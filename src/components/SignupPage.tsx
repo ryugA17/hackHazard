@@ -84,8 +84,8 @@ const SignupPage = () => {
   return (
     <div className="signup-page" style={{ backgroundImage: `url(${signupBackground})` }}>
       <div className="signup-container">
-        <h1 className="signup-title">Join Your Coding Adventure</h1>
-        <p className="signup-subtitle">Create your account and start learning today</p>
+        <h1 className="signup-title">Join Your Gaming Adventure</h1>
+        <p className="signup-subtitle">Create your account and start gaming today</p>
         
         <form className="signup-form" onSubmit={handleSubmit}>
           <div className="form-group">

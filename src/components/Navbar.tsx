@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../assets/logo.svg';
+import pikachuRunning from '../assets/pikachu-running.gif';
 
 const Navbar = () => {
   return (
@@ -10,7 +11,8 @@ const Navbar = () => {
         <div className="navbar-logo">
           <Link to="/">
             <img src={logo} alt="Codedex" />
-            <span>Codédex</span>
+            <span>Pikadex</span>
+            <img src={pikachuRunning} alt="Pikachu running" className="pikachu-gif" />
           </Link>
         </div>
         <div className="navbar-links">
