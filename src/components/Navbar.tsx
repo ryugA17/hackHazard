@@ -3,8 +3,32 @@ import { Link } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../assets/navbar.png';
 import pikachuRunning from '../assets/pikachu-running.gif';
+import { auth, signOut } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const Navbar = () => {
+  const [user, setUser] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      setLoading(true);
+      await signOut();
+      console.log('Successfully signed out');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -34,7 +58,27 @@ const Navbar = () => {
               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
             </svg>
           </button>
-          <Link to="/signup" className="signup-btn">Sign up</Link>
+          
+          {user ? (
+            <div className="user-menu">
+              <div className="user-avatar">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName || 'User'} />
+                ) : (
+                  <span>{user.displayName?.[0] || user.email?.[0] || '?'}</span>
+                )}
+              </div>
+              <button 
+                onClick={handleSignOut} 
+                className="signout-btn"
+                disabled={loading}
+              >
+                {loading ? 'Signing out...' : 'Sign out'}
+              </button>
+            </div>
+          ) : (
+            <Link to="/signup" className="signup-btn">Sign up</Link>
+          )}
         </div>
       </div>
     </nav>
