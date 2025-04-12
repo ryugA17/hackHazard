@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../assets/logo.svg';
 
@@ -7,8 +8,10 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-logo">
-          <img src={logo} alt="Codedex" />
-          <span>Codédex</span>
+          <Link to="/">
+            <img src={logo} alt="Codedex" />
+            <span>Codédex</span>
+          </Link>
         </div>
         <div className="navbar-links">
           <div className="dropdown">
@@ -29,7 +32,7 @@ const Navbar = () => {
               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
             </svg>
           </button>
-          <button className="signup-btn">Sign up</button>
+          <Link to="/signup" className="signup-btn">Sign up</Link>
         </div>
       </div>
     </nav>
