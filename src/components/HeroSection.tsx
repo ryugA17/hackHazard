@@ -7,7 +7,7 @@ const HeroSection = () => {
       <div className="hero-content">
         <h2 className="hero-subtitle">START YOUR</h2>
         <h1 className="hero-title">
-          <span className="coding">Coding</span>
+          <span className="coding">Gaming</span>
           <span className="adventure">Adventure</span>
         </h1>
         <p className="hero-description">

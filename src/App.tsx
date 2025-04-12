@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import Sponsors from './components/Sponsors';
 import SignupPage from './components/SignupPage';
+import StatsSection from './components/StatsSection';
 
 // Home page component
 const HomePage = () => {
@@ -14,6 +15,7 @@ const HomePage = () => {
       <main>
         <HeroSection />
         <Sponsors />
+        <StatsSection />
       </main>
     </>
   );

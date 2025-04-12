@@ -1,0 +1,151 @@
+.stats-section {
+  position: relative;
+  padding: 4rem 1rem;
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.stats-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pixel-world-container {
+  max-width: 1200px;
+  width: 100%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+.level-up-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.level-up-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 2.5rem;
+  color: white;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.start-learning-btn {
+  background-color: #3B82F6;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.start-learning-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+}
+
+.start-learning-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Game world elements */
+.game-world {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 2rem;
+}
+
+.pixel-characters {
+  position: relative;
+  margin-bottom: 2rem;
+  z-index: 5;
+}
+
+.character-gif {
+  max-width: 400px;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+}
+
+.hacker-house {
+  background-color: #2a3b5a;
+  width: 260px;
+  height: 80px;
+  border-radius: 8px;
+  border: 4px solid #1a2c47;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  margin-top: 1rem;
+  z-index: 3;
+}
+
+.hacker-house-sign {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 100%;
+}
+
+.hacker-house-sign p {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1rem;
+  color: white;
+  margin: 0;
+}
+
+.sign-rocket {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .level-up-title {
+    font-size: 1.8rem;
+  }
+  
+  .start-learning-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .hacker-house {
+    width: 200px;
+    height: 60px;
+  }
+  
+  .hacker-house-sign p {
+    font-size: 0.7rem;
+  }
+
+  .character-gif {
+    max-width: 150px;
+  }
+} 
