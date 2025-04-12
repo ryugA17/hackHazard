@@ -1,8 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './SignupPage.css';
 import signupBackground from '../assets/signUp_Page.png';
+import { auth, signInWithGoogle } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const SignupPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = React.useState({
     username: '',
     email: '',
@@ -16,6 +20,20 @@ const SignupPage = () => {
     password: '',
     confirmPassword: ''
   });
+
+  const [loading, setLoading] = React.useState(false);
+  const [authError, setAuthError] = React.useState('');
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, redirect to home page
+        navigate('/');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -81,11 +99,46 @@ const SignupPage = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      setAuthError('');
+      const user = await signInWithGoogle();
+      if (user) {
+        console.log('Successfully signed in with Google:', user);
+        // Redirect or update UI is handled by the useEffect
+      }
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      setAuthError('Failed to sign in with Google. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="signup-page" style={{ backgroundImage: `url(${signupBackground})` }}>
       <div className="signup-container">
         <h1 className="signup-title">Join Your Gaming Adventure</h1>
         <p className="signup-subtitle">Create your account and start gaming today</p>
+        
+        {authError && <div className="auth-error">{authError}</div>}
+        
+        <div className="social-login">
+          <button 
+            type="button" 
+            className="google-btn"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+            <span>{loading ? 'Signing in...' : 'Sign up with Google'}</span>
+          </button>
+        </div>
+        
+        <div className="separator">
+          <span>or</span>
+        </div>
         
         <form className="signup-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -144,7 +197,9 @@ const SignupPage = () => {
             {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
           </div>
           
-          <button type="submit" className="signup-button">Create Account</button>
+          <button type="submit" className="signup-button" disabled={loading}>
+            Create Account
+          </button>
         </form>
         
         <div className="login-option">
