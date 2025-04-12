@@ -1,6 +1,6 @@
 import React from 'react';
 import './SignupPage.css';
-import signupBackground from '../assets/signupPage.png';
+import signupBackground from '../assets/signUp_Page.png';
 
 const SignupPage = () => {
   const [formData, setFormData] = React.useState({
