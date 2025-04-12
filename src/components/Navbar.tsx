@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
-import logo from '../assets/logo.svg';
+import logo from '../assets/navbar.png';
 import pikachuRunning from '../assets/pikachu-running.gif';
 
 const Navbar = () => {
@@ -17,16 +17,16 @@ const Navbar = () => {
         </div>
         <div className="navbar-links">
           <div className="dropdown">
-            <button className="dropbtn">Learn <span>▾</span></button>
+            <button className="dropbtn">Rules <span>▾</span></button>
           </div>
           <div className="dropdown">
-            <button className="dropbtn">Practice <span>▾</span></button>
+            <button className="dropbtn">Play <span>▾</span></button>
           </div>
-          <button className="nav-btn">Build</button>
+          
           <div className="dropdown">
             <button className="dropbtn">Community <span>▾</span></button>
           </div>
-          <button className="nav-btn">Pricing</button>
+          
         </div>
         <div className="navbar-buttons">
           <button className="theme-toggle">
