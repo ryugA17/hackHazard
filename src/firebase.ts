@@ -4,12 +4,13 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, User } from 'firebase/aut
 // Your web app's Firebase configuration
 // Replace these with your actual Firebase config values
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-app.firebaseapp.com",
-  projectId: "your-app-id",
-  storageBucket: "your-app.appspot.com",
-  messagingSenderId: "your-messaging-sender-id",
-  appId: "your-app-id"
+  apiKey: "AIzaSyC5du5Ib1lINdK-gy_poupvMfLYyF-JGz0",
+  authDomain: "pikadex-d6235.firebaseapp.com",
+  projectId: "pikadex-d6235",
+  storageBucket: "pikadex-d6235.firebasestorage.app",
+  messagingSenderId: "415825446566",
+  appId: "1:415825446566:web:a9504860480da993569667",
+  measurementId: "G-HP52NNDP29"
 };
 
 // Initialize Firebase
