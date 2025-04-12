@@ -1,12 +1,13 @@
 .stats-section {
   position: relative;
-  padding: 4rem 1rem;
+  padding: 0;
   background-size: cover;
   background-position: center;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
 .stats-overlay {
@@ -15,21 +16,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.3);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .pixel-world-container {
-  max-width: 1200px;
   width: 100%;
+  height: 100%;
   z-index: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 2rem;
+  position: relative;
 }
 
 .level-up-section {
@@ -37,7 +38,12 @@
   flex-direction: column;
   align-items: center;
   gap: 2rem;
-  margin-top: 2rem;
+  position: absolute;
+  top: 15%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 10;
 }
 
 .level-up-title {
@@ -62,7 +68,6 @@
   font-family: 'Press Start 2P', cursive;
   font-size: 0.9rem;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
-  z-index: 10;
 }
 
 .start-learning-btn:hover {
@@ -77,21 +82,31 @@
 
 /* Game world elements */
 .game-world {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  padding-top: 2rem;
 }
 
 .pixel-characters {
-  position: relative;
-  margin-bottom: 2rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .character-gif {
   max-width: 400px;
+  width: 100%;
+  height: auto;
   filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
 }
 
@@ -146,6 +161,6 @@
   }
 
   .character-gif {
-    max-width: 150px;
+    max-width: 300px;
   }
 } 

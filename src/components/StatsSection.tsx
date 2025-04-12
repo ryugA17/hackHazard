@@ -17,8 +17,6 @@ const StatsSection = () => {
             <div className="pixel-characters">
               <img src={childhoodGif} alt="Pixel Characters" className="character-gif" />
             </div>
-            
-            
           </div>
         </div>
       </div>
