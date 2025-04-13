@@ -198,7 +198,7 @@ const Dashboard = () => {
 
           {/* New tutorials section */}
           <div className="tutorials-header">
-            <h2 className="tutorials-title">New project tutorials</h2>
+            <h2 className="tutorials-title"></h2>
             <Link to="/tutorials" className="see-all-link">See all</Link>
           </div>
           
