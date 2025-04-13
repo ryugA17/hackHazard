@@ -3,6 +3,7 @@ import './MiddleSection.css';
 import './ScrollAnimations.css';
 import pokeBattle1 from '../assets/poke battle 1.jpg';
 import pokeBattle2 from '../assets/poke battle 22.jpg';
+import codeGif from '../assets/battle.gif';
 import { setupScrollAnimations } from '../utils/scrollAnimations';
 
 const MiddleSection = () => {
@@ -21,6 +22,9 @@ const MiddleSection = () => {
         <div className="code-interface-container slide-in-left">
           <div className="battle-image-container">
             <img src={pokeBattle1} alt="Pokemon Battle" className="battle-image" />
+            <div className="code-gif-wrapper">
+              <img src={codeGif} alt="Code Learning Interface" className="code-gif" />
+            </div>
           </div>
         </div>
 
