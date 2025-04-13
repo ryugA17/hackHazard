@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import Footer from './Footer';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import userAvatar from '../assets/random component.gif';
 import computerIcon from '../assets/bot.gif';
 import rocketIcon from '../assets/random component.gif';
@@ -10,8 +12,23 @@ import codeIcon from '../assets/code-icon.png';
 import loadingicon from '../assets/ass.gif';
 
 const Dashboard = () => {
-  const username = "hardikiltop80299";
+  const [user, setUser] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
   const navigate = useNavigate();
+  
+  // Default fallback info
+  const defaultUsername = "hardikiltop80299";
+  
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Extract username from Google account email
+  const username = user?.email ? user.email.split('@')[0] : defaultUsername;
   
   // Handler for the Get Started button
   const handleGetStarted = () => {
@@ -21,6 +38,10 @@ const Dashboard = () => {
       tutorialsSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+  
+  if (loading) {
+    return <div className="loading">Loading dashboard...</div>;
+  }
   
   return (
     <>
@@ -51,9 +72,9 @@ const Dashboard = () => {
           {/* User profile panel */}
           <div className="profile-panel">
             <div className="profile-header">
-              <img src={userAvatar} alt="User Avatar" className="profile-avatar" />
+              <img src={user?.photoURL || userAvatar} alt="User Avatar" className="profile-avatar" />
               <div className="profile-info">
-                <h2>{username}</h2>
+                <h2>{user?.displayName || username}</h2>
                 <p>Level 1</p>
               </div>
             </div>
