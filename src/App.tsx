@@ -12,10 +12,10 @@ import CommunityPage from './components/CommunityPage';
 import ProfilePage from './components/ProfilePage';
 
 // Home page component
-const HomePage = () => {
+const HomePage = ({ disableSignOut = false }) => {
   return (
     <>
-      <Navbar />
+      <Navbar disableSignOut={disableSignOut} />
       <main>
         <HeroSection />
         <StatsSection />
@@ -39,7 +39,7 @@ const App = () => {
     <div className="app">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomePage disableSignOut={isSignedIn} />} />
           <Route path="/signup" element={
             isSignedIn ? (
               <Navigate to="/dashboard" replace />
@@ -50,10 +50,30 @@ const App = () => {
               </>
             )
           } />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/rules" element={<RulesPage />} />
-          <Route path="/community" element={<CommunityPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/dashboard" element={
+            <>
+              <Navbar hideDashboardSignOut={true} disableSignOut={isSignedIn} />
+              <Dashboard />
+            </>
+          } />
+          <Route path="/rules" element={
+            <>
+              <Navbar disableSignOut={isSignedIn} />
+              <RulesPage />
+            </>
+          } />
+          <Route path="/community" element={
+            <>
+              <Navbar disableSignOut={isSignedIn} />
+              <CommunityPage />
+            </>
+          } />
+          <Route path="/profile" element={
+            <>
+              <Navbar disableSignOut={isSignedIn} />
+              <ProfilePage />
+            </>
+          } />
         </Routes>
       </BrowserRouter>
     </div>

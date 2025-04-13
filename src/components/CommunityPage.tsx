@@ -1,12 +1,10 @@
 import React from 'react';
 import './CommunityPage.css';
-import Navbar from './Navbar';
 import Footer from './Footer';
 
 const CommunityPage = () => {
   return (
     <>
-      <Navbar />
       <div className="community-page">
         <div className="community-container">
           <h1 className="community-title">Community</h1>

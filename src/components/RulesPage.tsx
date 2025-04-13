@@ -1,12 +1,10 @@
 import React from 'react';
 import './RulesPage.css';
-import Navbar from './Navbar';
 import Footer from './Footer';
 
 const RulesPage = () => {
   return (
     <>
-      <Navbar />
       <div className="rules-page">
         <div className="rules-container">
           <h1 className="rules-title">Game Rules</h1>

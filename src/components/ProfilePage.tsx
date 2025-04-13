@@ -1,12 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './ProfilePage.css';
-import Navbar from './Navbar';
 import Footer from './Footer';
 
 // Placeholder image imports - replace with actual assets later
 import defaultAvatar from '../assets/random component.gif';
-import headerBackground from '../assets/profile-header-bg.png';
+import headerBackground from '../assets/profile.gif';
 
 const ProfilePage = () => {
   const username = "Hardik";
@@ -21,7 +20,6 @@ const ProfilePage = () => {
   
   return (
     <>
-      <Navbar />
       <div className="profile-page">
         <div className="profile-header">
           <div className="profile-header-bg">

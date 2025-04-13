@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
-import Navbar from './Navbar';
 import Footer from './Footer';
 import userAvatar from '../assets/random component.gif';
 import computerIcon from '../assets/bot.gif';
@@ -25,7 +24,6 @@ const Dashboard = () => {
   
   return (
     <>
-      <Navbar hideDashboardSignOut={true} />
       <div className="dashboard">
         <div className="dashboard-container">
           {/* Greeting section */}

@@ -8,13 +8,15 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 interface NavbarProps {
   hideDashboardSignOut?: boolean;
+  disableSignOut?: boolean;
 }
 
-const Navbar = ({ hideDashboardSignOut = false }: NavbarProps) => {
+const Navbar = ({ hideDashboardSignOut = false, disableSignOut = false }: NavbarProps) => {
   const [user, setUser] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
+  const isProfile = location.pathname === '/profile';
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -34,6 +36,9 @@ const Navbar = ({ hideDashboardSignOut = false }: NavbarProps) => {
       setLoading(false);
     }
   };
+
+  // Hide sign out button on dashboard, profile page, or if disabled
+  const hideSignOutButton = (isDashboard && hideDashboardSignOut) || isProfile || disableSignOut;
 
   return (
     <nav className="navbar">
@@ -67,8 +72,8 @@ const Navbar = ({ hideDashboardSignOut = false }: NavbarProps) => {
                   <span>{user.displayName?.[0] || user.email?.[0] || '?'}</span>
                 )}
               </div>
-              {/* Hide sign out button on dashboard */}
-              {!(isDashboard && hideDashboardSignOut) && (
+              {/* Hide sign out button if required */}
+              {!hideSignOutButton && (
                 <button 
                   onClick={handleSignOut} 
                   className="signout-btn"
