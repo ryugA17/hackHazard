@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Navbar.css';
-import logo from '../assets/navbar.png';
+import logo from '../assets/logogogogogogo.png';
 import pikachuRunning from '../assets/pikachu-running.gif';
 import { auth, signOut } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
