@@ -45,19 +45,12 @@ const Navbar = ({ hideDashboardSignOut = false }: NavbarProps) => {
             <img src={pikachuRunning} alt="Pikachu running" className="pikachu-gif" />
           </Link>
         </div>
+        
         <div className="navbar-links">
-          <div className="dropdown">
-            <button className="dropbtn">Rules <span>▾</span></button>
-          </div>
-          <div className="dropdown">
-            <button className="dropbtn">Play <span>▾</span></button>
-          </div>
-          
-          <div className="dropdown">
-            <button className="dropbtn">Community <span>▾</span></button>
-          </div>
-          
+          <Link to="/rules" className="nav-link">Rules</Link>
+          <Link to="/community" className="nav-link">Community</Link>
         </div>
+        
         <div className="navbar-buttons">
           <button className="theme-toggle">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

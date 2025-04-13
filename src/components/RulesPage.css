@@ -1,0 +1,71 @@
+.rules-page {
+  background-color: #080c19;
+  color: white;
+  min-height: calc(100vh - 60px);
+  padding: 40px 0;
+}
+
+.rules-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.rules-title {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 40px;
+  font-family: 'Press Start 2P', monospace;
+  color: #ffde59;
+}
+
+.rules-content {
+  background-color: rgba(25, 30, 45, 0.7);
+  border-radius: 8px;
+  padding: 30px;
+}
+
+.rules-section {
+  margin-bottom: 40px;
+}
+
+.rules-section:last-child {
+  margin-bottom: 0;
+}
+
+.rules-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: #d4af37;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+  padding-bottom: 10px;
+}
+
+.rules-section p {
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.rules-section ul {
+  padding-left: 20px;
+  margin-bottom: 15px;
+}
+
+.rules-section li {
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .rules-title {
+    font-size: 2rem;
+  }
+  
+  .rules-content {
+    padding: 20px;
+  }
+  
+  .rules-section h2 {
+    font-size: 1.3rem;
+  }
+} 

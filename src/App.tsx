@@ -7,6 +7,8 @@ import HeroSection from './components/HeroSection';
 import SignupPage from './components/SignupPage';
 import StatsSection from './components/StatsSection';
 import Dashboard from './components/Dashboard';
+import RulesPage from './components/RulesPage';
+import CommunityPage from './components/CommunityPage';
 
 // Home page component
 const HomePage = () => {
@@ -48,6 +50,8 @@ const App = () => {
             )
           } />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/rules" element={<RulesPage />} />
+          <Route path="/community" element={<CommunityPage />} />
         </Routes>
       </BrowserRouter>
     </div>

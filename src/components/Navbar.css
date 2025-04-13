@@ -40,38 +40,6 @@
   margin-left: 5px;
 }
 
-.navbar-links {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropbtn {
-  background-color: transparent;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.nav-btn {
-  background-color: transparent;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.5rem;
-}
-
 .navbar-buttons {
   display: flex;
   gap: 1rem;
@@ -152,6 +120,41 @@
 .signout-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.5rem;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.nav-link:hover {
+  color: #d4af37;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  background-color: #d4af37;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+  width: 80%;
 }
 
 @media (max-width: 768px) {
