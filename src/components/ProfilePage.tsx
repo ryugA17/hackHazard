@@ -41,6 +41,14 @@ const ProfilePage = () => {
   const handle = user?.email ? `@${user.email.split('@')[0]}` : defaultHandle;
   const profilePic = user?.photoURL || defaultAvatar;
   
+  // For debugging
+  console.log("User auth info:", { 
+    displayName: user?.displayName,
+    email: user?.email,
+    photoURL: user?.photoURL,
+    uid: user?.uid
+  });
+  
   if (loading) {
     return <div className="loading">Loading profile...</div>;
   }
@@ -58,7 +66,14 @@ const ProfilePage = () => {
 
         <div className="profile-avatar-container">
           <div className="profile-avatar-large">
-            <img src={profilePic} alt={username} />
+            <img 
+              src={profilePic} 
+              alt={username} 
+              onError={(e) => {
+                console.log("Profile image failed to load, using fallback");
+                e.currentTarget.src = defaultAvatar;
+              }}
+            />
           </div>
           <div className="profile-info">
             <div className="username-container">

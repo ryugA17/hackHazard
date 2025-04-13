@@ -28,7 +28,16 @@ const Dashboard = () => {
   }, []);
 
   // Extract username from Google account email
-  const username = user?.email ? user.email.split('@')[0] : defaultUsername;
+  const username = user?.displayName || (user?.email ? user.email.split('@')[0] : defaultUsername);
+  const profilePic = user?.photoURL || userAvatar;
+  
+  // For debugging
+  console.log("Dashboard user info:", { 
+    displayName: user?.displayName,
+    email: user?.email,
+    photoURL: user?.photoURL,
+    uid: user?.uid
+  });
   
   // Handler for the Get Started button
   const handleGetStarted = () => {
@@ -72,9 +81,17 @@ const Dashboard = () => {
           {/* User profile panel */}
           <div className="profile-panel">
             <div className="profile-header">
-              <img src={user?.photoURL || userAvatar} alt="User Avatar" className="profile-avatar" />
+              <img 
+                src={profilePic} 
+                alt="User Avatar" 
+                className="profile-avatar" 
+                onError={(e) => {
+                  console.log("Dashboard profile image failed to load, using fallback");
+                  e.currentTarget.src = userAvatar;
+                }}
+              />
               <div className="profile-info">
-                <h2>{user?.displayName || username}</h2>
+                <h2>{username}</h2>
                 <p>Level 1</p>
               </div>
             </div>

@@ -18,10 +18,19 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
+// Add scopes to request profile information
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
 // Function to sign in with Google
 export const signInWithGoogle = async (): Promise<User | null> => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
+    // Log to debug profile info
+    console.log("Google sign-in successful:", result.user);
     return result.user;
   } catch (error) {
     console.error("Error signing in with Google:", error);
