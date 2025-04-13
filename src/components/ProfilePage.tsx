@@ -84,62 +84,86 @@ const ProfilePage = () => {
           <div className="tab">Certificates</div>
         </div>
 
-        <div className="profile-content">
-          <div className="profile-section profile-bio">
-            <div className="bio-level">
-              <span className="trophy-icon">🏆</span>
-              <span>Lvl 1</span>
-            </div>
-            <p className="bio-empty-state">
-              You don't have anything in your bio. 
-              <Link to="/account" className="bio-link">Go to account</Link> and edit profile to add something cool about yourself.
-            </p>
-            <div className="profile-joined">
-              <span className="joined-icon">🗓️</span> Joined {joinDate}
+        <div className="profile-container">
+          <div className="profile-main">
+            <div className="profile-section profile-bio">
+              <div className="bio-level">
+                <span className="trophy-icon">🏆</span>
+                <span>Lvl 1</span>
+              </div>
+              <p className="bio-empty-state">
+                You don't have anything in your bio. 
+                <Link to="/account" className="bio-link">Go to account</Link> and edit profile to add something cool about yourself.
+              </p>
+              <div className="profile-joined">
+                <span className="joined-icon">🗓️</span> Joined {joinDate}
+              </div>
             </div>
           </div>
 
-          <div className="profile-section profile-pinned">
-            <div className="pinned-placeholder">
-              <p>Pin a project</p>
+          <div className="stats-panel">
+            <h2>Your Stats</h2>
+            <div className="profile-stats">
+              <span className="stat-icon xp-icon">{stats.totalXp}</span>
+              <span className="stat-details"><p>Total XP</p></span>
+              
+              <span className="stat-icon rank-icon">Bronze</span>
+              <span className="stat-details"><p>Rank</p></span>
+              
+              <span className="stat-icon badges-icon">{stats.courseBadges}</span>
+              <span className="stat-details"><p>Badges</p></span>
+              
+              <span className="stat-icon streak-icon">{stats.dailyStreak}</span>
+              <span className="stat-details"><p>Day streak</p></span>
             </div>
           </div>
 
-          <div className="profile-section profile-stats">
-            <div className="stats-grid">
-              <div className="stat-card">
-                <h3>EXERCISES</h3>
-                <span className="stat-value">{stats.exercises}</span>
-              </div>
-              <div className="stat-card">
-                <h3>TOTAL XP</h3>
-                <span className="stat-value">{stats.totalXp}</span>
-              </div>
-              <div className="stat-card">
-                <h3>COURSE BADGES</h3>
-                <span className="stat-value">{stats.courseBadges}</span>
-              </div>
-              <div className="stat-card">
-                <h3>DAILY STREAK</h3>
-                <span className="stat-value">{stats.dailyStreak}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="profile-section profile-skills">
-            <p>Add skills from <Link to="/account/settings">account settings</Link>.</p>
-          </div>
-
-          <div className="profile-section pet-cafe">
+          <div className="pet-cafe-panel">
+            <h2>Pet Café</h2>
             <div className="pet-egg-container">
               <img src={require('../assets/egg-icon.png')} alt="Pet egg" className="pet-egg" />
             </div>
+            <p>Raise your virtual pet by coding daily!</p>
           </div>
 
-          <div className="profile-section profile-posts">
-            <div className="empty-state">
-              <p>You have not made a post yet.</p>
-              <p>Say hi in the <Link to="/community">community</Link></p>
+          <h2 className="skills-title">Skills</h2>
+          
+          <div className="skills-grid">
+            <div className="skill-card">
+              <h3>HTML</h3>
+              <div className="skill-level">
+                <div className="level-bar" style={{width: '70%'}}></div>
+              </div>
+            </div>
+            <div className="skill-card">
+              <h3>CSS</h3>
+              <div className="skill-level">
+                <div className="level-bar" style={{width: '65%'}}></div>
+              </div>
+            </div>
+            <div className="skill-card">
+              <h3>JavaScript</h3>
+              <div className="skill-level">
+                <div className="level-bar" style={{width: '50%'}}></div>
+              </div>
+            </div>
+            <div className="skill-card">
+              <h3>React</h3>
+              <div className="skill-level">
+                <div className="level-bar" style={{width: '40%'}}></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="projects-header">
+            <h2 className="projects-title">Projects</h2>
+            <Link to="/projects" className="see-all-link">See all</Link>
+          </div>
+          
+          <div className="projects-grid">
+            <div className="empty-project">
+              <p>You haven't created any projects yet.</p>
+              <button className="create-project-btn">Create a project</button>
             </div>
           </div>
         </div>
