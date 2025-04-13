@@ -10,6 +10,7 @@ import Dashboard from './components/Dashboard';
 import RulesPage from './components/RulesPage';
 import CommunityPage from './components/CommunityPage';
 import ProfilePage from './components/ProfilePage';
+import MiddleSection from './components/MiddleSection';
 
 // Home page component
 const HomePage = ({ disableSignOut = false }) => {
@@ -18,6 +19,7 @@ const HomePage = ({ disableSignOut = false }) => {
       <Navbar disableSignOut={disableSignOut} />
       <main>
         <HeroSection />
+        <MiddleSection />
         <StatsSection />
       </main>
       <Footer />

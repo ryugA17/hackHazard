@@ -23,6 +23,13 @@ const HeroSection = () => {
     }
   };
 
+  const scrollToMiddleSection = () => {
+    const middleSection = document.querySelector('.middle-section');
+    if (middleSection) {
+      middleSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="hero-section">
       <div className="hero-content">
@@ -37,6 +44,11 @@ const HeroSection = () => {
         <button className="get-started-btn" onClick={handleGetStarted}>
           {isSignedIn ? 'Go to Dashboard' : 'Get Started'}
         </button>
+      </div>
+      <div className="scroll-indicator" onClick={scrollToMiddleSection}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+        </svg>
       </div>
     </section>
   );
