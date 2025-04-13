@@ -61,33 +61,17 @@ const Dashboard = () => {
             </div>
             
             <div className="profile-stats">
-              <div className="stat-item">
-                <div className="stat-icon xp-icon">8</div>
-                <div className="stat-details">
-                  <p>Total XP</p>
-                </div>
-              </div>
+              <span className="stat-icon xp-icon">8</span>
+              <span className="stat-details"><p>Total XP</p></span>
               
-              <div className="stat-item">
-                <div className="stat-icon rank-icon">Bronze</div>
-                <div className="stat-details">
-                  <p>Rank</p>
-                </div>
-              </div>
+              <span className="stat-icon rank-icon">Bronze</span>
+              <span className="stat-details"><p>Rank</p></span>
               
-              <div className="stat-item">
-                <div className="stat-icon badges-icon">8</div>
-                <div className="stat-details">
-                  <p>Badges</p>
-                </div>
-              </div>
+              <span className="stat-icon badges-icon">8</span>
+              <span className="stat-details"><p>Badges</p></span>
               
-              <div className="stat-item">
-                <div className="stat-icon streak-icon">2</div>
-                <div className="stat-details">
-                  <p>Day streak</p>
-                </div>
-              </div>
+              <span className="stat-icon streak-icon">2</span>
+              <span className="stat-details"><p>Day streak</p></span>
             </div>
             
             <button className="view-profile-btn">View profile</button>
