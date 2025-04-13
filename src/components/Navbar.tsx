@@ -1,14 +1,20 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../assets/navbar.png';
 import pikachuRunning from '../assets/pikachu-running.gif';
 import { auth, signOut } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
-const Navbar = () => {
+interface NavbarProps {
+  hideDashboardSignOut?: boolean;
+}
+
+const Navbar = ({ hideDashboardSignOut = false }: NavbarProps) => {
   const [user, setUser] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
+  const location = useLocation();
+  const isDashboard = location.pathname === '/dashboard';
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -68,13 +74,16 @@ const Navbar = () => {
                   <span>{user.displayName?.[0] || user.email?.[0] || '?'}</span>
                 )}
               </div>
-              <button 
-                onClick={handleSignOut} 
-                className="signout-btn"
-                disabled={loading}
-              >
-                {loading ? 'Signing out...' : 'Sign out'}
-              </button>
+              {/* Hide sign out button on dashboard */}
+              {!(isDashboard && hideDashboardSignOut) && (
+                <button 
+                  onClick={handleSignOut} 
+                  className="signout-btn"
+                  disabled={loading}
+                >
+                  {loading ? 'Signing out...' : 'Sign out'}
+                </button>
+              )}
             </div>
           ) : (
             <Link to="/signup" className="signup-btn">Sign up</Link>

@@ -1,20 +1,30 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import userAvatar from '../assets/pixel-trainer.png';
-import computerIcon from '../assets/computer-icon.png';
+import computerIcon from '../assets/bot.gif';
 import rocketIcon from '../assets/rocket-icon.png';
 import eggIcon from '../assets/egg-icon.png';
 import codeIcon from '../assets/code-icon.png';
 
 const Dashboard = () => {
   const username = "hardikiltop80299";
+  const navigate = useNavigate();
+  
+  // Handler for the Get Started button
+  const handleGetStarted = () => {
+    // Scroll to the tutorials section
+    const tutorialsSection = document.querySelector('.tutorials-header');
+    if (tutorialsSection) {
+      tutorialsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
   
   return (
     <>
-      <Navbar />
+      <Navbar hideDashboardSignOut={true} />
       <div className="dashboard">
         <div className="dashboard-container">
           {/* Greeting section */}
@@ -35,7 +45,7 @@ const Dashboard = () => {
               </div>
               <h1 className="welcome-title">Welcome to Codédex!</h1>
               <p className="welcome-subtitle">Your coding journey awaits—but first let's find something to learn.</p>
-              <button className="get-started-btn">Get Started</button>
+              <button className="get-started-btn" onClick={handleGetStarted}>Get Started</button>
             </div>
           </div>
 

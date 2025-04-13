@@ -1,12 +1,26 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HeroSection.css';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const [isSignedIn, setIsSignedIn] = React.useState(false);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsSignedIn(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleGetStarted = () => {
-    navigate('/signup');
+    if (isSignedIn) {
+      navigate('/dashboard');
+    } else {
+      navigate('/signup');
+    }
   };
 
   return (
@@ -20,7 +34,9 @@ const HeroSection = () => {
         <p className="hero-description">
           The most fun and beginner-friendly way to learn to code. +♦
         </p>
-        <button className="get-started-btn" onClick={handleGetStarted}>Get Started</button>
+        <button className="get-started-btn" onClick={handleGetStarted}>
+          {isSignedIn ? 'Go to Dashboard' : 'Get Started'}
+        </button>
       </div>
     </section>
   );
