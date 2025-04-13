@@ -74,7 +74,7 @@ const Dashboard = () => {
               <span className="stat-details"><p>Day streak</p></span>
             </div>
             
-            <button className="view-profile-btn">View profile</button>
+            <button className="view-profile-btn" onClick={() => navigate('/profile')}>View profile</button>
           </div>
 
           {/* Events panel */}

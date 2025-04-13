@@ -1,0 +1,281 @@
+.profile-page {
+  background-color: #080c19;
+  color: white;
+  min-height: calc(100vh - 60px);
+}
+
+/* Profile Header */
+.profile-header {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.profile-header-bg {
+  height: 180px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-header-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.profile-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: flex-start;
+  margin-top: -50px;
+}
+
+.profile-avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 4px solid #080c19;
+  overflow: hidden;
+  background-color: #1f253a;
+  margin-right: 20px;
+}
+
+.profile-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-info-main {
+  padding-top: 50px;
+}
+
+.profile-info-main h1 {
+  font-size: 24px;
+  margin: 0 0 5px 0;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.profile-handle {
+  color: #a0a0a0;
+  margin: 0 0 10px 0;
+  font-size: 14px;
+}
+
+.profile-follow-info {
+  margin-bottom: 15px;
+}
+
+.follow-count {
+  margin-right: 15px;
+  color: #a0a0a0;
+  font-size: 14px;
+}
+
+.edit-profile-btn {
+  background-color: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+}
+
+.edit-profile-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Profile Content */
+.profile-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Tabs */
+.profile-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+  overflow-x: auto;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.profile-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  padding: 10px 15px;
+  margin-right: 5px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: #a0a0a0;
+}
+
+.tab.active {
+  border-bottom: 2px solid #4dabf7;
+  color: white;
+}
+
+/* Profile Sections */
+.profile-section {
+  background-color: rgba(25, 30, 45, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Bio Section */
+.bio-level {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+}
+
+.trophy-icon {
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.bio-empty-state {
+  color: #a0a0a0;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.bio-link {
+  color: #4dabf7;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+.bio-link:hover {
+  text-decoration: underline;
+}
+
+.profile-joined {
+  color: #a0a0a0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.joined-icon {
+  margin-right: 10px;
+}
+
+/* Pinned Section */
+.pinned-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  color: #a0a0a0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+}
+
+/* Stats Section */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background-color: rgba(15, 20, 35, 0.7);
+  border-radius: 6px;
+  padding: 15px;
+  text-align: center;
+}
+
+.stat-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: #a0a0a0;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: bold;
+  color: #4dabf7;
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* Pet Cafe Section */
+.pet-cafe {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.pet-egg-container {
+  width: 100px;
+  height: 140px;
+}
+
+.pet-egg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Empty States */
+.empty-state {
+  text-align: center;
+  color: #a0a0a0;
+  padding: 20px;
+}
+
+.empty-state p {
+  margin-bottom: 10px;
+}
+
+.empty-state a {
+  color: #4dabf7;
+  text-decoration: none;
+}
+
+.empty-state a:hover {
+  text-decoration: underline;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .profile-header-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .profile-avatar-large {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+  
+  .profile-info-main {
+    padding-top: 10px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+} 

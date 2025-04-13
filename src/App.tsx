@@ -9,6 +9,7 @@ import StatsSection from './components/StatsSection';
 import Dashboard from './components/Dashboard';
 import RulesPage from './components/RulesPage';
 import CommunityPage from './components/CommunityPage';
+import ProfilePage from './components/ProfilePage';
 
 // Home page component
 const HomePage = () => {
@@ -52,6 +53,7 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/rules" element={<RulesPage />} />
           <Route path="/community" element={<CommunityPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </BrowserRouter>
     </div>
