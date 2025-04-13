@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import userAvatar from '../assets/pixel-trainer.png';
+import userAvatar from '../assets/random component.gif';
 import computerIcon from '../assets/bot.gif';
-import rocketIcon from '../assets/rocket-icon.png';
+import rocketIcon from '../assets/random component.gif';
 import eggIcon from '../assets/egg-icon.png';
 import codeIcon from '../assets/code-icon.png';
+import loadingicon from '../assets/ass.gif';
 
 const Dashboard = () => {
   const username = "hardikiltop80299";
@@ -41,10 +42,10 @@ const Dashboard = () => {
           <div className="dashboard-main">
             <div className="dashboard-welcome">
               <div className="pixel-trainer">
-                <img src={userAvatar} alt="Pixel Trainer" />
+                <img src={loadingicon} alt="Pixel Trainer" />
               </div>
-              <h1 className="welcome-title">Welcome to Codédex!</h1>
-              <p className="welcome-subtitle">Your coding journey awaits—but first let's find something to learn.</p>
+              <h1 className="welcome-title">Welcome to Pikadex!</h1>
+              <p className="welcome-subtitle">Your Gaming journey awaits—but first let's find something to learn.</p>
               <button className="get-started-btn" onClick={handleGetStarted}>Get Started</button>
             </div>
           </div>
