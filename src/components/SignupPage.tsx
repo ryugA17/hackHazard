@@ -5,7 +5,11 @@ import signupBackground from '../assets/signUp_Page.png';
 import { auth, signInWithGoogle } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
-const SignupPage = () => {
+interface SignupPageProps {
+  onSignUp?: () => void;
+}
+
+const SignupPage = ({ onSignUp }: SignupPageProps) => {
   const navigate = useNavigate();
   const [formData, setFormData] = React.useState({
     username: '',
@@ -28,12 +32,15 @@ const SignupPage = () => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // User is signed in, redirect to home page
-        navigate('/');
+        if (onSignUp) {
+          onSignUp();
+        }
+        navigate('/dashboard');
       }
     });
 
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, onSignUp]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -95,7 +102,10 @@ const SignupPage = () => {
     if (validateForm()) {
       // Submit form data
       console.log('Form submitted:', formData);
-      alert('Account created successfully!');
+      if (onSignUp) {
+        onSignUp();
+      }
+      navigate('/dashboard');
     }
   };
 
@@ -106,7 +116,10 @@ const SignupPage = () => {
       const user = await signInWithGoogle();
       if (user) {
         console.log('Successfully signed in with Google:', user);
-        // Redirect or update UI is handled by the useEffect
+        if (onSignUp) {
+          onSignUp();
+        }
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Error signing in with Google:', error);

@@ -1,7 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './HeroSection.css';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate('/signup');
+  };
+
   return (
     <section className="hero-section">
       <div className="hero-content">
@@ -13,7 +20,7 @@ const HeroSection = () => {
         <p className="hero-description">
           The most fun and beginner-friendly way to learn to code. +♦
         </p>
-        <button className="get-started-btn">Get Started</button>
+        <button className="get-started-btn" onClick={handleGetStarted}>Get Started</button>
       </div>
     </section>
   );

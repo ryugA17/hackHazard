@@ -1,11 +1,12 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HeroSection from './components/HeroSection';
 import SignupPage from './components/SignupPage';
 import StatsSection from './components/StatsSection';
+import Dashboard from './components/Dashboard';
 
 // Home page component
 const HomePage = () => {
@@ -22,17 +23,31 @@ const HomePage = () => {
 };
 
 const App = () => {
+  // This state would normally come from your authentication system
+  const [isSignedIn, setIsSignedIn] = React.useState(false);
+
+  const handleSignUp = () => {
+    // This function would handle the actual signup process
+    // For demo purposes, we're just setting isSignedIn to true
+    setIsSignedIn(true);
+  };
+
   return (
     <div className="app">
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={
-            <>
-              <Navbar />
-              <SignupPage />
-            </>
+            isSignedIn ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <>
+                <Navbar />
+                <SignupPage onSignUp={handleSignUp} />
+              </>
+            )
           } />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </BrowserRouter>
     </div>
