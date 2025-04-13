@@ -26,33 +26,36 @@ const ProfilePage = () => {
             <img src={headerBackground} alt="Profile background" />
           </div>
           <div className="profile-header-content">
-            <div className="profile-avatar-large">
-              <img src={defaultAvatar} alt={username} />
-            </div>
-            <div className="profile-info-main">
-              <h1>{username}</h1>
-              <p className="profile-handle">{handle}</p>
-              <div className="profile-follow-info">
-                <span className="follow-count">0 following</span>
-                <span className="follow-count">0 followers</span>
-              </div>
-              <button className="edit-profile-btn">Edit Profile</button>
+            <button className="edit-profile-btn">Edit Profile</button>
+          </div>
+        </div>
+
+        <div className="profile-avatar-container">
+          <div className="profile-avatar-large">
+            <img src={defaultAvatar} alt={username} />
+          </div>
+          <div className="profile-info">
+            <h1>{username}</h1>
+            <p className="profile-handle">{handle}</p>
+            <div className="profile-follow-info">
+              <span className="follow-count">0 following</span>
+              <span className="follow-count">0 followers</span>
             </div>
           </div>
         </div>
 
-        <div className="profile-content">
-          <div className="profile-tabs">
-            <div className="tab active">Bio</div>
-            <div className="tab">Pinned</div>
-            <div className="tab">Stats</div>
-            <div className="tab">Skills</div>
-            <div className="tab">Pet Café</div>
-            <div className="tab">Posts (0)</div>
-            <div className="tab">Projects (0)</div>
-            <div className="tab">Certificates</div>
-          </div>
+        <div className="profile-tabs">
+          <div className="tab active">Bio</div>
+          <div className="tab">Pinned</div>
+          <div className="tab">Stats</div>
+          <div className="tab">Skills</div>
+          <div className="tab">Pet Café</div>
+          <div className="tab">Posts (0)</div>
+          <div className="tab">Projects (0)</div>
+          <div className="tab">Certificates</div>
+        </div>
 
+        <div className="profile-content">
           <div className="profile-section profile-bio">
             <div className="bio-level">
               <span className="trophy-icon">🏆</span>
