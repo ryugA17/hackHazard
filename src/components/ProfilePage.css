@@ -287,6 +287,18 @@
   text-decoration: underline;
 }
 
+/* Loading Indicator */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 60px);
+  font-family: 'Press Start 2P', monospace;
+  color: white;
+  background-color: #080c19;
+  font-size: 16px;
+}
+
 /* Media Queries */
 @media (max-width: 768px) {
   .profile-avatar-container {

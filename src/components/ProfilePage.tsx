@@ -2,21 +2,48 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './ProfilePage.css';
 import Footer from './Footer';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 // Placeholder image imports - replace with actual assets later
 import defaultAvatar from '../assets/random component.gif';
-import headerBackground from '../assets/profile.gif';
+import headerBackground from '../assets/background.svg';
 
 const ProfilePage = () => {
-  const username = "Hardik";
-  const handle = "@hardikiltop80299";
-  const joinDate = "Apr 12, 2025";
+  const [user, setUser] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+  
+  // Default fallback info
+  const defaultUsername = "Hardik";
+  const defaultHandle = "@hardikiltop80299";
+  
+  // Get current date for new users
+  const currentDate = new Date();
+  const joinDate = `${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getDate()}, ${currentDate.getFullYear()}`;
+  
   const stats = {
     exercises: 0,
     totalXp: 0, 
     courseBadges: 0,
     dailyStreak: 2
   };
+  
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Extract display name and profile pic from Google account
+  const username = user?.displayName || defaultUsername;
+  const handle = user?.email ? `@${user.email.split('@')[0]}` : defaultHandle;
+  const profilePic = user?.photoURL || defaultAvatar;
+  
+  if (loading) {
+    return <div className="loading">Loading profile...</div>;
+  }
   
   return (
     <>
@@ -31,7 +58,7 @@ const ProfilePage = () => {
 
         <div className="profile-avatar-container">
           <div className="profile-avatar-large">
-            <img src={defaultAvatar} alt={username} />
+            <img src={profilePic} alt={username} />
           </div>
           <div className="profile-info">
             <div className="username-container">
