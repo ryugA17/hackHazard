@@ -1,0 +1,7 @@
+opencv-python
+numpy
+torch 
+torchvision
+ultralytics
+pyautogui
+keyboard
