@@ -2,8 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import HeroSection from './components/HeroSection';
-import Sponsors from './components/Sponsors';
 import SignupPage from './components/SignupPage';
 import StatsSection from './components/StatsSection';
 
@@ -14,9 +14,9 @@ const HomePage = () => {
       <Navbar />
       <main>
         <HeroSection />
-        <Sponsors />
         <StatsSection />
       </main>
+      <Footer />
     </>
   );
 };
@@ -27,7 +27,13 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/signup" element={
+            <>
+              <Navbar />
+              <SignupPage />
+              <Footer />
+            </>
+          } />
         </Routes>
       </BrowserRouter>
     </div>
