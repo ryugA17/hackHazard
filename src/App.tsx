@@ -31,7 +31,6 @@ const App = () => {
             <>
               <Navbar />
               <SignupPage />
-              <Footer />
             </>
           } />
         </Routes>
