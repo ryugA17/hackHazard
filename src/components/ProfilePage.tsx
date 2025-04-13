@@ -7,7 +7,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 // Placeholder image imports - replace with actual assets later
 import defaultAvatar from '../assets/random component.gif';
-import headerBackground from '../assets/background.svg';
+import headerBackground from '../assets/profile.gif';
 
 const ProfilePage = () => {
   const [user, setUser] = React.useState<any>(null);
