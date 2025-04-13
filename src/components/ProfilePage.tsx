@@ -26,7 +26,6 @@ const ProfilePage = () => {
             <img src={headerBackground} alt="Profile background" />
           </div>
           <div className="profile-header-content">
-            <button className="edit-profile-btn">Edit Profile</button>
           </div>
         </div>
 
@@ -35,7 +34,10 @@ const ProfilePage = () => {
             <img src={defaultAvatar} alt={username} />
           </div>
           <div className="profile-info">
-            <h1>{username}</h1>
+            <div className="username-container">
+              <h1>{username}</h1>
+              <button className="edit-profile-btn">Edit Profile</button>
+            </div>
             <p className="profile-handle">{handle}</p>
             <div className="profile-follow-info">
               <span className="follow-count">0 following</span>

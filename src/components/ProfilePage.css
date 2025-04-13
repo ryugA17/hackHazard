@@ -68,6 +68,12 @@
   padding-top: 15px;
 }
 
+.username-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .profile-info h1 {
   font-size: 24px;
   margin: 0 0 5px 0;
@@ -101,9 +107,6 @@
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Press Start 2P', monospace;
-  position: absolute;
-  right: 20px;
-  top: 20px;
   text-transform: uppercase;
   font-weight: 400;
   letter-spacing: 0.5px;
@@ -302,6 +305,11 @@
   .profile-info {
     padding-top: 10px;
     text-align: center;
+  }
+
+  .username-container {
+    justify-content: center;
+    flex-wrap: wrap;
   }
   
   .stats-grid {
