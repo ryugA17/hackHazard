@@ -11,6 +11,7 @@ import RulesPage from './components/RulesPage';
 import CommunityPage from './components/CommunityPage';
 import ProfilePage from './components/ProfilePage';
 import MiddleSection from './components/MiddleSection';
+import { ProfileProvider } from './context/ProfileContext';
 
 // Home page component
 const HomePage = ({ disableSignOut = false }) => {
@@ -38,47 +39,49 @@ const App = () => {
   };
 
   return (
-    <div className="app">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePage disableSignOut={isSignedIn} />} />
-          <Route path="/signup" element={
-            isSignedIn ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
+    <ProfileProvider>
+      <div className="app">
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage disableSignOut={isSignedIn} />} />
+            <Route path="/signup" element={
+              isSignedIn ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <>
+                  <Navbar />
+                  <SignupPage onSignUp={handleSignUp} />
+                </>
+              )
+            } />
+            <Route path="/dashboard" element={
               <>
-                <Navbar />
-                <SignupPage onSignUp={handleSignUp} />
+                <Navbar hideDashboardSignOut={true} disableSignOut={isSignedIn} />
+                <Dashboard />
               </>
-            )
-          } />
-          <Route path="/dashboard" element={
-            <>
-              <Navbar hideDashboardSignOut={true} disableSignOut={isSignedIn} />
-              <Dashboard />
-            </>
-          } />
-          <Route path="/rules" element={
-            <>
-              <Navbar disableSignOut={isSignedIn} />
-              <RulesPage />
-            </>
-          } />
-          <Route path="/community" element={
-            <>
-              <Navbar disableSignOut={isSignedIn} />
-              <CommunityPage />
-            </>
-          } />
-          <Route path="/profile" element={
-            <>
-              <Navbar disableSignOut={isSignedIn} />
-              <ProfilePage />
-            </>
-          } />
-        </Routes>
-      </BrowserRouter>
-    </div>
+            } />
+            <Route path="/rules" element={
+              <>
+                <Navbar disableSignOut={isSignedIn} />
+                <RulesPage />
+              </>
+            } />
+            <Route path="/community" element={
+              <>
+                <Navbar disableSignOut={isSignedIn} />
+                <CommunityPage />
+              </>
+            } />
+            <Route path="/profile" element={
+              <>
+                <Navbar disableSignOut={isSignedIn} />
+                <ProfilePage />
+              </>
+            } />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </ProfileProvider>
   );
 };
 

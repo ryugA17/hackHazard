@@ -5,6 +5,7 @@ import logo from '../assets/logogogogogogo.png';
 import pikachuRunning from '../assets/pikachu-running.gif';
 import { auth, signOut } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useProfile } from '../context/ProfileContext';
 
 interface NavbarProps {
   hideDashboardSignOut?: boolean;
@@ -17,6 +18,9 @@ const Navbar = ({ hideDashboardSignOut = false, disableSignOut = false }: Navbar
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
   const isProfile = location.pathname === '/profile';
+  
+  // Get profile data from context
+  const { profileData, profilePic } = useProfile();
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -65,13 +69,12 @@ const Navbar = ({ hideDashboardSignOut = false, disableSignOut = false }: Navbar
           
           {user ? (
             <div className="user-menu">
-              <div className="user-avatar">
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName || 'User'} />
-                ) : (
-                  <span>{user.displayName?.[0] || user.email?.[0] || '?'}</span>
-                )}
-              </div>
+              <Link to="/profile" className="user-profile-link">
+                <div className="user-avatar">
+                  <img src={profilePic} alt={profileData.name || 'User'} />
+                </div>
+                {profileData.name && <span className="user-name">{profileData.name}</span>}
+              </Link>
               {/* Hide sign out button if required */}
               {!hideSignOutButton && (
                 <button 

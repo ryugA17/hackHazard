@@ -2,32 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './ProfilePage.css';
 import Footer from './Footer';
-import { auth } from '../firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
-
-// Placeholder image imports - replace with actual assets later
-import defaultAvatar from '../assets/random component.gif';
+import { useProfile, ProfileData } from '../context/ProfileContext';
 import headerBackground from '../assets/profile.gif';
+import defaultAvatar from '../assets/random component.gif';
 
-// Type definitions
-interface ProfileData {
-  name: string;
-  username: string;
-  location: string;
-  work: string;
-  education: string;
-  bio: string;
-  social: {
-    github: string;
-    instagram: string;
-    twitch: string;
-    tiktok: string;
-    youtube: string;
-    twitter: string;
-    linkedin: string;
-  }
-}
-
+// Interface for EditProfilePage props
 interface EditProfilePageProps {
   profileData: ProfileData;
   setProfileData: React.Dispatch<React.SetStateAction<ProfileData>>;
@@ -37,9 +16,9 @@ interface EditProfilePageProps {
 }
 
 const ProfilePage = () => {
-  const [user, setUser] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(true);
+  const { profileData, updateProfileData, loading, profilePic } = useProfile();
   const [isEditing, setIsEditing] = React.useState(false);
+  const [editData, setEditData] = React.useState<ProfileData>(profileData);
   
   // Default fallback info
   const defaultUsername = "Hardik";
@@ -55,55 +34,6 @@ const ProfilePage = () => {
     courseBadges: 0,
     dailyStreak: 2
   };
-
-  // User profile data
-  const [profileData, setProfileData] = React.useState<ProfileData>({
-    name: "",
-    username: "",
-    location: "",
-    work: "",
-    education: "",
-    bio: "",
-    social: {
-      github: "",
-      instagram: "",
-      twitch: "",
-      tiktok: "",
-      youtube: "",
-      twitter: "",
-      linkedin: ""
-    }
-  });
-  
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-      
-      // Initialize profile data when user is loaded
-      if (currentUser) {
-        setProfileData((prev: ProfileData) => ({
-          ...prev,
-          name: currentUser.displayName || defaultUsername,
-          username: currentUser.email ? currentUser.email.split('@')[0] : defaultHandle.substring(1)
-        }));
-      }
-    });
-    return () => unsubscribe();
-  }, [defaultHandle, defaultUsername]);
-
-  // Extract display name and profile pic from Google account
-  const username = user?.displayName || defaultUsername;
-  const handle = user?.email ? `@${user.email.split('@')[0]}` : defaultHandle;
-  const profilePic = user?.photoURL || defaultAvatar;
-  
-  // For debugging
-  console.log("User auth info:", { 
-    displayName: user?.displayName,
-    email: user?.email,
-    photoURL: user?.photoURL,
-    uid: user?.uid
-  });
   
   if (loading) {
     return <div className="loading">Loading profile...</div>;
@@ -111,15 +41,15 @@ const ProfilePage = () => {
   
   // Handle save profile changes
   const handleSaveProfile = () => {
-    // Here you would typically save to a database
-    console.log("Saving profile:", profileData);
+    // Update the global profile data (persists across the application)
+    updateProfileData(editData);
     setIsEditing(false);
   };
   
   if (isEditing) {
     return <EditProfilePage 
-      profileData={profileData} 
-      setProfileData={setProfileData} 
+      profileData={editData} 
+      setProfileData={setEditData} 
       onSave={handleSaveProfile} 
       onCancel={() => setIsEditing(false)}
       profilePic={profilePic}
@@ -141,7 +71,7 @@ const ProfilePage = () => {
           <div className="profile-avatar-large">
             <img 
               src={profilePic} 
-              alt={username} 
+              alt={profileData.name} 
               onError={(e) => {
                 console.log("Profile image failed to load, using fallback");
                 e.currentTarget.src = defaultAvatar;
@@ -150,10 +80,13 @@ const ProfilePage = () => {
           </div>
           <div className="profile-info">
             <div className="username-container">
-              <h1>{profileData.name || username}</h1>
-              <button className="edit-profile-btn" onClick={() => setIsEditing(true)}>Edit Profile</button>
+              <h1>{profileData.name}</h1>
+              <button className="edit-profile-btn" onClick={() => {
+                setEditData({...profileData});
+                setIsEditing(true);
+              }}>Edit Profile</button>
             </div>
-            <p className="profile-handle">@{profileData.username || handle.substring(1)}</p>
+            <p className="profile-handle">@{profileData.username}</p>
             <div className="profile-follow-info">
               <span className="follow-count">0 following</span>
               <span className="follow-count">0 followers</span>
@@ -184,7 +117,10 @@ const ProfilePage = () => {
               ) : (
                 <p className="bio-empty-state">
                   You don't have anything in your bio. 
-                  <button onClick={() => setIsEditing(true)} className="bio-link">Edit profile</button> to add something cool about yourself.
+                  <button onClick={() => {
+                    setEditData({...profileData});
+                    setIsEditing(true);
+                  }} className="bio-link">Edit profile</button> to add something cool about yourself.
                 </p>
               )}
               <div className="profile-joined">
