@@ -2,8 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SignupPage.css';
 import signupBackground from '../assets/signUp_Page.png';
-import { auth, signInWithGoogle } from '../firebase';
+import { auth, signInWithGoogle, signUpWithEmailAndPassword, loginWithEmailAndPassword } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 
 interface SignupPageProps {
   onSignUp?: () => void;
@@ -11,6 +12,7 @@ interface SignupPageProps {
 
 const SignupPage = ({ onSignUp }: SignupPageProps) => {
   const navigate = useNavigate();
+  const [isLogin, setIsLogin] = React.useState(false);
   const [formData, setFormData] = React.useState({
     username: '',
     email: '',
@@ -59,11 +61,11 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
       confirmPassword: ''
     };
 
-    // Username validation
-    if (!formData.username.trim()) {
+    // Username validation (only required for signup)
+    if (!isLogin && !formData.username.trim()) {
       newErrors.username = 'Username is required';
       isValid = false;
-    } else if (formData.username.length < 3) {
+    } else if (!isLogin && formData.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters';
       isValid = false;
     }
@@ -82,13 +84,13 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
     if (!formData.password) {
       newErrors.password = 'Password is required';
       isValid = false;
-    } else if (formData.password.length < 8) {
+    } else if (!isLogin && formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
       isValid = false;
     }
 
-    // Password confirmation
-    if (formData.password !== formData.confirmPassword) {
+    // Password confirmation (only required for signup)
+    if (!isLogin && formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
       isValid = false;
     }
@@ -97,15 +99,56 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      // Submit form data
-      console.log('Form submitted:', formData);
-      if (onSignUp) {
-        onSignUp();
+      setLoading(true);
+      setAuthError('');
+
+      try {
+        if (isLogin) {
+          // Login with email and password
+          await loginWithEmailAndPassword(formData.email, formData.password);
+          console.log('Successfully logged in with email/password');
+        } else {
+          // Sign up with email and password
+          await signUpWithEmailAndPassword(formData.email, formData.password);
+          console.log('Successfully signed up with email/password');
+        }
+        
+        if (onSignUp) {
+          onSignUp();
+        }
+        navigate('/dashboard');
+      } catch (error) {
+        console.error(`Error ${isLogin ? 'logging in' : 'signing up'} with email/password:`, error);
+        // Handle specific Firebase errors
+        if (error instanceof FirebaseError) {
+          switch(error.code) {
+            case 'auth/email-already-in-use':
+              setAuthError('This email is already registered. Please login instead.');
+              break;
+            case 'auth/invalid-email':
+              setAuthError('Invalid email address.');
+              break;
+            case 'auth/weak-password':
+              setAuthError('Password is too weak. Please use a stronger password.');
+              break;
+            case 'auth/user-not-found':
+              setAuthError('No account found with this email. Please sign up instead.');
+              break;
+            case 'auth/wrong-password':
+              setAuthError('Incorrect password. Please try again.');
+              break;
+            default:
+              setAuthError(`${isLogin ? 'Login' : 'Signup'} failed. Please try again.`);
+          }
+        } else {
+          setAuthError(`${isLogin ? 'Login' : 'Signup'} failed. Please try again.`);
+        }
+      } finally {
+        setLoading(false);
       }
-      navigate('/dashboard');
     }
   };
 
@@ -129,11 +172,25 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
     }
   };
 
+  // Toggle between login and signup modes
+  const toggleAuthMode = () => {
+    setIsLogin(!isLogin);
+    setAuthError('');
+    setErrors({
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
+  };
+
   return (
     <div className="signup-page" style={{ backgroundImage: `url(${signupBackground})` }}>
       <div className="signup-container">
-        <h1 className="signup-title">Join Your Gaming Adventure</h1>
-        <p className="signup-subtitle">Create your account and start gaming today</p>
+        <h1 className="signup-title">{isLogin ? 'Welcome Back' : 'Join Your Gaming Adventure'}</h1>
+        <p className="signup-subtitle">
+          {isLogin ? 'Sign in to continue your journey' : 'Create your account and start gaming today'}
+        </p>
         
         {authError && <div className="auth-error">{authError}</div>}
         
@@ -145,7 +202,7 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
             disabled={loading}
           >
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-            <span>{loading ? 'Signing in...' : 'Sign up with Google'}</span>
+            <span>{loading ? 'Processing...' : `Sign ${isLogin ? 'in' : 'up'} with Google`}</span>
           </button>
         </div>
         
@@ -154,19 +211,21 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
         </div>
         
         <form className="signup-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Choose a username"
-              className={errors.username ? 'input-error' : ''}
-            />
-            {errors.username && <span className="error-message">{errors.username}</span>}
-          </div>
+          {!isLogin && (
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Choose a username"
+                className={errors.username ? 'input-error' : ''}
+              />
+              {errors.username && <span className="error-message">{errors.username}</span>}
+            </div>
+          )}
           
           <div className="form-group">
             <label htmlFor="email">Email</label>
@@ -190,37 +249,53 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Create a password"
+              placeholder={isLogin ? "Enter your password" : "Create a password"}
               className={errors.password ? 'input-error' : ''}
             />
             {errors.password && <span className="error-message">{errors.password}</span>}
           </div>
           
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              className={errors.confirmPassword ? 'input-error' : ''}
-            />
-            {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
-          </div>
+          {!isLogin && (
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                className={errors.confirmPassword ? 'input-error' : ''}
+              />
+              {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+            </div>
+          )}
           
           <button type="submit" className="signup-button" disabled={loading}>
-            Create Account
+            {loading ? 'Processing...' : isLogin ? 'Login' : 'Create Account'}
           </button>
         </form>
         
         <div className="login-option">
-          Already have an account? <a href="#login">Log in</a>
+          {isLogin ? "Don't have an account? " : "Already have an account? "}
+          <button 
+            onClick={toggleAuthMode}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              padding: 0, 
+              color: '#ffde59', 
+              textDecoration: 'none',
+              fontWeight: 500,
+              cursor: 'pointer'
+            }}
+          >
+            {isLogin ? 'Sign up' : 'Log in'}
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default SignupPage; 
+export default SignupPage;
