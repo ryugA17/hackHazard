@@ -180,6 +180,25 @@
   width: 80%;
 }
 
+.game-link {
+  color: #ffcc00;
+  font-weight: bold;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.game-link::before {
+  content: '🎮';
+  margin-right: 5px;
+  font-size: 16px;
+}
+
+.game-link:hover {
+  color: #ff9900;
+  text-shadow: 0 0 5px rgba(255, 153, 0, 0.5);
+}
+
 @media (max-width: 768px) {
   .navbar-links {
     display: none;
