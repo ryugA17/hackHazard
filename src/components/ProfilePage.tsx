@@ -3,15 +3,43 @@ import { Link } from 'react-router-dom';
 import './ProfilePage.css';
 import Footer from './Footer';
 import { auth } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 // Placeholder image imports - replace with actual assets later
 import defaultAvatar from '../assets/random component.gif';
 import headerBackground from '../assets/profile.gif';
 
+// Type definitions
+interface ProfileData {
+  name: string;
+  username: string;
+  location: string;
+  work: string;
+  education: string;
+  bio: string;
+  social: {
+    github: string;
+    instagram: string;
+    twitch: string;
+    tiktok: string;
+    youtube: string;
+    twitter: string;
+    linkedin: string;
+  }
+}
+
+interface EditProfilePageProps {
+  profileData: ProfileData;
+  setProfileData: React.Dispatch<React.SetStateAction<ProfileData>>;
+  onSave: () => void;
+  onCancel: () => void;
+  profilePic: string;
+}
+
 const ProfilePage = () => {
   const [user, setUser] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
+  const [isEditing, setIsEditing] = React.useState(false);
   
   // Default fallback info
   const defaultUsername = "Hardik";
@@ -27,14 +55,42 @@ const ProfilePage = () => {
     courseBadges: 0,
     dailyStreak: 2
   };
+
+  // User profile data
+  const [profileData, setProfileData] = React.useState<ProfileData>({
+    name: "",
+    username: "",
+    location: "",
+    work: "",
+    education: "",
+    bio: "",
+    social: {
+      github: "",
+      instagram: "",
+      twitch: "",
+      tiktok: "",
+      youtube: "",
+      twitter: "",
+      linkedin: ""
+    }
+  });
   
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
+      
+      // Initialize profile data when user is loaded
+      if (currentUser) {
+        setProfileData((prev: ProfileData) => ({
+          ...prev,
+          name: currentUser.displayName || defaultUsername,
+          username: currentUser.email ? currentUser.email.split('@')[0] : defaultHandle.substring(1)
+        }));
+      }
     });
     return () => unsubscribe();
-  }, []);
+  }, [defaultHandle, defaultUsername]);
 
   // Extract display name and profile pic from Google account
   const username = user?.displayName || defaultUsername;
@@ -51,6 +107,23 @@ const ProfilePage = () => {
   
   if (loading) {
     return <div className="loading">Loading profile...</div>;
+  }
+  
+  // Handle save profile changes
+  const handleSaveProfile = () => {
+    // Here you would typically save to a database
+    console.log("Saving profile:", profileData);
+    setIsEditing(false);
+  };
+  
+  if (isEditing) {
+    return <EditProfilePage 
+      profileData={profileData} 
+      setProfileData={setProfileData} 
+      onSave={handleSaveProfile} 
+      onCancel={() => setIsEditing(false)}
+      profilePic={profilePic}
+    />;
   }
   
   return (
@@ -77,10 +150,10 @@ const ProfilePage = () => {
           </div>
           <div className="profile-info">
             <div className="username-container">
-              <h1>{username}</h1>
-              <button className="edit-profile-btn">Edit Profile</button>
+              <h1>{profileData.name || username}</h1>
+              <button className="edit-profile-btn" onClick={() => setIsEditing(true)}>Edit Profile</button>
             </div>
-            <p className="profile-handle">{handle}</p>
+            <p className="profile-handle">@{profileData.username || handle.substring(1)}</p>
             <div className="profile-follow-info">
               <span className="follow-count">0 following</span>
               <span className="follow-count">0 followers</span>
@@ -106,13 +179,32 @@ const ProfilePage = () => {
                 <span className="trophy-icon">🏆</span>
                 <span>Lvl 1</span>
               </div>
-              <p className="bio-empty-state">
-                You don't have anything in your bio. 
-                <Link to="/account" className="bio-link">Go to account</Link> and edit profile to add something cool about yourself.
-              </p>
+              {profileData.bio ? (
+                <p className="bio-content">{profileData.bio}</p>
+              ) : (
+                <p className="bio-empty-state">
+                  You don't have anything in your bio. 
+                  <button onClick={() => setIsEditing(true)} className="bio-link">Edit profile</button> to add something cool about yourself.
+                </p>
+              )}
               <div className="profile-joined">
                 <span className="joined-icon">🗓️</span> Joined {joinDate}
               </div>
+              {profileData.location && (
+                <div className="profile-location">
+                  <span className="location-icon">📍</span> {profileData.location}
+                </div>
+              )}
+              {profileData.work && (
+                <div className="profile-work">
+                  <span className="work-icon">💼</span> {profileData.work}
+                </div>
+              )}
+              {profileData.education && (
+                <div className="profile-education">
+                  <span className="education-icon">🎓</span> {profileData.education}
+                </div>
+              )}
             </div>
           </div>
 
@@ -180,6 +272,279 @@ const ProfilePage = () => {
               <p>You haven't created any projects yet.</p>
               <button className="create-project-btn">Create a project</button>
             </div>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </>
+  );
+};
+
+// Edit Profile Component
+const EditProfilePage = ({ 
+  profileData, 
+  setProfileData, 
+  onSave, 
+  onCancel, 
+  profilePic 
+}: EditProfilePageProps) => {
+  // Handle input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    if (name.includes('.')) {
+      const [parentProp, childProp] = name.split('.');
+      setProfileData({
+        ...profileData,
+        [parentProp]: {
+          ...profileData[parentProp as keyof typeof profileData] as Record<string, string>,
+          [childProp]: value
+        }
+      });
+    } else {
+      setProfileData({
+        ...profileData,
+        [name]: value
+      });
+    }
+  };
+
+  return (
+    <>
+      <div className="edit-profile-page">
+        <div className="edit-profile-container">
+          <div className="edit-profile-sidebar">
+            <h2 className="account-heading">Account</h2>
+            <ul className="account-menu">
+              <li className="account-menu-item active">
+                <span className="account-menu-icon">✏️</span> Edit Profile
+              </li>
+              <li className="account-menu-item">
+                <span className="account-menu-icon">💳</span> Billing
+              </li>
+              <li className="account-menu-item">
+                <span className="account-menu-icon">⚙️</span> Settings
+              </li>
+            </ul>
+          </div>
+          
+          <div className="edit-profile-content">
+            <div className="edit-profile-section">
+              <h2 className="section-heading">Personal Information</h2>
+              
+              <div className="form-group">
+                <label htmlFor="name">Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={profileData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter your name"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="username">Username *</label>
+                <div className="username-input-group">
+                  <span className="username-prefix">@</span>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={profileData.username}
+                    onChange={handleInputChange}
+                    placeholder="Enter your username"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="location">Location</label>
+                <input
+                  type="text"
+                  id="location"
+                  name="location"
+                  value={profileData.location}
+                  onChange={handleInputChange}
+                  placeholder="Enter your location here"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="work">Work</label>
+                <input
+                  type="text"
+                  id="work"
+                  name="work"
+                  value={profileData.work}
+                  onChange={handleInputChange}
+                  placeholder="Enter where you work here"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="education">Education</label>
+                <input
+                  type="text"
+                  id="education"
+                  name="education"
+                  value={profileData.education}
+                  onChange={handleInputChange}
+                  placeholder="Enter your school/college here"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="bio">Bio</label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  value={profileData.bio}
+                  onChange={handleInputChange}
+                  placeholder="Edit your bio here"
+                  rows={5}
+                />
+              </div>
+            </div>
+            
+            <div className="edit-profile-section">
+              <h2 className="section-heading">Skill Set</h2>
+              <p className="section-description">Coming soon! You'll be able to edit your skills here.</p>
+            </div>
+            
+            <div className="edit-profile-section">
+              <h2 className="section-heading">Social Profiles</h2>
+              
+              <div className="form-group">
+                <label htmlFor="github">GitHub</label>
+                <div className="social-input-group">
+                  <span className="social-prefix">@</span>
+                  <input
+                    type="text"
+                    id="github"
+                    name="social.github"
+                    value={profileData.social.github}
+                    onChange={handleInputChange}
+                    placeholder="Enter GitHub username"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="instagram">Instagram</label>
+                <div className="social-input-group">
+                  <span className="social-prefix">@</span>
+                  <input
+                    type="text"
+                    id="instagram"
+                    name="social.instagram"
+                    value={profileData.social.instagram}
+                    onChange={handleInputChange}
+                    placeholder="Enter Instagram username"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="twitch">Twitch</label>
+                <div className="social-input-group">
+                  <span className="social-prefix">@</span>
+                  <input
+                    type="text"
+                    id="twitch"
+                    name="social.twitch"
+                    value={profileData.social.twitch}
+                    onChange={handleInputChange}
+                    placeholder="Enter Twitch username"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="tiktok">TikTok</label>
+                <div className="social-input-group">
+                  <span className="social-prefix">@</span>
+                  <input
+                    type="text"
+                    id="tiktok"
+                    name="social.tiktok"
+                    value={profileData.social.tiktok}
+                    onChange={handleInputChange}
+                    placeholder="Enter TikTok username"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="youtube">YouTube</label>
+                <div className="social-input-group">
+                  <span className="social-prefix">@</span>
+                  <input
+                    type="text"
+                    id="youtube"
+                    name="social.youtube"
+                    value={profileData.social.youtube}
+                    onChange={handleInputChange}
+                    placeholder="Enter YouTube username"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="twitter">Twitter</label>
+                <div className="social-input-group">
+                  <span className="social-prefix">@</span>
+                  <input
+                    type="text"
+                    id="twitter"
+                    name="social.twitter"
+                    value={profileData.social.twitter}
+                    onChange={handleInputChange}
+                    placeholder="Enter Twitter username"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="linkedin">LinkedIn</label>
+                <div className="social-input-group">
+                  <span className="social-prefix">in/</span>
+                  <input
+                    type="text"
+                    id="linkedin"
+                    name="social.linkedin"
+                    value={profileData.social.linkedin}
+                    onChange={handleInputChange}
+                    placeholder="Enter LinkedIn username"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="edit-profile-actions">
+              <button className="save-changes-btn" onClick={onSave}>
+                Save Changes
+              </button>
+              <button className="view-profile-btn" onClick={onCancel}>
+                View Profile
+              </button>
+            </div>
+          </div>
+          
+          <div className="profile-picture-section">
+            <div className="profile-picture-container">
+              <img 
+                src={profilePic} 
+                alt="Profile"
+                className="edit-profile-picture" 
+              />
+              <button className="change-picture-btn">
+                <span className="edit-icon">✏️</span>
+              </button>
+            </div>
+            <p className="profile-picture-info">
+              *Recommended ratio 1:1 and file size less than 5 MB
+            </p>
           </div>
         </div>
       </div>
