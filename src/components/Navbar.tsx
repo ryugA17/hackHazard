@@ -6,13 +6,19 @@ import pikachuRunning from '../assets/pikachu-running.gif';
 import { auth, signOut } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useProfile } from '../context/ProfileContext';
+import { WalletConnect } from './WalletConnect';
 
+// Properly type the interface
 interface NavbarProps {
   hideDashboardSignOut?: boolean;
   disableSignOut?: boolean;
 }
 
-const Navbar = ({ hideDashboardSignOut = false, disableSignOut = false }: NavbarProps) => {
+// Use the typed interface
+const Navbar: React.FC<NavbarProps> = ({ 
+  hideDashboardSignOut = false, 
+  disableSignOut = false 
+}) => {
   const [user, setUser] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
   const location = useLocation();
@@ -62,6 +68,7 @@ const Navbar = ({ hideDashboardSignOut = false, disableSignOut = false }: Navbar
         </div>
         
         <div className="navbar-buttons">
+          <WalletConnect />
           <button className="theme-toggle">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />

@@ -5,6 +5,7 @@ import Footer from './Footer';
 import { useProfile, ProfileData } from '../context/ProfileContext';
 import headerBackground from '../assets/profile.gif';
 import defaultAvatar from '../assets/random component.gif';
+import { NFTGallery } from './NFTGallery';
 
 // Interface for EditProfilePage props
 interface EditProfilePageProps {
@@ -161,12 +162,14 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="pet-cafe-panel">
-            <h2>Pet Café</h2>
-            <div className="pet-egg-container">
-              <img src={require('../assets/egg-icon.png')} alt="Pet egg" className="pet-egg" />
+          <div className="profile-section">
+            <div className="section-header">
+              <h2>My NFTs</h2>
+              <Link to="/nfts" className="see-all-link">See all</Link>
             </div>
-            <p>Raise your virtual pet by coding daily!</p>
+            <div className="nft-preview">
+              <NFTGallery preview={true} maxDisplay={3} />
+            </div>
           </div>
 
           <h2 className="skills-title">Skills</h2>

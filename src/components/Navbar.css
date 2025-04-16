@@ -42,8 +42,27 @@
 
 .navbar-buttons {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 1rem;
+}
+
+/* Add specific styles for the WalletConnect component when it's in the navbar */
+.navbar-buttons :global(.wallet-connect-button) {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+/* Adjust the connected wallet display in navbar */
+.navbar-buttons :global(.wallet-status) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
 }
 
 .theme-toggle {
@@ -212,4 +231,30 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-} 
+}
+
+.wallet-connect-button {
+  background-color: #d4af37;
+  color: black;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.wallet-connect-button:hover {
+  background-color: #c4a030;
+}
+
+.wallet-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 0.875rem;
+}

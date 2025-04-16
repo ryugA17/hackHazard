@@ -1,17 +1,34 @@
-import { useState } from 'react';
+import React from 'react';
 import { useAccount } from 'wagmi';
 import { nftService } from '../services/nft';
 
-export const Inventory: React.FC<{ items: any[] }> = ({ items }) => {
-  const { address } = useAccount();
-  const [minting, setMinting] = useState<Record<string, boolean>>({});
+interface InventoryItem {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  type: string;
+  level: number;
+  rarity: string;
+}
 
-  const handleMint = async (item: any) => {
-    if (!address) return;
+interface InventoryProps {
+  items: InventoryItem[];
+}
+
+export const Inventory: React.FC<InventoryProps> = ({ items }: InventoryProps) => {
+  const { address } = useAccount();
+  const [minting, setMinting] = React.useState<Record<string, boolean>>({});
+
+  const handleMint = async (item: InventoryItem) => {
+    if (!address) {
+      alert("Please connect your wallet first");
+      return;
+    }
     
     setMinting({ ...minting, [item.id]: true });
     try {
-      await nftService.mintInventoryItem(address, {
+      const txHash = await nftService.mintInventoryItem({
         name: item.name,
         description: item.description,
         image: item.imageUrl,
@@ -20,10 +37,12 @@ export const Inventory: React.FC<{ items: any[] }> = ({ items }) => {
         rarity: item.rarity
       });
       
-      // Update UI or show success message
+      alert(`Successfully minted NFT! Transaction: ${txHash}`);
+      // Optionally refresh the NFT gallery
+      window.location.href = '/nfts';
     } catch (error) {
       console.error("Failed to mint:", error);
-      // Show error message
+      alert("Failed to mint NFT. Please check console for details.");
     } finally {
       setMinting({ ...minting, [item.id]: false });
     }
@@ -31,7 +50,7 @@ export const Inventory: React.FC<{ items: any[] }> = ({ items }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {items.map((item) => (
+      {items.map((item: InventoryItem) => (
         <div key={item.id} className="card bg-base-100 shadow-xl">
           <figure><img src={item.imageUrl} alt={item.name} /></figure>
           <div className="card-body">

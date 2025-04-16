@@ -1,33 +1,48 @@
 import { ethers } from 'ethers';
 import GameItemsABI from '../contracts/GameItems.json';
-import { uploadToIPFS } from './ipfs';
+
+interface MintItemParams {
+  name: string;
+  description: string;
+  image: string;
+  type: string;
+  level: number;
+  rarity: string;
+}
+
+type GameItemsContract = ethers.Contract & {
+  mintItem(player: string, uri: string): Promise<{
+    wait(): Promise<ethers.ContractTransactionReceipt>;
+    hash: string;
+  }>;
+};
 
 export class NFTService {
-  private contract: ethers.Contract;
-  private provider: ethers.providers.Provider;
+  private contract: GameItemsContract;
+  private provider: ethers.BrowserProvider;
   
   constructor() {
-    this.provider = new ethers.providers.JsonRpcProvider("https://testnet-rpc.monad.xyz");
+    if (!window.ethereum) {
+      throw new Error("No ethereum provider found. Please install MetaMask.");
+    }
+    
+    const contractAddress = process.env.REACT_APP_GAME_ITEMS_ADDRESS;
+    if (!contractAddress) {
+      throw new Error("Game Items contract address not configured");
+    }
+    
+    this.provider = new ethers.BrowserProvider(window.ethereum);
     this.contract = new ethers.Contract(
-      process.env.NEXT_PUBLIC_GAME_ITEMS_ADDRESS!,
+      contractAddress,
       GameItemsABI,
       this.provider
-    );
+    ) as GameItemsContract;
+
+    console.log("NFTService initialized with contract:", contractAddress);
   }
 
-  async mintInventoryItem(
-    player: string,
-    item: {
-      name: string;
-      description: string;
-      image: string;
-      type: string;
-      level: number;
-      rarity: string;
-    }
-  ) {
+  async mintInventoryItem(item: MintItemParams): Promise<string> {
     try {
-      // Create metadata
       const metadata = {
         name: item.name,
         description: item.description,
@@ -39,23 +54,36 @@ export class NFTService {
         ]
       };
 
-      // Upload metadata to IPFS
-      const tokenURI = await uploadToIPFS(metadata);
+      const metadataUri = await this.uploadMetadata(metadata);
+      const signer = await this.provider.getSigner();
+      const connectedContract = this.contract.connect(signer) as GameItemsContract;
+      
+      const tx = await connectedContract.mintItem(await signer.getAddress(), metadataUri);
+      await tx.wait();
 
-      // Mint NFT
-      const signer = this.contract.connect(new ethers.Wallet(process.env.PRIVATE_KEY!, this.provider));
-      const tx = await signer.mintItem(
-        player,
-        tokenURI,
-        item.type,
-        item.level,
-        item.rarity
-      );
-
-      const receipt = await tx.wait();
-      return receipt;
+      return tx.hash;
     } catch (error) {
-      console.error("Error minting NFT:", error);
+      console.error("Error in mintInventoryItem:", error);
+      throw error;
+    }
+  }
+
+  private async uploadMetadata(metadata: any): Promise<string> {
+    // You need to implement metadata storage, typically using IPFS
+    // Example using NFT.Storage or Pinata:
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(metadata)
+      });
+      
+      const { uri } = await response.json();
+      return uri;
+    } catch (error) {
+      console.error("Error uploading metadata:", error);
       throw error;
     }
   }
