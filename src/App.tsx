@@ -11,7 +11,7 @@ import RulesPage from './components/RulesPage';
 import CommunityPage from './components/CommunityPage';
 import ProfilePage from './components/ProfilePage';
 import MiddleSection from './components/MiddleSection';
-import GamePage from './components/GamePage';
+import GameMap from './components/GameMap';
 import { ProfileProvider } from './context/ProfileContext';
 
 // Home page component
@@ -79,10 +79,10 @@ const App = () => {
                 <ProfilePage />
               </>
             } />
-            <Route path="/game" element={
+            <Route path="/map" element={
               <>
                 <Navbar disableSignOut={isSignedIn} />
-                <GamePage />
+                <GameMap />
               </>
             } />
           </Routes>

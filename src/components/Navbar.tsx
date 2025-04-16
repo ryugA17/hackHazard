@@ -58,7 +58,7 @@ const Navbar = ({ hideDashboardSignOut = false, disableSignOut = false }: Navbar
         <div className="navbar-links">
           <Link to="/rules" className="nav-link">Rules</Link>
           <Link to="/community" className="nav-link">Community</Link>
-          <Link to="/game" className="nav-link game-link">Play Game</Link>
+          <Link to="/map" className="nav-link">Game Map</Link>
         </div>
         
         <div className="navbar-buttons">
