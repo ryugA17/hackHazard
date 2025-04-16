@@ -9,6 +9,7 @@
  */
 import React from 'react';
 import mapImage from '../assets/Map.png';
+import './GameMap.css';
 
 const { useState, useRef, useEffect } = React;
 
@@ -34,8 +35,8 @@ interface Cell {
 }
 
 // Constants
-const GRID_SIZE = 5; // Changed from 20 to 5 for smaller grid
-const CELL_SIZE = 100; // Increased from 40 to 100 for bigger cells
+const GRID_SIZE = 5; // 5x5 grid
+const CELL_SIZE = 100; // 100px cells
 const VISION_RANGE = 2;
 
 // Background map image
@@ -93,6 +94,7 @@ const GameMap: React.FC = () => {
   const [draggingPiece, setDraggingPiece] = useState<Piece | null>(null);
   const [nextPieceId, setNextPieceId] = useState(1);
   const [isPlacingMode, setIsPlacingMode] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
   // Create a new piece
@@ -213,50 +215,41 @@ const GameMap: React.FC = () => {
     }
   };
 
-  // Cell styling
-  const getCellStyle = (cell: Cell, x: number, y: number): React.CSSProperties => {
+  // Get cell class names based on cell properties
+  const getCellClassName = (cell: Cell, x: number, y: number): string => {
     const isSelected = selectedPieceId !== null && 
       pieces.some((p: Piece) => p.id === selectedPieceId && p.x === x && p.y === y);
     
-    return {
-      width: CELL_SIZE,
-      height: CELL_SIZE,
-      position: 'relative',
-      backgroundImage: `url(${MAP_IMAGE_URL})`,
-      backgroundPosition: `${cell.bgX}px ${cell.bgY}px`,
-      backgroundSize: `${MAP_WIDTH}px ${MAP_HEIGHT}px`,
-      border: isSelected ? '3px solid white' : '3px solid #333', // Thicker border
-      cursor: cell.isObstacle ? 'not-allowed' : 'pointer',
-      opacity: cell.type === "fog" ? 0.5 : 1,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      boxSizing: 'border-box', // Ensure border is included in size calculation
-    };
+    const isPlaceable = isPlacingMode && 
+      !pieces.some((piece: Piece) => piece.x === x && piece.y === y) && 
+      !cell.isObstacle;
+    
+    let classes = "cell";
+    
+    // Add terrain classes
+    classes += ` terrain-${cell.terrain}`;
+    
+    // Add state classes
+    if (isSelected) classes += " selected";
+    if (cell.isObstacle) classes += " obstacle";
+    if (isPlaceable) classes += " placeable";
+    
+    return classes;
   };
 
-  // Piece styling
-  const getPieceStyle = (piece: Piece): React.CSSProperties => {
-    const isSelected = selectedPieceId === piece.id;
+  // Get piece class names
+  const getPieceClassName = (piece: Piece): string => {
+    let classes = "piece";
     
-    return {
-      position: 'absolute',
-      width: '70%',
-      height: '70%',
-      backgroundColor: piece.color,
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: '16px',
-      cursor: 'grab',
-      zIndex: isSelected || piece.isDragging ? 20 : 10,
-      border: isSelected ? '2px solid white' : 'none',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-      transition: piece.isDragging ? 'none' : 'all 0.2s',
-    };
+    if (selectedPieceId === piece.id) {
+      classes += " selected";
+    }
+    
+    if (piece.isDragging) {
+      classes += " dragging";
+    }
+    
+    return classes;
   };
 
   // Add random piece function
@@ -294,48 +287,96 @@ const GameMap: React.FC = () => {
     }
   };
 
+  // Reset game function
+  const resetGame = (): void => {
+    setMap(createEmptyMap());
+    setPieces([]);
+    setSelectedPieceId(null);
+    setDraggingPiece(null);
+    setNextPieceId(1);
+    setIsPlacingMode(false);
+  };
+
   // Render
   return (
-    <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
-      <div className="flex flex-col items-center gap-4">
-        <h1 className="text-2xl text-white">D&D Game Map</h1>
-        
-        <div className="flex items-center mb-4">
+    <div className="game-container">
+      <header className="game-header">
+        <h1 className="game-title">D&D Game Map</h1>
+        <p className="game-subtitle">
+          Place and move your character tokens on the interactive game board
+        </p>
+      </header>
+      
+      <div className="game-board">
+        <div className="controls">
           <button 
-            className={`px-4 py-2 text-white rounded mr-2 ${isPlacingMode ? 'bg-green-600' : 'bg-blue-600'}`}
+            className={`btn btn-place ${isPlacingMode ? 'active' : ''}`}
             onClick={togglePlacingMode}
           >
-            {isPlacingMode ? 'Cancel Placement' : 'Place New Token'}
+            {isPlacingMode ? '✘ Cancel' : '✚ Place Token'}
           </button>
           
           <button 
-            className="px-4 py-2 bg-blue-600 text-white rounded mr-2"
+            className="btn btn-random"
             onClick={addRandomPiece}
           >
-            Add Random Piece
+            🎲 Random Token
           </button>
           
           <button 
-            className="px-4 py-2 bg-red-600 text-white rounded"
+            className="btn btn-remove"
             onClick={removeSelectedPiece}
             disabled={!selectedPieceId}
           >
-            Remove Selected Piece
+            🗑️ Remove Token
+          </button>
+          
+          <button 
+            className="btn btn-reset"
+            onClick={resetGame}
+          >
+            🔄 Reset Map
           </button>
         </div>
         
+        <div className="status-bar">
+          {isPlacingMode ? (
+            <span className="status-placing">✓ Select any empty cell to place a new token</span>
+          ) : selectedPieceId ? (
+            <span className="status-selected">✓ Token selected - click on a cell to move it</span>
+          ) : (
+            <span>Select a token to move it or use the buttons above</span>
+          )}
+        </div>
+        
+        <div className="help-button" onClick={() => setShowTooltip(!showTooltip)}>
+          ?
+        </div>
+        
+        {showTooltip && (
+          <div className="tooltip">
+            <h3>Color Guide:</h3>
+            <ul>
+              <li>Green tiles: Forests</li>
+              <li>Blue tiles: Water (obstacle)</li>
+              <li>Brown tiles: Mountains (obstacle)</li>
+              <li>Light green: Grass</li>
+            </ul>
+            <button 
+              className="tooltip-close"
+              onClick={() => setShowTooltip(false)}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        
         <div
           ref={gridRef}
-          className="grid relative"
+          className={`grid ${isPlacingMode ? 'cursor-crosshair' : draggingPiece ? 'cursor-grabbing' : ''}`}
           style={{
-            display: 'grid',
             gridTemplateColumns: `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`,
             gridTemplateRows: `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`,
-            gap: '4px',
-            padding: '10px',
-            backgroundColor: '#333',
-            borderRadius: '8px',
-            cursor: isPlacingMode ? 'crosshair' : draggingPiece ? 'grabbing' : 'default',
           }}
           onClick={(e) => {
             if (!gridRef.current) return;
@@ -361,13 +402,14 @@ const GameMap: React.FC = () => {
             row.map((cell: Cell, x: number) => (
               <div
                 key={`${x}-${y}`}
-                style={getCellStyle(cell, x, y)}
+                className={getCellClassName(cell, x, y)}
               >
                 {pieces.some((piece: Piece) => piece.x === x && piece.y === y) && (
                   pieces.filter((piece: Piece) => piece.x === x && piece.y === y).map((piece: Piece) => (
                     <div
                       key={piece.id}
-                      style={getPieceStyle(piece)}
+                      className={getPieceClassName(piece)}
+                      style={{ backgroundColor: piece.color }}
                       onMouseDown={(e) => handlePieceDragStart(e, piece)}
                       onClick={(e) => handlePieceClick(e, piece)}
                       onDoubleClick={(e) => handleDeletePiece(e, piece)}
@@ -377,21 +419,39 @@ const GameMap: React.FC = () => {
                     </div>
                   ))
                 )}
+                {cell.isObstacle && (
+                  <div className="obstacle-indicator">
+                    ⛔
+                  </div>
+                )}
               </div>
             ))
           )}
         </div>
         
-        <div className="text-white mt-4">
-          <p>Instructions:</p>
-          <ul className="list-disc ml-5">
-            <li>Click "Place New Token" then click on any empty cell to place a token</li>
-            <li>Click on a piece to select it, then click on a cell to move it</li>
-            <li>Drag and drop pieces to move them</li>
-            <li>Double-click a piece to remove it</li>
-          </ul>
+        <div className="legend">
+          <div className="legend-item">
+            <div className="legend-color legend-grass"></div>
+            <span>Grass</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color legend-water"></div>
+            <span>Water (obstacle)</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color legend-mountain"></div>
+            <span>Mountain (obstacle)</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color legend-forest"></div>
+            <span>Forest</span>
+          </div>
         </div>
       </div>
+      
+      <footer className="game-footer">
+        <p>Hover over tokens to see their name • Double-click to remove a token</p>
+      </footer>
     </div>
   );
 };
