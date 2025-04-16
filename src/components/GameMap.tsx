@@ -8,8 +8,9 @@
  * future update by adding proper TypeScript configuration.
  */
 import React from 'react';
-const { useState, useRef, useEffect } = React;
 import mapImage from '../assets/Map.png';
+
+const { useState, useRef, useEffect } = React;
 
 // Define types
 interface Piece {
@@ -195,7 +196,7 @@ const GameMap: React.FC = () => {
   const handleMouseUp = (): void => {
     if (!draggingPiece) return;
     
-    setPieces(prevPieces => prevPieces.map(p => 
+    setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) => 
       p.id === draggingPiece.id
         ? { ...p, isDragging: false }
         : p
@@ -206,7 +207,7 @@ const GameMap: React.FC = () => {
   // Handle piece deletion
   const handleDeletePiece = (e: React.MouseEvent, piece: Piece): void => {
     e.stopPropagation();
-    setPieces(prevPieces => prevPieces.filter(p => p.id !== piece.id));
+    setPieces((prevPieces: Piece[]) => prevPieces.filter((p: Piece) => p.id !== piece.id));
     if (selectedPieceId === piece.id) {
       setSelectedPieceId(null);
     }
@@ -215,7 +216,7 @@ const GameMap: React.FC = () => {
   // Cell styling
   const getCellStyle = (cell: Cell, x: number, y: number): React.CSSProperties => {
     const isSelected = selectedPieceId !== null && 
-      pieces.some(p => p.id === selectedPieceId && p.x === x && p.y === y);
+      pieces.some((p: Piece) => p.id === selectedPieceId && p.x === x && p.y === y);
     
     return {
       width: CELL_SIZE,
@@ -264,7 +265,7 @@ const GameMap: React.FC = () => {
     
     for (let y = 0; y < GRID_SIZE; y++) {
       for (let x = 0; x < GRID_SIZE; x++) {
-        if (!map[y][x].isObstacle && !pieces.some(p => p.x === x && p.y === y)) {
+        if (!map[y][x].isObstacle && !pieces.some((p: Piece) => p.x === x && p.y === y)) {
           emptyCells.push({x, y});
         }
       }
@@ -279,7 +280,7 @@ const GameMap: React.FC = () => {
   // Remove selected piece function
   const removeSelectedPiece = (): void => {
     if (selectedPieceId) {
-      setPieces(prevPieces => prevPieces.filter(p => p.id !== selectedPieceId));
+      setPieces((prevPieces: Piece[]) => prevPieces.filter((p: Piece) => p.id !== selectedPieceId));
       setSelectedPieceId(null);
     }
   };
@@ -356,14 +357,14 @@ const GameMap: React.FC = () => {
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          {map.flatMap((row, y) =>
-            row.map((cell, x) => (
+          {map.flatMap((row: Cell[], y: number) =>
+            row.map((cell: Cell, x: number) => (
               <div
                 key={`${x}-${y}`}
                 style={getCellStyle(cell, x, y)}
               >
-                {pieces.some(piece => piece.x === x && piece.y === y) && (
-                  pieces.filter(piece => piece.x === x && piece.y === y).map(piece => (
+                {pieces.some((piece: Piece) => piece.x === x && piece.y === y) && (
+                  pieces.filter((piece: Piece) => piece.x === x && piece.y === y).map((piece: Piece) => (
                     <div
                       key={piece.id}
                       style={getPieceStyle(piece)}
