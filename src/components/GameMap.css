@@ -11,6 +11,157 @@
   color: white;
 }
 
+/* Map Selection Screen Styles */
+.map-selection-screen {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.map-selection-screen .game-title {
+  font-size: 42px;
+  margin-bottom: 15px;
+  text-shadow: 0 3px 5px rgba(0, 0, 0, 0.5);
+}
+
+.map-selection-screen .game-subtitle {
+  font-size: 20px;
+  margin-bottom: 40px;
+  max-width: 600px;
+  opacity: 0.8;
+}
+
+.map-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  width: 100%;
+  margin-bottom: 40px;
+}
+
+.map-selection-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  border: 3px solid transparent;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-selection-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.map-selection-card.selected {
+  border-color: #ffc107;
+  background-color: rgba(255, 193, 7, 0.15);
+  transform: scale(1.05);
+}
+
+.map-selection-preview {
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.map-selection-preview::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 70%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+}
+
+.map-selection-info {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.map-selection-info h2 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  color: #fff;
+}
+
+.map-selection-info p {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+.map-selection-grid-info {
+  margin-top: auto;
+  font-size: 14px;
+  color: #ffc107;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 5px 10px;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+.map-selection-actions {
+  margin-top: 20px;
+}
+
+.btn-start-game {
+  background-color: #4caf50;
+  color: white;
+  font-size: 18px;
+  padding: 12px 30px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  font-weight: bold;
+  min-width: 250px;
+}
+
+.btn-start-game:hover {
+  background-color: #388e3c;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.btn-start-game:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.btn-back {
+  background-color: #607d8b;
+}
+
+.btn-back:hover {
+  background-color: #455a64;
+}
+
+/* Original Game Styles */
 .game-header {
   margin-bottom: 20px;
   text-align: center;
@@ -91,6 +242,141 @@
   background-color: #ff9800;
 }
 
+.btn-map-selector {
+  background-color: #3f51b5;
+  min-width: 160px;
+}
+
+.btn-close-selector {
+  background-color: #616161;
+  margin-top: 15px;
+}
+
+/* Map Selector Styles */
+.map-selector {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  border-radius: 8px;
+  padding: 20px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.map-selector h3 {
+  font-size: 20px;
+  margin: 0 0 15px 0;
+  text-align: center;
+  width: 100%;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.map-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 15px;
+  width: 100%;
+}
+
+.map-option {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+}
+
+.map-option:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.map-option.selected {
+  border-color: #ffc107;
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.map-preview {
+  height: 140px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.map-info {
+  padding: 10px;
+}
+
+.map-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  color: #fff;
+}
+
+.map-info p {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+.map-grid-info {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #ffc107;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.current-map-info {
+  margin-top: 20px;
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  text-align: center;
+  max-width: 500px;
+}
+
+.current-map-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  color: #fff;
+}
+
+.current-map-info p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.grid-dimensions {
+  font-size: 14px;
+  color: #ffc107;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Existing styles continue below */
 .status-bar {
   background-color: rgba(0,0,0,0.7);
   padding: 8px 15px;
@@ -164,21 +450,24 @@
   display: grid;
   gap: 4px;
   padding: 10px;
-  background-color: #111;
+  background-color: rgba(0, 0, 0, 0.5);
   border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: width 0.3s ease, height 0.3s ease;
+  margin: 0 auto;
 }
 
 .cell {
-  width: 100px;
-  height: 100px;
   position: relative;
-  border: 3px solid #424242;
+  border: 3px solid rgba(255, 255, 255, 0.3);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   transition: all 0.2s ease;
+  backdrop-filter: blur(1px);
 }
 
 .cell.selected {
@@ -187,7 +476,7 @@
 }
 
 .cell.obstacle {
-  border: 3px solid #b71c1c;
+  border: 3px solid rgba(183, 28, 28, 0.7);
   cursor: not-allowed;
 }
 
@@ -197,27 +486,19 @@
 }
 
 .terrain-grass {
-  background-color: #a5d6a7;
-  background-image: linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
-  background-size: 10px 10px;
+  background-color: rgba(165, 214, 167, 0.2);
 }
 
 .terrain-water {
-  background-color: #4fc3f7;
-  background-image: linear-gradient(135deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
-  background-size: 20px 20px;
+  background-color: rgba(79, 195, 247, 0.3);
 }
 
 .terrain-mountain {
-  background-color: #8d6e63;
-  background-image: linear-gradient(45deg, #6d4c41 25%, transparent 25%, transparent 75%, #6d4c41 75%, #6d4c41);
-  background-size: 20px 20px;
+  background-color: rgba(141, 110, 99, 0.3);
 }
 
 .terrain-forest {
-  background-color: #66bb6a;
-  background-image: radial-gradient(circle, rgba(76,175,80,0.8) 8px, transparent 8px);
-  background-size: 24px 24px;
+  background-color: rgba(102, 187, 106, 0.2);
 }
 
 .obstacle-indicator {
@@ -231,15 +512,12 @@
 
 .piece {
   position: absolute;
-  width: 70%;
-  height: 70%;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   font-weight: bold;
-  font-size: 18px;
   cursor: grab;
   z-index: 10;
   border: 2px solid rgba(0,0,0,0.3);
@@ -311,4 +589,25 @@
 
 .cursor-grabbing {
   cursor: grabbing;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+  .grid {
+    max-width: 100%;
+    overflow: auto;
+  }
+  
+  .map-selection-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  .map-selection-preview {
+    height: 150px;
+  }
+  
+  .btn-start-game {
+    font-size: 16px;
+    padding: 10px 20px;
+  }
 } 

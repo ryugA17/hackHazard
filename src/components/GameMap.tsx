@@ -9,9 +9,84 @@
  */
 import React from 'react';
 import mapImage from '../assets/Map.png';
+import seaMap from '../assets/Maps/SeaSomethingMap.jpg';
+import gridlessMap from '../assets/Maps/GridlessMap.jpg';
+import contrastBeforeMap from '../assets/Maps/Contrast-Before.jpg';
+import contrastAfterMap from '../assets/Maps/Contrast-After.jpg';
 import './GameMap.css';
 
 const { useState, useRef, useEffect } = React;
+
+// Define map options
+interface MapOption {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  gridSize: {
+    width: number;
+    height: number;
+  };
+  cellSize: number;
+}
+
+const MAP_OPTIONS: MapOption[] = [
+  {
+    id: 'default',
+    name: 'Default Map',
+    image: mapImage,
+    description: 'The original D&D campaign map',
+    gridSize: {
+      width: 5,
+      height: 5
+    },
+    cellSize: 100
+  },
+  {
+    id: 'sea',
+    name: 'Coastal Adventure',
+    image: seaMap,
+    description: 'A seaside village with coastal areas',
+    gridSize: {
+      width: 8,
+      height: 6
+    },
+    cellSize: 80
+  },
+  {
+    id: 'gridless',
+    name: 'Open Plains',
+    image: gridlessMap,
+    description: 'Wide open battle ground',
+    gridSize: {
+      width: 10,
+      height: 8
+    },
+    cellSize: 60
+  },
+  {
+    id: 'contrast-before',
+    name: 'Ancient Ruins',
+    image: contrastBeforeMap,
+    description: 'Mysterious ruins with ancient magic',
+    gridSize: {
+      width: 7,
+      height: 7
+    },
+    cellSize: 70
+  },
+  {
+    id: 'contrast-after',
+    name: 'Forest Encampment',
+    image: contrastAfterMap,
+    description: 'Forest campsite with tactical positions',
+    gridSize: {
+      width: 6,
+      height: 5
+    },
+    cellSize: 90
+  }
+];
 
 // Define types
 interface Piece {
@@ -35,12 +110,9 @@ interface Cell {
 }
 
 // Constants
-const GRID_SIZE = 5; // 5x5 grid
-const CELL_SIZE = 100; // 100px cells
 const VISION_RANGE = 2;
 
 // Background map image
-const MAP_IMAGE_URL = mapImage;
 const MAP_WIDTH = 640;
 const MAP_HEIGHT = 640;
 
@@ -69,17 +141,17 @@ const getRandomTerrain = (): TerrainType => {
   return "grass";
 };
 
-const createEmptyMap = (): Cell[][] => {
-  return Array.from({ length: GRID_SIZE }, (_, y) =>
-    Array.from({ length: GRID_SIZE }, (_, x) => {
+const createEmptyMap = (gridWidth: number, gridHeight: number, cellSize: number): Cell[][] => {
+  return Array.from({ length: gridHeight }, (_, y) =>
+    Array.from({ length: gridWidth }, (_, x) => {
       const terrain = getRandomTerrain();
       return {
         type: "revealed",
         terrain,
         isObstacle: OBSTACLE_TERRAINS.includes(terrain),
         // Calculate background position based on grid coordinates
-        bgX: -(x * CELL_SIZE) % MAP_WIDTH,
-        bgY: -(y * CELL_SIZE) % MAP_HEIGHT
+        bgX: -(x * cellSize) % MAP_WIDTH,
+        bgY: -(y * cellSize) % MAP_HEIGHT
       };
     })
   );
@@ -88,13 +160,20 @@ const createEmptyMap = (): Cell[][] => {
 // Main component
 const GameMap: React.FC = () => {
   // State management
-  const [map, setMap] = useState<Cell[][]>(createEmptyMap);
+  const [selectedMap, setSelectedMap] = useState<MapOption>(MAP_OPTIONS[0]);
+  const [map, setMap] = useState<Cell[][]>(createEmptyMap(
+    selectedMap.gridSize.width, 
+    selectedMap.gridSize.height, 
+    selectedMap.cellSize
+  ));
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [selectedPieceId, setSelectedPieceId] = useState<string | null>(null);
   const [draggingPiece, setDraggingPiece] = useState<Piece | null>(null);
   const [nextPieceId, setNextPieceId] = useState(1);
   const [isPlacingMode, setIsPlacingMode] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showMapSelector, setShowMapSelector] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
   // Create a new piece
@@ -180,12 +259,12 @@ const GameMap: React.FC = () => {
     const offsetY = rect.top + window.scrollY + 10; // Add padding offset
     
     // Calculate grid position, accounting for gap between cells (4px)
-    const cellWithGap = CELL_SIZE + 4; // Cell size plus gap
+    const cellWithGap = selectedMap.cellSize + 4; // Cell size plus gap
     const x = Math.floor((e.clientX - offsetX) / cellWithGap);
     const y = Math.floor((e.clientY - offsetY) / cellWithGap);
     
     // Ensure we're within grid bounds
-    if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+    if (x >= 0 && x < selectedMap.gridSize.width && y >= 0 && y < selectedMap.gridSize.height) {
       setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) => 
         p.id === draggingPiece.id
           ? { ...p, x, y }
@@ -256,8 +335,8 @@ const GameMap: React.FC = () => {
   const addRandomPiece = (): void => {
     const emptyCells: {x: number, y: number}[] = [];
     
-    for (let y = 0; y < GRID_SIZE; y++) {
-      for (let x = 0; x < GRID_SIZE; x++) {
+    for (let y = 0; y < selectedMap.gridSize.height; y++) {
+      for (let x = 0; x < selectedMap.gridSize.width; x++) {
         if (!map[y][x].isObstacle && !pieces.some((p: Piece) => p.x === x && p.y === y)) {
           emptyCells.push({x, y});
         }
@@ -289,7 +368,11 @@ const GameMap: React.FC = () => {
 
   // Reset game function
   const resetGame = (): void => {
-    setMap(createEmptyMap());
+    setMap(createEmptyMap(
+      selectedMap.gridSize.width, 
+      selectedMap.gridSize.height, 
+      selectedMap.cellSize
+    ));
     setPieces([]);
     setSelectedPieceId(null);
     setDraggingPiece(null);
@@ -297,161 +380,313 @@ const GameMap: React.FC = () => {
     setIsPlacingMode(false);
   };
 
-  // Render
-  return (
-    <div className="game-container">
-      <header className="game-header">
+  // Handle map selection
+  const handleMapSelect = (mapOption: MapOption): void => {
+    setSelectedMap(mapOption);
+    
+    // Create a new map with the selected map's grid size
+    setMap(createEmptyMap(
+      mapOption.gridSize.width, 
+      mapOption.gridSize.height, 
+      mapOption.cellSize
+    ));
+    
+    // Reset game state
+    setPieces([]);
+    setSelectedPieceId(null);
+    setDraggingPiece(null);
+    setNextPieceId(1);
+    setIsPlacingMode(false);
+  };
+
+  // Start game with selected map
+  const startGame = (): void => {
+    setGameStarted(true);
+  };
+
+  // Return to map selection
+  const backToMapSelection = (): void => {
+    setGameStarted(false);
+    setPieces([]);
+    setSelectedPieceId(null);
+    setDraggingPiece(null);
+    setNextPieceId(1);
+    setIsPlacingMode(false);
+    setShowMapSelector(false);
+  };
+
+  // Get cell style adjustments based on cell size
+  const getCellStyle = (cell: Cell): React.CSSProperties => {
+    return {
+      width: selectedMap.cellSize,
+      height: selectedMap.cellSize,
+      backgroundColor: cell.isObstacle ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+    };
+  };
+
+  // Get piece style adjustments based on cell size
+  const getPieceStyle = (piece: Piece): React.CSSProperties => {
+    return {
+      backgroundColor: piece.color,
+      width: `${selectedMap.cellSize * 0.7}px`,
+      height: `${selectedMap.cellSize * 0.7}px`,
+      fontSize: selectedMap.cellSize < 70 ? '14px' : '18px',
+    };
+  };
+
+  // Render the Map Selection Screen
+  const renderMapSelectionScreen = () => {
+    return (
+      <div className="map-selection-screen">
         <h1 className="game-title">D&D Game Map</h1>
-        <p className="game-subtitle">
-          Place and move your character tokens on the interactive game board
-        </p>
-      </header>
-      
-      <div className="game-board">
-        <div className="controls">
-          <button 
-            className={`btn btn-place ${isPlacingMode ? 'active' : ''}`}
-            onClick={togglePlacingMode}
-          >
-            {isPlacingMode ? '✘ Cancel' : '✚ Place Token'}
-          </button>
-          
-          <button 
-            className="btn btn-random"
-            onClick={addRandomPiece}
-          >
-            🎲 Random Token
-          </button>
-          
-          <button 
-            className="btn btn-remove"
-            onClick={removeSelectedPiece}
-            disabled={!selectedPieceId}
-          >
-            🗑️ Remove Token
-          </button>
-          
-          <button 
-            className="btn btn-reset"
-            onClick={resetGame}
-          >
-            🔄 Reset Map
-          </button>
-        </div>
+        <p className="game-subtitle">Select a map to begin your adventure</p>
         
-        <div className="status-bar">
-          {isPlacingMode ? (
-            <span className="status-placing">✓ Select any empty cell to place a new token</span>
-          ) : selectedPieceId ? (
-            <span className="status-selected">✓ Token selected - click on a cell to move it</span>
-          ) : (
-            <span>Select a token to move it or use the buttons above</span>
-          )}
-        </div>
-        
-        <div className="help-button" onClick={() => setShowTooltip(!showTooltip)}>
-          ?
-        </div>
-        
-        {showTooltip && (
-          <div className="tooltip">
-            <h3>Color Guide:</h3>
-            <ul>
-              <li>Green tiles: Forests</li>
-              <li>Blue tiles: Water (obstacle)</li>
-              <li>Brown tiles: Mountains (obstacle)</li>
-              <li>Light green: Grass</li>
-            </ul>
-            <button 
-              className="tooltip-close"
-              onClick={() => setShowTooltip(false)}
+        <div className="map-selection-grid">
+          {MAP_OPTIONS.map(mapOption => (
+            <div 
+              key={mapOption.id} 
+              className={`map-selection-card ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
+              onClick={() => handleMapSelect(mapOption)}
             >
-              ✕
-            </button>
-          </div>
-        )}
-        
-        <div
-          ref={gridRef}
-          className={`grid ${isPlacingMode ? 'cursor-crosshair' : draggingPiece ? 'cursor-grabbing' : ''}`}
-          style={{
-            gridTemplateColumns: `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`,
-            gridTemplateRows: `repeat(${GRID_SIZE}, ${CELL_SIZE}px)`,
-          }}
-          onClick={(e) => {
-            if (!gridRef.current) return;
-            
-            const rect = gridRef.current.getBoundingClientRect();
-            const offsetX = rect.left + window.scrollX + 10; // Add padding offset
-            const offsetY = rect.top + window.scrollY + 10; // Add padding offset
-            
-            // Calculate position with gap between cells
-            const cellWithGap = CELL_SIZE + 4;
-            const x = Math.floor((e.clientX - offsetX) / cellWithGap);
-            const y = Math.floor((e.clientY - offsetY) / cellWithGap);
-            
-            if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-              handleCellClick(x, y);
-            }
-          }}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-        >
-          {map.flatMap((row: Cell[], y: number) =>
-            row.map((cell: Cell, x: number) => (
-              <div
-                key={`${x}-${y}`}
-                className={getCellClassName(cell, x, y)}
-              >
-                {pieces.some((piece: Piece) => piece.x === x && piece.y === y) && (
-                  pieces.filter((piece: Piece) => piece.x === x && piece.y === y).map((piece: Piece) => (
-                    <div
-                      key={piece.id}
-                      className={getPieceClassName(piece)}
-                      style={{ backgroundColor: piece.color }}
-                      onMouseDown={(e) => handlePieceDragStart(e, piece)}
-                      onClick={(e) => handlePieceClick(e, piece)}
-                      onDoubleClick={(e) => handleDeletePiece(e, piece)}
-                      title={`${piece.label} (double-click to delete)`}
-                    >
-                      {piece.label}
-                    </div>
-                  ))
-                )}
-                {cell.isObstacle && (
-                  <div className="obstacle-indicator">
-                    ⛔
-                  </div>
-                )}
+              <div className="map-selection-preview" style={{ backgroundImage: `url(${mapOption.image})` }} />
+              <div className="map-selection-info">
+                <h2>{mapOption.name}</h2>
+                <p>{mapOption.description}</p>
+                <div className="map-selection-grid-info">
+                  Grid: {mapOption.gridSize.width}×{mapOption.gridSize.height}
+                </div>
               </div>
-            ))
-          )}
+            </div>
+          ))}
         </div>
         
-        <div className="legend">
-          <div className="legend-item">
-            <div className="legend-color legend-grass"></div>
-            <span>Grass</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color legend-water"></div>
-            <span>Water (obstacle)</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color legend-mountain"></div>
-            <span>Mountain (obstacle)</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color legend-forest"></div>
-            <span>Forest</span>
-          </div>
+        <div className="map-selection-actions">
+          <button 
+            className="btn btn-start-game"
+            onClick={startGame}
+          >
+            Start Game with {selectedMap.name}
+          </button>
         </div>
       </div>
-      
-      <footer className="game-footer">
-        <p>Hover over tokens to see their name • Double-click to remove a token</p>
-      </footer>
+    );
+  };
+
+  // Render the Game Interface
+  const renderGameInterface = () => {
+    return (
+      <>
+        <header className="game-header">
+          <h1 className="game-title">D&D Game Map</h1>
+          <p className="game-subtitle">
+            Place and move your character tokens on the interactive game board
+          </p>
+        </header>
+        
+        <div className="game-board">
+          <div className="controls">
+            <button 
+              className="btn btn-back"
+              onClick={backToMapSelection}
+            >
+              ← Change Map
+            </button>
+
+            <button 
+              className={`btn btn-place ${isPlacingMode ? 'active' : ''}`}
+              onClick={togglePlacingMode}
+            >
+              {isPlacingMode ? '✘ Cancel' : '✚ Place Token'}
+            </button>
+            
+            <button 
+              className="btn btn-random"
+              onClick={addRandomPiece}
+            >
+              🎲 Random Token
+            </button>
+            
+            <button 
+              className="btn btn-remove"
+              onClick={removeSelectedPiece}
+              disabled={!selectedPieceId}
+            >
+              🗑️ Remove Token
+            </button>
+            
+            <button 
+              className="btn btn-reset"
+              onClick={resetGame}
+            >
+              🔄 Reset Map
+            </button>
+          </div>
+
+          {showMapSelector && (
+            <div className="map-selector">
+              <h3>Select a Map</h3>
+              <div className="map-options">
+                {MAP_OPTIONS.map(mapOption => (
+                  <div 
+                    key={mapOption.id} 
+                    className={`map-option ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
+                    onClick={() => handleMapSelect(mapOption)}
+                  >
+                    <div className="map-preview" style={{ backgroundImage: `url(${mapOption.image})` }} />
+                    <div className="map-info">
+                      <h4>{mapOption.name}</h4>
+                      <p>{mapOption.description}</p>
+                      <div className="map-grid-info">
+                        Grid: {mapOption.gridSize.width}×{mapOption.gridSize.height}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button 
+                className="btn btn-close-selector"
+                onClick={() => setShowMapSelector(false)}
+              >
+                Close
+              </button>
+            </div>
+          )}
+          
+          <div className="status-bar">
+            {isPlacingMode ? (
+              <span className="status-placing">✓ Select any empty cell to place a new token</span>
+            ) : selectedPieceId ? (
+              <span className="status-selected">✓ Token selected - click on a cell to move it</span>
+            ) : (
+              <span>Select a token to move it or use the buttons above</span>
+            )}
+          </div>
+          
+          <div className="help-button" onClick={() => setShowTooltip(!showTooltip)}>
+            ?
+          </div>
+          
+          {showTooltip && (
+            <div className="tooltip">
+              <h3>Color Guide:</h3>
+              <ul>
+                <li>Green tiles: Forests</li>
+                <li>Blue tiles: Water (obstacle)</li>
+                <li>Brown tiles: Mountains (obstacle)</li>
+                <li>Light green: Grass</li>
+              </ul>
+              <button 
+                className="tooltip-close"
+                onClick={() => setShowTooltip(false)}
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          
+          <div
+            ref={gridRef}
+            className={`grid ${isPlacingMode ? 'cursor-crosshair' : draggingPiece ? 'cursor-grabbing' : ''}`}
+            style={{
+              gridTemplateColumns: `repeat(${selectedMap.gridSize.width}, ${selectedMap.cellSize}px)`,
+              gridTemplateRows: `repeat(${selectedMap.gridSize.height}, ${selectedMap.cellSize}px)`,
+              backgroundImage: `url(${selectedMap.image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              width: `${selectedMap.gridSize.width * (selectedMap.cellSize + 4) - 4}px`,
+              height: `${selectedMap.gridSize.height * (selectedMap.cellSize + 4) - 4}px`,
+            }}
+            onClick={(e) => {
+              if (!gridRef.current) return;
+              
+              const rect = gridRef.current.getBoundingClientRect();
+              const offsetX = rect.left + window.scrollX + 10; // Add padding offset
+              const offsetY = rect.top + window.scrollY + 10; // Add padding offset
+              
+              // Calculate position with gap between cells
+              const cellWithGap = selectedMap.cellSize + 4;
+              const x = Math.floor((e.clientX - offsetX) / cellWithGap);
+              const y = Math.floor((e.clientY - offsetY) / cellWithGap);
+              
+              if (x >= 0 && x < selectedMap.gridSize.width && y >= 0 && y < selectedMap.gridSize.height) {
+                handleCellClick(x, y);
+              }
+            }}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            {map.flatMap((row: Cell[], y: number) =>
+              row.map((cell: Cell, x: number) => (
+                <div
+                  key={`${x}-${y}`}
+                  className={getCellClassName(cell, x, y)}
+                  style={getCellStyle(cell)}
+                >
+                  {pieces.some((piece: Piece) => piece.x === x && piece.y === y) && (
+                    pieces.filter((piece: Piece) => piece.x === x && piece.y === y).map((piece: Piece) => (
+                      <div
+                        key={piece.id}
+                        className={getPieceClassName(piece)}
+                        style={getPieceStyle(piece)}
+                        onMouseDown={(e) => handlePieceDragStart(e, piece)}
+                        onClick={(e) => handlePieceClick(e, piece)}
+                        onDoubleClick={(e) => handleDeletePiece(e, piece)}
+                        title={`${piece.label} (double-click to delete)`}
+                      >
+                        {piece.label}
+                      </div>
+                    ))
+                  )}
+                  {cell.isObstacle && (
+                    <div className="obstacle-indicator">
+                      ⛔
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+          
+          <div className="legend">
+            <div className="legend-item">
+              <div className="legend-color legend-grass"></div>
+              <span>Grass</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color legend-water"></div>
+              <span>Water (obstacle)</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color legend-mountain"></div>
+              <span>Mountain (obstacle)</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color legend-forest"></div>
+              <span>Forest</span>
+            </div>
+          </div>
+
+          <div className="current-map-info">
+            <h3>Current Map: {selectedMap.name}</h3>
+            <p>{selectedMap.description}</p>
+            <div className="grid-dimensions">
+              Grid Size: {selectedMap.gridSize.width} × {selectedMap.gridSize.height}
+            </div>
+          </div>
+        </div>
+        
+        <footer className="game-footer">
+          <p>Hover over tokens to see their name • Double-click to remove a token</p>
+        </footer>
+      </>
+    );
+  };
+
+  // Main render
+  return (
+    <div className="game-container">
+      {!gameStarted ? renderMapSelectionScreen() : renderGameInterface()}
     </div>
   );
 };
