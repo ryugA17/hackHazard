@@ -26,9 +26,16 @@ const Onboarding: React.FC<OnboardingProps> = () => {
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedAvatar, setSelectedAvatar] = React.useState<number | null>(null);
   const [username, setUsername] = React.useState('');
-  const [visibleAvatars, setVisibleAvatars] = React.useState([0, 1, 2]); // Indexes of visible avatars
+  const [currentAvatarIndex, setCurrentAvatarIndex] = React.useState(0);
   const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // Effect to automatically select the current avatar
+  React.useEffect(() => {
+    if (currentAvatarIndex >= 0 && currentAvatarIndex < avatarOptions.length) {
+      setSelectedAvatar(avatarOptions[currentAvatarIndex].id);
+    }
+  }, [currentAvatarIndex]);
 
   // Progress percentage calculation
   const getProgressPercentage = () => {
@@ -78,32 +85,19 @@ const Onboarding: React.FC<OnboardingProps> = () => {
     }
   };
 
-  // Handle avatar selection
-  const handleAvatarSelect = (avatarId: number) => {
-    setSelectedAvatar(avatarId);
-  };
-
-  // Handle navigation through avatars
-  const handlePrevAvatars = () => {
-    setVisibleAvatars((current: number[]) => {
-      const firstVisible = current[0];
-      if (firstVisible === 0) {
-        // Wrap around to the end
-        const lastIdx = avatarOptions.length - 1;
-        return [lastIdx - 2, lastIdx - 1, lastIdx];
-      }
-      return [firstVisible - 1, ...current.slice(0, 2)];
+  // Navigate to previous avatar
+  const handlePrevAvatar = () => {
+    setCurrentAvatarIndex((prevIndex: number) => {
+      const newIndex = prevIndex === 0 ? avatarOptions.length - 1 : prevIndex - 1;
+      return newIndex;
     });
   };
 
-  const handleNextAvatars = () => {
-    setVisibleAvatars((current: number[]) => {
-      const lastVisible = current[2];
-      if (lastVisible === avatarOptions.length - 1) {
-        // Wrap around to the beginning
-        return [0, 1, 2];
-      }
-      return [...current.slice(1), lastVisible + 1];
+  // Navigate to next avatar
+  const handleNextAvatar = () => {
+    setCurrentAvatarIndex((prevIndex: number) => {
+      const newIndex = prevIndex === avatarOptions.length - 1 ? 0 : prevIndex + 1;
+      return newIndex;
     });
   };
 
@@ -159,28 +153,27 @@ const Onboarding: React.FC<OnboardingProps> = () => {
           </div>
           
           <div className="avatar-selection">
-            <button className="avatar-nav prev" onClick={handlePrevAvatars}>&lt;</button>
+            <button className="avatar-nav prev" onClick={handlePrevAvatar}>&lt;</button>
+            
             <div className="avatar-options">
-              {visibleAvatars.map((index: number) => {
-                const avatar = avatarOptions[index];
-                return (
-                  <div 
-                    key={avatar.id} 
-                    className={`avatar-option ${selectedAvatar === avatar.id ? 'selected' : ''}`}
-                    onClick={() => handleAvatarSelect(avatar.id)}
-                  >
-                    <img src={avatar.src} alt={avatar.alt} />
-                  </div>
-                );
-              })}
+              <div className="avatar-platform"></div>
+              
+              {avatarOptions.map((avatar, index) => (
+                <div 
+                  key={avatar.id} 
+                  className={`avatar-option ${currentAvatarIndex === index ? 'active' : ''} ${selectedAvatar === avatar.id ? 'selected' : ''}`}
+                >
+                  <img src={avatar.src} alt={avatar.alt} />
+                </div>
+              ))}
             </div>
-            <button className="avatar-nav next" onClick={handleNextAvatars}>&gt;</button>
+            
+            <button className="avatar-nav next" onClick={handleNextAvatar}>&gt;</button>
           </div>
           
           <button 
             className="continue-button" 
             onClick={handleContinue}
-            disabled={!selectedAvatar}
           >
             Continue
           </button>
