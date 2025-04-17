@@ -31,8 +31,10 @@ cd codedex-clone
 
 Install the frontend dependencies:
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
+
+> **Note:** The `--legacy-peer-deps` flag is required due to TypeScript version conflicts between the project (using TypeScript 4.9.x) and blockchain libraries (requiring TypeScript >=5.0.4). This flag allows npm to ignore peer dependency conflicts and install packages anyway.
 
 Create a `.env` file in the root directory:
 ```env
@@ -50,7 +52,7 @@ REACT_APP_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
 Navigate to the blockchain directory and install dependencies:
 ```bash
 cd blockchain
-npm install
+npm install --legacy-peer-deps
 ```
 
 Create a `.env` file in the blockchain directory:

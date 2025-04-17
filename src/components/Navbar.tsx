@@ -65,6 +65,7 @@ const Navbar: React.FC<NavbarProps> = ({
           <Link to="/rules" className="nav-link">Rules</Link>
           <Link to="/community" className="nav-link">Community</Link>
           <Link to="/map" className="nav-link">Game Map</Link>
+          <Link to="/nfts" className="nav-link">NFT Gallery</Link>
         </div>
         
         <div className="navbar-buttons">

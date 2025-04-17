@@ -46,23 +46,73 @@
   gap: 1rem;
 }
 
-/* Add specific styles for the WalletConnect component when it's in the navbar */
-.navbar-buttons :global(.wallet-connect-button) {
+/* Wallet connect button styles */
+.wallet-connect-button {
+  background-color: #d4af37;
+  color: black;
+  border: none;
+  border-radius: 4px;
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  font-weight: bold;
+  cursor: pointer;
   font-size: 0.875rem;
   transition: all 0.2s;
 }
 
-/* Adjust the connected wallet display in navbar */
-.navbar-buttons :global(.wallet-status) {
+.wallet-connect-button:hover {
+  background-color: #c4a030;
+}
+
+/* Wallet status styles */
+.wallet-status {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.25rem;
   padding: 0.5rem;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   font-size: 0.875rem;
+  min-width: 150px;
+}
+
+.wallet-address {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connection-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #4caf50;
+}
+
+.address-text {
+  font-family: monospace;
+  color: white;
+}
+
+.chain-name {
+  font-size: 0.75rem;
+  color: #bdbdbd;
+}
+
+.disconnect-button {
+  background: transparent;
+  border: none;
+  padding: 0.25rem 0;
+  color: #f44336;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  transition: color 0.2s;
+}
+
+.disconnect-button:hover {
+  color: #d32f2f;
+  text-decoration: underline;
 }
 
 .theme-toggle {
@@ -231,30 +281,4 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-}
-
-.wallet-connect-button {
-  background-color: #d4af37;
-  color: black;
-  border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.wallet-connect-button:hover {
-  background-color: #c4a030;
-}
-
-.wallet-status {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  font-size: 0.875rem;
 }

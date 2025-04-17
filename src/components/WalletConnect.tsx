@@ -17,16 +17,16 @@ export function WalletConnect() {
   if (isConnected)
     return (
       <div className="wallet-status">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-          <span className="font-mono">{formatAddress(address!)}</span>
+        <div className="wallet-address">
+          <div className="connection-indicator"></div>
+          <span className="address-text">{formatAddress(address!)}</span>
         </div>
         {chain && (
-          <span className="text-sm text-gray-400">{chain.name}</span>
+          <span className="chain-name">{chain.name}</span>
         )}
         <button 
           onClick={() => disconnect()}
-          className="text-red-500 hover:text-red-600 text-sm"
+          className="disconnect-button"
         >
           Disconnect
         </button>
