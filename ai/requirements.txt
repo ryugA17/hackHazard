@@ -1,7 +1,10 @@
-opencv-python
-numpy
-torch 
-torchvision
-ultralytics
-pyautogui
-keyboard
+opencv-python 
+numpy 
+pillow 
+groq 
+asyncio
+scipy 
+pyttsx3 
+pygame 
+flask 
+langchain

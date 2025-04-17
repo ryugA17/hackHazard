@@ -1,400 +1,341 @@
-import os
-import time
 import cv2
 import numpy as np
-import mss
-import groq
-import threading
-import tempfile
-from gtts import gTTS
-from pygame import mixer
-import requests
-from io import BytesIO
+import time
 from PIL import Image
-from dotenv import load_dotenv
-import keyboard
-
-# Load environment variables
-load_dotenv()
-
-# Initialize Groq client
-client = groq.Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-# Initialize pygame mixer for audio playback
-mixer.init()
-
-# Define the screen capture area (adjust as needed for your game window)
-monitor = {"top": 0, "left": 0, "width": 800, "height": 600}
-
-# Game state tracking
-last_frame = None
-last_narration_time = 0
-narration_cooldown = 5  # seconds between narrations
-currently_speaking = False
-game_state = {
-    "location": "unknown",
-    "character_position": "unknown",
-    "nearby_npcs": [],
-    "nearby_pokemon": None,
-    "in_battle": False,
-    "in_menu": False,
-    "in_conversation": False,
-    "health_status": "unknown",
-    "team": [],
-    "current_objective": "Start your journey",
-    "badges": 0,
-    "last_event": "",
-    "player_input": "",
+from groq import Groq
+import asyncio
+from collections import deque
+CONFIG = {
+    "model": "llama-3.3-70b-versatile", 
+    "board_dimensions": (8, 6), 
+    "terrain_types": ["grass", "water", "mountain", "forest"],
+    "max_history": 10,
+    "sampling_rate": 5, 
 }
 
-# Conversation history to maintain context
-conversation_history = []
-MAX_HISTORY_LENGTH = 5  # Keep last 5 interactions
+class VisionModule:
+    def __init__(self, config):
+        self.config = config
+        self.previous_frame = None
+        self.grid_map = np.zeros(config["board_dimensions"], dtype=int)
+        
+    def capture_frame(self, camera_source=0):
+        """Capture frame from camera or video source"""
+        cap = cv2.VideoCapture(camera_source)
+        ret, frame = cap.read()
+        cap.release()
+        return frame if ret else None
+    
+    def detect_grid(self, frame):
+        """Detect the game board grid in the image"""
+        # Convert to grayscale
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        
+        # Apply edge detection
+        edges = cv2.Canny(gray, 50, 150)
+        
+        # Find grid lines using Hough transform
+        lines = cv2.HoughLinesP(edges, 1, np.pi/180, 100, minLineLength=100, maxLineGap=10)
+        
+        # Process lines to extract grid structure
+        # (simplified implementation)
+        grid_cells = []
+        for i in range(self.config["board_dimensions"][0]):
+            for j in range(self.config["board_dimensions"][1]):
+                grid_cells.append((i, j))
+                
+        return grid_cells
+    
+    def detect_tokens(self, frame, grid_cells):
+        """Detect player tokens on the board"""
+        # Use color segmentation or template matching to find tokens
+        # For each detected token, associate with the nearest grid cell
+        
+        # Placeholder implementation
+        tokens = []
+        # Example: tokens.append({"player_id": 1, "position": (2, 3)})
+        return tokens
+    
+    def detect_obstacles(self, frame, grid_cells):
+        """Detect red obstacle markers on the board"""
+        # Convert to HSV for better color detection
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        
+        # Red color range in HSV
+        lower_red = np.array([0, 120, 70])
+        upper_red = np.array([10, 255, 255])
+        mask1 = cv2.inRange(hsv, lower_red, upper_red)
+        
+        lower_red = np.array([170, 120, 70])
+        upper_red = np.array([180, 255, 255])
+        mask2 = cv2.inRange(hsv, lower_red, upper_red)
+        
+        red_mask = mask1 + mask2
+        
+        # Find contours of red obstacles
+        contours, _ = cv2.findContours(red_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        obstacles = []
+        for contour in contours:
+            # Get centroid of contour
+            M = cv2.moments(contour)
+            if M["m00"] > 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                
+                # Find nearest grid cell
+                # (implementation simplified)
+                cell = (int(cx / 100), int(cy / 100))  # Example mapping
+                obstacles.append(cell)
+                
+        return obstacles
+    
+    def classify_terrain(self, frame, grid_cells):
+        """Classify terrain types for each grid cell"""
+        terrain_map = {}
+        
+        # For each grid cell, sample pixels and classify terrain
+        for cell in grid_cells:
+            # Extract region corresponding to this cell
+            # Analyze color distribution to determine terrain type
+            
+            # Placeholder implementation
+            # In reality, would use more sophisticated color analysis or ML classifier
+            x, y = cell
+            terrain_map[cell] = self.config["terrain_types"][
+                (x + y) % len(self.config["terrain_types"])
+            ]
+            
+        return terrain_map
+    
+    def detect_changes(self, current_frame):
+        """Detect changes between frames to identify player actions"""
+        if self.previous_frame is None:
+            self.previous_frame = current_frame
+            return None
+        
+        # Compute difference between frames
+        diff = cv2.absdiff(current_frame, self.previous_frame)
+        gray_diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+        
+        # Threshold to identify significant changes
+        _, thresholded = cv2.threshold(gray_diff, 30, 255, cv2.THRESH_BINARY)
+        
+        # Find contours of changed regions
+        contours, _ = cv2.findContours(thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        changes = []
+        for contour in contours:
+            if cv2.contourArea(contour) > 100:  # Filter small changes
+                # Get bounding box
+                x, y, w, h = cv2.boundingRect(contour)
+                # Map to grid coordinates
+                grid_x = int(x / (frame_width / self.config["board_dimensions"][0]))
+                grid_y = int(y / (frame_height / self.config["board_dimensions"][1]))
+                changes.append((grid_x, grid_y))
+        
+        self.previous_frame = current_frame
+        return changes
+    
+    def process_frame(self, frame):
+        """Process a frame to extract game state"""
+        grid_cells = self.detect_grid(frame)
+        tokens = self.detect_tokens(frame, grid_cells)
+        obstacles = self.detect_obstacles(frame, grid_cells)
+        terrain = self.classify_terrain(frame, grid_cells)
+        changes = self.detect_changes(frame)
+        
+        return {
+            "grid_cells": grid_cells,
+            "tokens": tokens,
+            "obstacles": obstacles,
+            "terrain": terrain,
+            "changes": changes,
+            "timestamp": time.time()
+        }
 
-def capture_screen():
-    """Capture the current game screen"""
-    with mss.mss() as sct:
-        screenshot = np.array(sct.grab(monitor))
-        return cv2.cvtColor(screenshot, cv2.COLOR_BGRA2RGB)
-
-def add_to_conversation_history(message, sender):
-    """Add a message to the conversation history"""
-    global conversation_history
-    conversation_history.append({"role": sender, "content": message})
-    # Limit history length
-    if len(conversation_history) > MAX_HISTORY_LENGTH:
-        conversation_history = conversation_history[-MAX_HISTORY_LENGTH:]
-
-def analyze_with_llm(image):
-    """Send image to LLM for analysis with improved context"""
-    try:
-        # Create a more detailed prompt with game context
+class GameStateInterpreter:
+    def __init__(self, config):
+        self.config = config
+        self.history = deque(maxlen=config["max_history"])
+        self.current_state = {}
+        self.narrative_context = {
+            "campaign": "Coastal Adventure",
+            "quests": [],
+            "npcs": {},
+            "events": []
+        }
+        
+    def update_state(self, vision_data):
+        """Update game state based on vision input"""
+        previous_state = self.current_state.copy() if self.current_state else {}
+        
+        # Update current state with new vision data
+        self.current_state = {
+            "tokens": vision_data["tokens"],
+            "obstacles": vision_data["obstacles"],
+            "terrain": vision_data["terrain"],
+        }
+        
+        # Detect events based on state changes
+        events = self._detect_events(previous_state, self.current_state, vision_data["changes"])
+        
+        # Update history
+        if events:
+            self.history.append({
+                "state": self.current_state,
+                "events": events,
+                "timestamp": vision_data["timestamp"]
+            })
+            
+        return events
+    
+    def _detect_events(self, previous_state, current_state, changes):
+        """Detect game events based on state changes"""
+        events = []
+        
+        # If this is the first state, no events to detect
+        if not previous_state:
+            return []
+            
+        # Check for token movements
+        for token in current_state["tokens"]:
+            player_id = token["player_id"]
+            position = token["position"]
+            
+            # Find previous position
+            prev_position = None
+            for prev_token in previous_state["tokens"]:
+                if prev_token["player_id"] == player_id:
+                    prev_position = prev_token["position"]
+                    break
+            
+            # If position changed, create movement event
+            if prev_position and prev_position != position:
+                terrain_type = current_state["terrain"].get(position, "unknown")
+                is_obstacle = position in current_state["obstacles"]
+                
+                event = {
+                    "type": "movement",
+                    "player_id": player_id,
+                    "from": prev_position,
+                    "to": position,
+                    "terrain": terrain_type,
+                    "obstacle_encountered": is_obstacle
+                }
+                events.append(event)
+                
+        # Check for other events based on detected changes
+        if changes:
+            for change_pos in changes:
+                # If change wasn't already captured as a movement
+                if not any(e["type"] == "movement" and e["to"] == change_pos for e in events):
+                    events.append({
+                        "type": "environment_change",
+                        "position": change_pos
+                    })
+        
+        return events
+    
+    def build_prompt(self, events):
+        """Build a context-rich prompt for the LLM"""
         prompt = f"""
-        You are a real-time gaming assistant for Pokémon Fire Red with expertise in the game.
-        
-        Current game state:
-        - Location: {game_state["location"]}
-        - Current objective: {game_state["current_objective"]}
-        - In battle: {game_state["in_battle"]}
-        - In menu: {game_state["in_menu"]}
-        - In conversation: {game_state["in_conversation"]}
-        - Pokémon team: {", ".join(game_state["team"]) if game_state["team"] else "Unknown"}
-        - Badges: {game_state["badges"]}
-        - Last event: {game_state["last_event"]}
-        - Player's last input: {game_state["player_input"]}
-        
-        First, analyze the current situation based on the information above.
-        Then, provide 1-2 specific and actionable instructions for what the player should do next.
-        Be direct and precise - tell the player exactly which buttons to press or actions to take.
-        
-        If in battle, give specific battle tactics based on the opponent.
-        If exploring, give clear navigation directions.
-        If in a conversation, advise on dialogue choices.
-        
-        End your response with a clear, concise instruction like "Press A to talk to the Professor" or "Use Ember on Oddish".
-        """
-        
-        # Create messages with conversation history for better context
-        messages = [
-            {"role": "system", "content": "You are a helpful Pokémon Fire Red gaming assistant that gives clear, specific instructions."}
-        ]
-        
-        # Add conversation history
-        for entry in conversation_history:
-            messages.append(entry)
-        
-        # Add current prompt
-        messages.append({"role": "user", "content": prompt})
-        
-        # Call Groq API with context
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            max_tokens=300
-        )
-        
-        # Extract the response text
-        analysis = response.choices[0].message.content
-        
-        # Add to conversation history
-        add_to_conversation_history(prompt, "user")
-        add_to_conversation_history(analysis, "assistant")
-        
-        # Update game state
-        update_game_state(analysis)
-        
-        return analysis
-    
-    except Exception as e:
-        print(f"Error with LLM API: {e}")
-        return "I can't analyze the game right now. Please check your connection or API key."
+You are an expert Dungeon Master for a fantasy RPG adventure set in a {self.narrative_context['campaign']} setting.
+Current game state:
+- Terrain: {', '.join([f"{pos}: {type}" for pos, type in self.current_state['terrain'].items()][:5])}...
+- Obstacles at positions: {', '.join([str(pos) for pos in self.current_state['obstacles']][:5])}...
+- Player tokens at: {', '.join([f"Player {t['player_id']} at {t['position']}" for t in self.current_state['tokens']])}
 
-def update_game_state(analysis_text):
-    """Update the game state based on LLM analysis with improved detection"""
-    global game_state
-    
-    # Battle detection
-    battle_keywords = ["battle", "fight", "opponent", "wild", "trainer", "attack", "move", "hp"]
-    battle_score = sum(1 for word in battle_keywords if word in analysis_text.lower())
-    game_state["in_battle"] = battle_score >= 2
+Recent events:
+"""
         
-    # Menu detection
-    menu_keywords = ["menu", "inventory", "bag", "items", "pokemon", "summary", "save"]
-    menu_score = sum(1 for word in menu_keywords if word in analysis_text.lower())
-    game_state["in_menu"] = menu_score >= 2
+        # Add current events
+        for event in events:
+            if event["type"] == "movement":
+                prompt += f"- Player {event['player_id']} moved from {event['from']} to {event['to']} "
+                prompt += f"(terrain: {event['terrain']})"
+                if event["obstacle_encountered"]:
+                    prompt += " and encountered an obstacle!"
+                prompt += "\n"
+            elif event["type"] == "environment_change":
+                prompt += f"- Something changed at position {event['position']}\n"
         
-    # Conversation detection
-    conversation_keywords = ["talking", "conversation", "dialog", "npc", "professor", "says", "ask", "reply"]
-    conversation_score = sum(1 for word in conversation_keywords if word in analysis_text.lower())
-    game_state["in_conversation"] = conversation_score >= 2
+        # Add recent history
+        prompt += "\nRecent history:\n"
+        for past_state in list(self.history)[:-1]:  # Exclude current state
+            for event in past_state["events"]:
+                if event["type"] == "movement":
+                    prompt += f"- Previously: Player {event['player_id']} moved to {event['to']} ({event['terrain']})\n"
         
-    # Location detection
-    location_keywords = ["town", "city", "route", "cave", "forest", "gym", "center", "mart", "house", "lab"]
-    for keyword in location_keywords:
-        if keyword in analysis_text.lower():
-            sentences = analysis_text.split('.')
-            for sentence in sentences:
-                if keyword in sentence.lower():
-                    # Extract location from sentence
-                    possible_location = sentence.strip()
-                    if 10 < len(possible_location) < 100:  # Reasonable length for a location description
-                        game_state["location"] = possible_location
-                        break
-    
-    # Pokémon team detection
-    pokemon_names = ["bulbasaur", "charmander", "squirtle", "pikachu", "pidgey", "rattata", "caterpie", 
-                    "weedle", "metapod", "kakuna", "spearow", "ekans", "sandshrew", "nidoran"]
-    for pokemon in pokemon_names:
-        if pokemon in analysis_text.lower() and pokemon not in game_state["team"]:
-            game_state["team"].append(pokemon)
+        prompt += "\nAs the Dungeon Master, narrate what happens next in vivid detail. Describe the environment, any challenges encountered, and potential story developments based on the players' current situation."
+        
+        return prompt
 
-    # Badge detection
-    if "badge" in analysis_text.lower():
-        for i in range(1, 9):
-            if f"{i} badge" in analysis_text.lower() or f"{i}th badge" in analysis_text.lower():
-                game_state["badges"] = max(game_state["badges"], i)
-    
-    # Objective detection
-    objective_indicators = ["need to", "should", "objective", "goal", "task", "quest", "next"]
-    for indicator in objective_indicators:
-        if indicator in analysis_text.lower():
-            sentences = analysis_text.split('.')
-            for sentence in sentences:
-                if indicator in sentence.lower() and "you" in sentence.lower():
-                    # This sentence might contain an objective
-                    potential_objective = sentence.strip()
-                    if 15 < len(potential_objective) < 100:  # Reasonable length for an objective
-                        game_state["current_objective"] = potential_objective
-                        break
-
-def speak_text(text):
-    """Convert text to speech and play it"""
-    global currently_speaking
-    
-    if currently_speaking:
-        return
-    
-    currently_speaking = True
-    
-    try:
-        # Generate speech
-        tts = gTTS(text=text, lang='en', slow=False)
+class LLMNarrator:
+    def __init__(self, config):
+        self.config = config
+        self.client = Groq(api_key="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")
+        self.model = config["model"]
         
-        # Use tempfile to create a temporary file with proper permissions
-        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_file:
-            temp_filename = temp_file.name
-            
-        # Save to the temporary file
-        tts.save(temp_filename)
-        
-        # Play the audio
-        mixer.music.load(temp_filename)
-        mixer.music.play()
-        
-        # Wait for audio to finish
-        while mixer.music.get_busy():
-            time.sleep(0.1)
-        
-        # Clean up
+    async def generate_narration(self, prompt):
+        """Generate DM narration using Groq LLM"""
         try:
-            os.remove(temp_filename)
-        except:
-            pass  # Ignore errors during cleanup
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "system", "content": "You are an expert Dungeon Master for a fantasy RPG game. Narrate events in a vivid, engaging style. Keep responses under 250 words."},
+                          {"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=500
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"Error generating narration: {e}")
+            return "The Dungeon Master pauses for a moment, considering the situation..."
+
+class DungeonMasterAI:
+    def __init__(self, config):
+        self.config = config
+        self.vision = VisionModule(config)
+        self.interpreter = GameStateInterpreter(config)
+        self.narrator = LLMNarrator(config)
         
-    except Exception as e:
-        print(f"TTS error: {e}")
-    
-    finally:
-        currently_speaking = False
+    async def process_turn(self, frame=None):
+        """Process a complete turn"""
+        # Capture frame if not provided
+        if frame is None:
+            frame = self.vision.capture_frame()
+            if frame is None:
+                return "Unable to capture game board."
+        
+        # Process vision data
+        vision_data = self.vision.process_frame(frame)
+        
+        # Update game state and detect events
+        events = self.interpreter.update_state(vision_data)
+        
+        # If no significant events, provide ambient narration
+        if not events:
+            prompt = self.interpreter.build_prompt([{"type": "ambient", "description": "Players are planning their next move."}])
+        else:
+            prompt = self.interpreter.build_prompt(events)
+        
+        # Generate narration
+        narration = await self.narrator.generate_narration(prompt)
+        
+        return narration
 
-def detect_significant_change(current_frame, threshold=0.15):
-    """Detect if there's a significant change in the game screen"""
-    global last_frame
+async def main():
+    config = CONFIG
+    dm_ai = DungeonMasterAI(config)
     
-    if last_frame is None:
-        last_frame = current_frame
-        return True
-    
-    # Resize for faster comparison
-    current_small = cv2.resize(current_frame, (160, 120))
-    last_small = cv2.resize(last_frame, (160, 120))
-    
-    # Convert to grayscale
-    current_gray = cv2.cvtColor(current_small, cv2.COLOR_RGB2GRAY)
-    last_gray = cv2.cvtColor(last_small, cv2.COLOR_RGB2GRAY)
-    
-    # Calculate difference
-    diff = cv2.absdiff(current_gray, last_gray)
-    
-    # Calculate percentage of change
-    change_percentage = np.sum(diff > 30) / (diff.shape[0] * diff.shape[1])
-    
-    if change_percentage > threshold:
-        last_frame = current_frame
-        return True
-    
-    return False
-
-def extract_important_info(analysis):
-    """Extract the most important information from the LLM analysis"""
-    # Split into paragraphs
-    paragraphs = analysis.split('\n')
-    
-    # Remove empty paragraphs
-    paragraphs = [p for p in paragraphs if p.strip()]
-    
-    # Look for clear instructions (often at the end)
-    instructions = ""
-    for p in paragraphs:
-        if ("press" in p.lower() or "use" in p.lower() or "go" in p.lower() or 
-            "move" in p.lower() or "select" in p.lower() or "talk" in p.lower()):
-            instructions = p
-            break
-    
-    # If no specific instructions found, use the last paragraph
-    if not instructions and paragraphs:
-        instructions = paragraphs[-1]
-    
-    # Get situation description (usually first paragraph)
-    description = paragraphs[0] if paragraphs else ""
-    
-    # Combine for narration
-    narration = description
-    if instructions and instructions != description:
-        narration += " " + instructions
-    
-    return narration
-
-def keyboard_listener():
-    """Listen for keyboard input to update game state manually"""
-    global game_state
-    
-    # Define hotkeys for manual game state updates
-    keyboard.add_hotkey('b', lambda: set_game_state("in_battle", True))
-    keyboard.add_hotkey('n', lambda: set_game_state("in_battle", False))
-    keyboard.add_hotkey('m', lambda: set_game_state("in_menu", not game_state["in_menu"]))
-    keyboard.add_hotkey('c', lambda: set_game_state("in_conversation", not game_state["in_conversation"]))
-    keyboard.add_hotkey('l', lambda: input_location())
-    keyboard.add_hotkey('t', lambda: input_team())
-    keyboard.add_hotkey('o', lambda: input_objective())
-    keyboard.add_hotkey('i', lambda: input_event())
-    keyboard.add_hotkey('p', lambda: print_game_state())
-    
-    print("\nKeyboard shortcuts:")
-    print("b - Set battle state to True")
-    print("n - Set battle state to False")
-    print("m - Toggle menu state")
-    print("c - Toggle conversation state")
-    print("l - Input current location")
-    print("t - Update Pokémon team")
-    print("o - Update current objective")
-    print("i - Input recent event")
-    print("p - Print current game state")
-
-def set_game_state(key, value):
-    """Update a game state value"""
-    global game_state
-    game_state[key] = value
-    print(f"Updated {key} to {value}")
-
-def input_location():
-    """Get location input from user"""
-    location = input("Enter current location: ")
-    set_game_state("location", location)
-
-def input_team():
-    """Get team input from user"""
-    team = input("Enter Pokémon team (comma separated): ")
-    if team:
-        set_game_state("team", [p.strip() for p in team.split(",")])
-
-def input_objective():
-    """Get objective input from user"""
-    objective = input("Enter current objective: ")
-    set_game_state("current_objective", objective)
-
-def input_event():
-    """Get recent event input from user"""
-    event = input("Enter recent event: ")
-    set_game_state("last_event", event)
-
-def print_game_state():
-    """Print the current game state"""
-    print("\nCurrent Game State:")
-    for key, value in game_state.items():
-        print(f"{key}: {value}")
-
-def main():
-    """Main function to run the Pokemon Fire Red assistant"""
-    global last_narration_time
-    
-    print("Starting Pokemon Fire Red Assistant...")
-    print("Make sure your game window is visible and properly positioned.")
-    
-    # Start keyboard listener in a separate thread
-    threading.Thread(target=keyboard_listener, daemon=True).start()
-    
-    print("Press Ctrl+C to exit.")
-    
-    try:
-        while True:
-            # Capture the current game screen
-            current_frame = capture_screen()
-            
-            current_time = time.time()
-            time_since_last = current_time - last_narration_time
-            
-            # Check if we should analyze the frame
-            if (time_since_last > narration_cooldown and 
-                not currently_speaking and 
-                detect_significant_change(current_frame)):
-                
-                # Analyze the frame with LLM
-                analysis = analyze_with_llm(current_frame)
-                
-                # Extract important information
-                narration = extract_important_info(analysis)
-                
-                # Speak the narration in a separate thread
-                threading.Thread(target=speak_text, args=(narration,)).start()
-                
-                # Update last narration time
-                last_narration_time = current_time
-                
-                # Print the analysis for debugging
-                print("\n" + "="*50)
-                print("ANALYSIS:")
-                print(analysis)
-                print("="*50 + "\n")
-            
-            # Sleep to reduce CPU usage
-            time.sleep(0.5)
-    
-    except KeyboardInterrupt:
-        print("\nExiting Pokemon Fire Red Assistant...")
-    
-    except Exception as e:
-        print(f"Error: {e}")
+    # Example: Process a frame from a test image
+    test_frame = cv2.imread("game_board.jpg")
+    if test_frame is not None:
+        narration = await dm_ai.process_turn(test_frame)
+        print("DM Narration:")
+        print(narration)
+    else:
+        print("Could not load test image.")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
