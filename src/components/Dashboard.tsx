@@ -41,11 +41,7 @@ const Dashboard = () => {
   
   // Handler for the Get Started button
   const handleGetStarted = () => {
-    // Scroll to the tutorials section
-    const tutorialsSection = document.querySelector('.tutorials-header');
-    if (tutorialsSection) {
-      tutorialsSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    navigate('/onboarding');
   };
   
   if (loading) {

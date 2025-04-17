@@ -18,6 +18,7 @@ import { config } from './config/wagmi';
 import { ProfileProvider } from './context/ProfileContext';
 import { WalletConnect } from './components/WalletConnect';
 import { useAccount } from 'wagmi';
+import Onboarding from './components/Onboarding';
 
 // Home page component
 const HomePage = ({ disableSignOut = false }) => {
@@ -83,6 +84,7 @@ const App = () => {
                   <Dashboard />
                 </>
               } />
+              <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/rules" element={
                 <>
                   <Navbar disableSignOut={isSignedIn} />
