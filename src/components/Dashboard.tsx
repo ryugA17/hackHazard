@@ -10,11 +10,13 @@ import rocketIcon from '../assets/random component.gif';
 import eggIcon from '../assets/egg-icon.png';
 import codeIcon from '../assets/code-icon.png';
 import loadingicon from '../assets/ass.gif';
+import { useProfile } from '../context/ProfileContext';
 
 const Dashboard = () => {
   const [user, setUser] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
   const navigate = useNavigate();
+  const { profileData, profilePic } = useProfile();
   
   // Default fallback info
   const defaultUsername = "hardikiltop80299";
@@ -27,22 +29,39 @@ const Dashboard = () => {
     return () => unsubscribe();
   }, []);
 
-  // Extract username from Google account email
-  const username = user?.displayName || (user?.email ? user.email.split('@')[0] : defaultUsername);
-  const profilePic = user?.photoURL || userAvatar;
+  // Extract username from Google account email or profile data
+  const username = profileData.username 
+    || user?.displayName 
+    || (user?.email ? user.email.split('@')[0] : defaultUsername);
   
   // For debugging
   console.log("Dashboard user info:", { 
     displayName: user?.displayName,
     email: user?.email,
     photoURL: user?.photoURL,
-    uid: user?.uid
+    uid: user?.uid,
+    profileData
   });
   
   // Handler for the Get Started button
   const handleGetStarted = () => {
     navigate('/onboarding');
   };
+
+  // Determine game plan display
+  const getPlanDisplayName = (planKey: string | null): string => {
+    if (!planKey) return 'Casual Gamer';
+    
+    const planNames: {[key: string]: string} = {
+      casual: 'Casual Gamer',
+      pro: 'Pro Gamer',
+      team: 'Team Player'
+    };
+    
+    return planNames[planKey] || 'Casual Gamer';
+  };
+  
+  const gamePlanDisplay = getPlanDisplayName(profileData.gamePlan);
   
   if (loading) {
     return <div className="loading">Loading dashboard...</div>;
@@ -70,7 +89,9 @@ const Dashboard = () => {
               </div>
               <h1 className="welcome-title">Welcome to Pikadex!</h1>
               <p className="welcome-subtitle">Your Gaming journey awaits—but first let's find something to learn.</p>
-              <button className="get-started-btn" onClick={handleGetStarted}>Get Started</button>
+              <button className="get-started-btn" onClick={handleGetStarted}>
+                {profileData.avatarId ? 'Update Your Profile' : 'Get Started'}
+              </button>
             </div>
           </div>
 
@@ -87,8 +108,8 @@ const Dashboard = () => {
                 }}
               />
               <div className="profile-info">
-                <h2>{username}</h2>
-                <p>Level 1</p>
+                <h2>{profileData.name || username}</h2>
+                <p>{gamePlanDisplay} - Level {profileData.level || 1}</p>
               </div>
             </div>
             
@@ -102,7 +123,7 @@ const Dashboard = () => {
               <span className="stat-icon badges-icon">8</span>
               <span className="stat-details"><p>Badges</p></span>
               
-              <span className="stat-icon streak-icon">2</span>
+              <span className="stat-icon streak-icon">{profileData.level || 2}</span>
               <span className="stat-details"><p>Day streak</p></span>
             </div>
             

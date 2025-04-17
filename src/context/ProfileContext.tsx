@@ -11,6 +11,10 @@ export interface ProfileData {
   work: string;
   education: string;
   bio: string;
+  gamePlan: string | null; // Type of gamer from onboarding
+  level: number;
+  avatarId: number | null; // ID of selected avatar from onboarding
+  joinDate: string; // When the user joined
   social: {
     github: string;
     instagram: string;
@@ -24,9 +28,10 @@ export interface ProfileData {
 
 interface ProfileContextType {
   profileData: ProfileData;
-  updateProfileData: (data: ProfileData) => void;
+  updateProfileData: (data: Partial<ProfileData>) => void;
   loading: boolean;
   profilePic: string;
+  getAvatarById: (id: number | null) => string;
 }
 
 // Create the context
@@ -44,6 +49,8 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
   // Default profile data
   const defaultUsername = "Hardik";
   const defaultHandle = "hardikiltop80299";
+  const currentDate = new Date();
+  const defaultJoinDate = `${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getDate()}, ${currentDate.getFullYear()}`;
 
   // Initialize profile data from localStorage or default values
   const [profileData, setProfileData] = React.useState<ProfileData>(() => {
@@ -58,6 +65,10 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       work: "",
       education: "",
       bio: "",
+      gamePlan: null,
+      level: 1,
+      avatarId: null,
+      joinDate: defaultJoinDate,
       social: {
         github: "",
         instagram: "",
@@ -70,14 +81,48 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
     };
   });
 
-  // Update profile data
-  const updateProfileData = (data: ProfileData) => {
-    setProfileData(data);
-    localStorage.setItem('profileData', JSON.stringify(data));
+  // Function to get avatar image URL from ID
+  const getAvatarById = (id: number | null): string => {
+    if (!id) return defaultAvatar;
+    
+    try {
+      // This would typically be a mapping of IDs to avatar image paths
+      // You'll need to adjust this to match your actual avatar paths
+      const avatarMap: {[key: number]: string} = {
+        1: require('../assets/avatars/boy.gif'),
+        2: require('../assets/avatars/girl.gif'),
+        3: require('../assets/avatars/foxboy.gif'),
+        4: require('../assets/avatars/foxgirl.gif'),
+        5: require('../assets/avatars/robot.gif')
+      };
+      return avatarMap[id] || defaultAvatar;
+    } catch (e) {
+      console.error("Error loading avatar:", e);
+      return defaultAvatar;
+    }
   };
 
-  // Get profile pic
-  const profilePic = user?.photoURL || defaultAvatar;
+  // Update profile data
+  const updateProfileData = (data: Partial<ProfileData>) => {
+    setProfileData((prevData: ProfileData) => {
+      const newData = { ...prevData, ...data };
+      localStorage.setItem('profileData', JSON.stringify(newData));
+      return newData;
+    });
+  };
+
+  // Get profile pic - use avatar from onboarding if available, otherwise from Google
+  const profilePic = profileData.avatarId 
+    ? getAvatarById(profileData.avatarId)
+    : (user?.photoURL || defaultAvatar);
+
+  // Check for onboarding data saved in localStorage
+  React.useEffect(() => {
+    const savedGamePlan = localStorage.getItem('userGamePlan');
+    if (savedGamePlan && profileData.gamePlan === null) {
+      updateProfileData({ gamePlan: savedGamePlan });
+    }
+  }, []);
 
   // Listen for auth state changes
   React.useEffect(() => {
@@ -100,7 +145,13 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
   }, [profileData, defaultUsername, defaultHandle]);
 
   return (
-    <ProfileContext.Provider value={{ profileData, updateProfileData, loading, profilePic }}>
+    <ProfileContext.Provider value={{ 
+      profileData, 
+      updateProfileData, 
+      loading, 
+      profilePic, 
+      getAvatarById 
+    }}>
       {children}
     </ProfileContext.Provider>
   );

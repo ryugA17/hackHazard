@@ -9,6 +9,7 @@ import girlAvatar from '../assets/avatars/girl.gif';
 import foxboyAvatar from '../assets/avatars/foxboy.gif';
 import { auth } from '../firebase';
 import { updateProfile } from 'firebase/auth';
+import { useProfile } from '../context/ProfileContext';
 
 // Avatar options with actual images from assets/avatars
 const avatarOptions = [
@@ -23,6 +24,7 @@ interface OnboardingProps {}
 
 const Onboarding: React.FC<OnboardingProps> = () => {
   const navigate = useNavigate();
+  const { updateProfileData } = useProfile();
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedAvatar, setSelectedAvatar] = React.useState<number | null>(null);
   const [username, setUsername] = React.useState('');
@@ -51,19 +53,24 @@ const Onboarding: React.FC<OnboardingProps> = () => {
       const currentUser = auth.currentUser;
       
       if (currentUser) {
-        // Get the selected avatar URL
-        const avatarSrc = avatarOptions.find(avatar => avatar.id === selectedAvatar)?.src || '';
-        
         // Update Firebase profile
         await updateProfile(currentUser, {
-          displayName: username,
-          photoURL: avatarSrc
+          displayName: username
         });
-        
-        // Save selected plan to localStorage for now
-        // In a real app, this would likely be saved to a database
-        localStorage.setItem('userGamePlan', selectedPlan);
       }
+      
+      // Get current date for join date
+      const currentDate = new Date();
+      const joinDate = `${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getDate()}, ${currentDate.getFullYear()}`;
+      
+      // Update ProfileContext with onboarding data
+      updateProfileData({
+        name: username,
+        username: username.toLowerCase().replace(/\s+/g, '_'),
+        avatarId: selectedAvatar,
+        gamePlan: selectedPlan,
+        joinDate: joinDate
+      });
       
       // Navigate to dashboard
       navigate('/dashboard');
@@ -106,14 +113,14 @@ const Onboarding: React.FC<OnboardingProps> = () => {
     setUsername(e.target.value);
   };
 
-  // Handle skip button
-  const handleSkip = () => {
-    navigate('/dashboard');
-  };
-
   // Handle plan selection
   const handleSelectPlan = (plan: string) => {
     setSelectedPlan(plan);
+  };
+
+  // Handle skip button
+  const handleSkip = () => {
+    navigate('/dashboard');
   };
 
   return (

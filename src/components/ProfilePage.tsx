@@ -25,15 +25,41 @@ const ProfilePage = () => {
   const defaultUsername = "Hardik";
   const defaultHandle = "@hardikiltop80299";
   
-  // Get current date for new users
-  const currentDate = new Date();
-  const joinDate = `${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getDate()}, ${currentDate.getFullYear()}`;
+  // Use the join date from profile data or create a new one
+  const joinDate = profileData.joinDate || `${new Date().toLocaleString('default', { month: 'short' })} ${new Date().getDate()}, ${new Date().getFullYear()}`;
+  
+  // Game plan emoji mapping
+  const gamePlanEmoji = {
+    casual: '🎮',
+    pro: '🏆',
+    team: '👥'
+  };
+  
+  // Determine what emoji to show based on the game plan
+  const planEmoji = profileData.gamePlan ? 
+    gamePlanEmoji[profileData.gamePlan as keyof typeof gamePlanEmoji] || '🎮' : 
+    '🎮';
+  
+  // Determine the game plan display name
+  const getPlanDisplayName = (planKey: string | null): string => {
+    if (!planKey) return 'Casual Gamer';
+    
+    const planNames: {[key: string]: string} = {
+      casual: 'Casual Gamer',
+      pro: 'Pro Gamer',
+      team: 'Team Player'
+    };
+    
+    return planNames[planKey] || 'Casual Gamer';
+  };
+  
+  const gamePlanDisplay = getPlanDisplayName(profileData.gamePlan);
   
   const stats = {
     exercises: 0,
     totalXp: 0, 
     courseBadges: 0,
-    dailyStreak: 2
+    dailyStreak: profileData.level || 1
   };
   
   if (loading) {
@@ -110,8 +136,8 @@ const ProfilePage = () => {
           <div className="profile-main">
             <div className="profile-section profile-bio">
               <div className="bio-level">
-                <span className="trophy-icon">🏆</span>
-                <span>Lvl 1</span>
+                <span className="trophy-icon">{planEmoji}</span>
+                <span>Lvl {profileData.level || 1} {gamePlanDisplay}</span>
               </div>
               {profileData.bio ? (
                 <p className="bio-content">{profileData.bio}</p>
@@ -227,8 +253,15 @@ const EditProfilePage = ({
   onCancel, 
   profilePic 
 }: EditProfilePageProps) => {
+  // Add game plan options for editing
+  const gamePlanOptions = [
+    { value: 'casual', label: 'Casual Gamer' },
+    { value: 'pro', label: 'Pro Gamer' },
+    { value: 'team', label: 'Team Player' }
+  ];
+
   // Handle input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name.includes('.')) {
       const [parentProp, childProp] = name.split('.');
@@ -343,6 +376,23 @@ const EditProfilePage = ({
                   placeholder="Edit your bio here"
                   rows={5}
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="gamePlan">Game Plan</label>
+                <select
+                  id="gamePlan"
+                  name="gamePlan"
+                  value={profileData.gamePlan || ''}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select a Game Plan</option>
+                  {gamePlanOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             

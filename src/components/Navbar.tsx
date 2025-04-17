@@ -50,6 +50,9 @@ const Navbar: React.FC<NavbarProps> = ({
   // Hide sign out button on dashboard, profile page, or if disabled
   const hideSignOutButton = (isDashboard && hideDashboardSignOut) || isProfile || disableSignOut;
 
+  // Determine username to display
+  const displayName = profileData.name || user?.displayName || '';
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -75,9 +78,9 @@ const Navbar: React.FC<NavbarProps> = ({
             <div className="user-menu">
               <Link to="/profile" className="user-profile-link">
                 <div className="user-avatar">
-                  <img src={profilePic} alt={profileData.name || 'User'} />
+                  <img src={profilePic} alt={displayName || 'User'} />
                 </div>
-                {profileData.name && <span className="user-name">{profileData.name}</span>}
+                {displayName && <span className="user-name">{displayName}</span>}
               </Link>
               {/* Hide sign out button if required */}
               {!hideSignOutButton && (
