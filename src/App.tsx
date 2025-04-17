@@ -17,6 +17,7 @@ import { WagmiConfig } from 'wagmi';
 import { config } from './config/wagmi';
 import { ProfileProvider } from './context/ProfileContext';
 import { WalletConnect } from './components/WalletConnect';
+import { useAccount } from 'wagmi';
 
 // Home page component
 const HomePage = ({ disableSignOut = false }) => {
@@ -28,6 +29,25 @@ const HomePage = ({ disableSignOut = false }) => {
         <MiddleSection />
         <StatsSection />
       </main>
+      <Footer />
+    </>
+  );
+};
+
+// NFT Gallery page component with wallet connection check
+const NFTPage = ({ disableSignOut = false }) => {
+  const { isConnected } = useAccount();
+  
+  return (
+    <>
+      <Navbar disableSignOut={disableSignOut} />
+      <div className="nft-container">
+        <div className="nft-header">
+          <h1 className="nft-title">My NFT Collection</h1>
+          {!isConnected && <WalletConnect />}
+        </div>
+        <NFTGallery />
+      </div>
       <Footer />
     </>
   );
@@ -87,19 +107,7 @@ const App = () => {
                   <GameMap />
                 </>
               } />
-              <Route path="/nfts" element={
-                <>
-                  <Navbar disableSignOut={isSignedIn} />
-                  <div className="nft-container">
-                    <div className="nft-header">
-                      <h1 className="nft-title">My NFT Collection</h1>
-                      <WalletConnect />
-                    </div>
-                    <NFTGallery />
-                  </div>
-                  <Footer />
-                </>
-              } />
+              <Route path="/nfts" element={<NFTPage disableSignOut={isSignedIn} />} />
             </Routes>
           </BrowserRouter>
         </div>

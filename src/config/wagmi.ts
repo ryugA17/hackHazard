@@ -1,7 +1,9 @@
 import { configureChains, createConfig } from 'wagmi';
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { publicProvider } from 'wagmi/providers/public';
+import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
 
+// Monad Testnet Chain Configuration
 const monadTestnet = {
   id: 10143,
   name: 'Monad Testnet',
@@ -21,14 +23,31 @@ const monadTestnet = {
   testnet: true,
 };
 
+// Configure chains and providers
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [monadTestnet],
-  [publicProvider()]
+  [
+    jsonRpcProvider({
+      rpc: (chain) => ({
+        http: chain.rpcUrls.default.http[0],
+      }),
+    }),
+    publicProvider(),
+  ]
 );
 
+// Create wagmi config
 export const config = createConfig({
   autoConnect: true,
-  connectors: [new InjectedConnector({ chains })],
+  connectors: [
+    new InjectedConnector({
+      chains,
+      options: {
+        shimDisconnect: true,
+        name: 'MetaMask',
+      },
+    }),
+  ],
   publicClient,
   webSocketPublicClient,
 });
