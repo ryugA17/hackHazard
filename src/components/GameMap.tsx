@@ -111,6 +111,7 @@ interface Cell {
 
 // Constants
 const VISION_RANGE = 2;
+const MAX_PLAYERS = 5; // Set maximum number of players/tokens
 
 // Background map image
 const MAP_WIDTH = 640;
@@ -187,6 +188,12 @@ const GameMap: React.FC = () => {
   
   // Create a new piece
   const createNewPiece = useCallback((x: number, y: number): Piece => {
+    // Check if we've reached the maximum number of players
+    if (pieces.length >= MAX_PLAYERS) {
+      alert(`Maximum of ${MAX_PLAYERS} tokens allowed on the map.`);
+      return null as unknown as Piece;
+    }
+
     const newPiece: Piece = {
       id: `piece-${nextPieceId}`,
       x,
@@ -199,12 +206,19 @@ const GameMap: React.FC = () => {
     setPieces((prevPieces: Piece[]) => [...prevPieces, newPiece]);
     setNextPieceId((prev: number) => prev + 1);
     return newPiece;
-  }, [nextPieceId]);
+  }, [nextPieceId, pieces.length]);
 
   // Handle cell click to add new piece or move existing piece
   const handleCellClick = useCallback((x: number, y: number): void => {
     // If in placing mode, add a new piece
     if (isPlacingMode) {
+      // Check if we've reached the maximum number of players
+      if (pieces.length >= MAX_PLAYERS) {
+        alert(`Maximum of ${MAX_PLAYERS} tokens allowed on the map.`);
+        setIsPlacingMode(false);
+        return;
+      }
+      
       // Check if the cell is empty and not an obstacle
       if (!pieces.some((piece: Piece) => piece.x === x && piece.y === y) && 
           y < map.length && x < map[0].length && !map[y][x].isObstacle) {
@@ -378,6 +392,12 @@ const GameMap: React.FC = () => {
 
   // Add random piece function
   const addRandomPiece = useCallback((): void => {
+    // Check if we've reached the maximum number of players
+    if (pieces.length >= MAX_PLAYERS) {
+      alert(`Maximum of ${MAX_PLAYERS} tokens allowed on the map.`);
+      return;
+    }
+    
     const emptyCells: {x: number, y: number}[] = [];
     
     for (let y = 0; y < selectedMap.gridSize.height && y < map.length; y++) {
@@ -404,12 +424,18 @@ const GameMap: React.FC = () => {
 
   // Toggle placing mode function
   const togglePlacingMode = useCallback((): void => {
+    // If trying to enter placing mode but already at max tokens, show warning
+    if (!isPlacingMode && pieces.length >= MAX_PLAYERS) {
+      alert(`Maximum of ${MAX_PLAYERS} tokens allowed on the map.`);
+      return;
+    }
+    
     setIsPlacingMode(!isPlacingMode);
     // Deselect any selected piece when entering placing mode
     if (!isPlacingMode) {
       setSelectedPieceId(null);
     }
-  }, [isPlacingMode]);
+  }, [isPlacingMode, pieces.length]);
 
   // Reset game function
   const resetGame = useCallback((): void => {
@@ -605,6 +631,7 @@ const GameMap: React.FC = () => {
             <button 
               className={`btn btn-place ${isPlacingMode ? 'active' : ''}`}
               onClick={togglePlacingMode}
+              disabled={pieces.length >= MAX_PLAYERS}
             >
               {isPlacingMode ? '✘ Cancel' : '✚ Place Token'}
             </button>
@@ -612,6 +639,7 @@ const GameMap: React.FC = () => {
             <button 
               className="btn btn-random"
               onClick={addRandomPiece}
+              disabled={pieces.length >= MAX_PLAYERS}
             >
               🎲 Random Token
             </button>
@@ -667,8 +695,10 @@ const GameMap: React.FC = () => {
               <span className="status-placing">✓ Select any empty cell to place a new token</span>
             ) : selectedPieceId ? (
               <span className="status-selected">✓ Token selected - click on a cell to move it</span>
+            ) : pieces.length >= MAX_PLAYERS ? (
+              <span className="status-max-players">Maximum player limit reached ({MAX_PLAYERS})</span>
             ) : (
-              <span>Select a token to move it or use the buttons above</span>
+              <span>Select a token to move it or use the buttons above ({pieces.length}/{MAX_PLAYERS} tokens used)</span>
             )}
           </div>
           

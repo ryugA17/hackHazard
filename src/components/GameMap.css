@@ -399,6 +399,11 @@
   color: #2196f3;
 }
 
+.status-max-players {
+  color: #f44336;
+  font-weight: bold;
+}
+
 .help-button {
   position: absolute;
   top: 10px;
@@ -650,4 +655,11 @@
     font-size: 16px;
     padding: 10px 20px;
   }
+}
+
+/* Add this to style disabled buttons */
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #757575;
 } 
