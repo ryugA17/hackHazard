@@ -1,32 +1,33 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/*
- * Note: There are still some TypeScript errors in this file related to:
- * 1. The React import - a project configuration issue with allowSyntheticDefaultImports
- * 2. Some implicit 'any' type parameters in the component
- * 
- * These issues don't affect functionality but would need to be addressed in a 
- * future update by adding proper TypeScript configuration.
- */
+import { Link } from 'react-router-dom';
 import React from 'react';
+import { DungeonMasterContext } from '../context/DungeonMasterContext';
 import mapImage from '../assets/Map.png';
-import seaMap from '../assets/Maps/SeaSomethingMap.jpg';
-import gridlessMap from '../assets/Maps/GridlessMap.jpg';
-import contrastBeforeMap from '../assets/Maps/Contrast-Before.jpg';
-import contrastAfterMap from '../assets/Maps/Contrast-After.jpg';
-import './GameMap.css';
-
-// Import avatar images
 import boyAvatar from '../assets/avatars/boy.gif';
 import girlAvatar from '../assets/avatars/girl.gif';
 import robotAvatar from '../assets/avatars/robot.gif';
 import foxboyAvatar from '../assets/avatars/foxboy.gif';
 import foxgirlAvatar from '../assets/avatars/foxgirl.gif';
-
-// Import background music
-// @ts-ignore -- Ignoring TS error for audio file import
 import backgroundMusic from '../assets/aizentheme.mp3';
+import './GameMap.css';
 
-const { useState, useRef, useEffect, useMemo, useCallback } = React;
+const { 
+  useState, 
+  useEffect, 
+  useCallback, 
+  useRef, 
+  useMemo 
+} = React;
+
+// Utility functions
+const getObstacles = () => {
+  // Implementation of getObstacles
+  return [];
+};
+
+const getTerrainMap = () => {
+  // Implementation of getTerrainMap
+  return {};
+};
 
 // Define map options
 interface MapOption {
@@ -41,60 +42,48 @@ interface MapOption {
   cellSize: number;
 }
 
+// Temporary placeholder for missing images
+const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN8/x8AAuMB8DtXNJsAAAAASUVORK5CYII=';
+
 const MAP_OPTIONS: MapOption[] = [
   {
     id: 'default',
     name: 'Default Map',
     image: mapImage,
     description: 'The original D&D campaign map',
-    gridSize: {
-      width: 5,
-      height: 5
-    },
+    gridSize: { width: 5, height: 5 },
     cellSize: 100
   },
   {
     id: 'sea',
     name: 'Coastal Adventure',
-    image: seaMap,
+    image: placeholderImage, // Temporarily use placeholder
     description: 'A seaside village with coastal areas',
-    gridSize: {
-      width: 8,
-      height: 6
-    },
+    gridSize: { width: 8, height: 6 },
     cellSize: 80
   },
   {
     id: 'gridless',
     name: 'Open Plains',
-    image: gridlessMap,
+    image: placeholderImage, // Temporarily use placeholder
     description: 'Wide open battle ground',
-    gridSize: {
-      width: 10,
-      height: 8
-    },
+    gridSize: { width: 10, height: 8 },
     cellSize: 60
   },
   {
     id: 'contrast-before',
     name: 'Ancient Ruins',
-    image: contrastBeforeMap,
+    image: placeholderImage, // Temporarily use placeholder
     description: 'Mysterious ruins with ancient magic',
-    gridSize: {
-      width: 7,
-      height: 7
-    },
+    gridSize: { width: 7, height: 7 },
     cellSize: 70
   },
   {
     id: 'contrast-after',
     name: 'Forest Encampment',
-    image: contrastAfterMap,
+    image: placeholderImage, // Temporarily use placeholder
     description: 'Forest campsite with tactical positions',
-    gridSize: {
-      width: 6,
-      height: 5
-    },
+    gridSize: { width: 6, height: 5 },
     cellSize: 90
   }
 ];
@@ -178,17 +167,46 @@ const createEmptyMap = (gridWidth: number, gridHeight: number, cellSize: number)
 
 // Main component
 const GameMap: React.FC = () => {
-  // State management
-  const [selectedMap, setSelectedMap] = useState<MapOption>(MAP_OPTIONS[0]);
-  const [map, setMap] = useState<Cell[][]>(() => createEmptyMap(
+  const { issueReward } = React.useContext(DungeonMasterContext);
+  const [showRewardModal, setShowRewardModal] = React.useState(false);
+  const [currentReward, setCurrentReward] = React.useState<string>('');
+  const [selectedMap, setSelectedMap] = React.useState<MapOption>(MAP_OPTIONS[0]);
+  const [map, setMap] = React.useState<Cell[][]>(() => createEmptyMap(
     selectedMap.gridSize.width, 
     selectedMap.gridSize.height, 
     selectedMap.cellSize
   ));
-  const [pieces, setPieces] = useState<Piece[]>([]);
-  const [selectedPieceId, setSelectedPieceId] = useState<string | null>(null);
-  const [draggingPiece, setDraggingPiece] = useState<Piece | null>(null);
-  const [nextPieceId, setNextPieceId] = useState(1);
+  const [pieces, setPieces] = React.useState<Piece[]>([]);
+  const [selectedPieceId, setSelectedPieceId] = React.useState<string | null>(null);
+  const [draggingPiece, setDraggingPiece] = React.useState<Piece | null>(null);
+  const [nextPieceId, setNextPieceId] = React.useState(1);
+  const [wsConnection, setWsConnection] = React.useState<WebSocket | null>(null);
+  const [narration, setNarration] = React.useState<string>("");
+
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8000/ws/game');
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setNarration(data.narration);
+    };
+    
+    setWsConnection(ws);
+    return () => ws.close();
+  }, [map, pieces, wsConnection]);
+
+  const sendGameState = useCallback(() => {
+    if (wsConnection) {
+      wsConnection.send(JSON.stringify({
+        grid_cells: map,
+        tokens: pieces,
+        obstacles: getObstacles(),
+        terrain: getTerrainMap()
+      }));
+    }
+  }, [map, pieces, wsConnection]);
+
+  // State management
   const [isPlacingMode, setIsPlacingMode] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showMapSelector, setShowMapSelector] = useState(false);
@@ -993,6 +1011,21 @@ const GameMap: React.FC = () => {
   return (
     <div className="game-container">
       {!gameStarted ? renderMapSelectionScreen() : renderGameInterface()}
+      <div className="narration-panel">
+        <h3>Dungeon Master</h3>
+        <p>{narration}</p>
+      </div>
+      {showRewardModal && (
+        <div className="reward-modal">
+          <h2>Achievement Unlocked!</h2>
+          <p>You've earned a new NFT reward!</p>
+          <p>Transaction: {currentReward}</p>
+          <button onClick={() => setShowRewardModal(false)}>Close</button>
+          <Link to="/nfts" className="view-nft-button">
+            View in NFT Gallery
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

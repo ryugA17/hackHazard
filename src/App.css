@@ -208,4 +208,39 @@ main {
   .nft-grid {
     grid-template-columns: repeat(3, 1fr);
   }
-} 
+}
+
+.reward-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 20, 30, 0.95);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(77, 171, 247, 0.3);
+  color: white;
+  text-align: center;
+  z-index: 1000;
+}
+
+.reward-modal h2 {
+  color: #4dabf7;
+  margin-bottom: 1rem;
+}
+
+.view-nft-button {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #4dabf7;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.view-nft-button:hover {
+  background: #228be6;
+  transform: translateY(-2px);
+}

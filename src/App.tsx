@@ -19,6 +19,7 @@ import { ProfileProvider } from './context/ProfileContext';
 import { WalletConnect } from './components/WalletConnect';
 import { useAccount } from 'wagmi';
 import Onboarding from './components/Onboarding';
+import { DungeonMasterProvider } from './context/DungeonMasterContext';
 
 // Home page component
 const HomePage = ({ disableSignOut = false }) => {
@@ -64,55 +65,57 @@ const App = () => {
   return (
     <WagmiConfig config={config}>
       <ProfileProvider>
-        <div className="app">
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<HomePage disableSignOut={isSignedIn} />} />
-              <Route path="/signup" element={
-                isSignedIn ? (
-                  <Navigate to="/dashboard" replace />
-                ) : (
+        <DungeonMasterProvider>
+          <div className="app">
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<HomePage disableSignOut={isSignedIn} />} />
+                <Route path="/signup" element={
+                  isSignedIn ? (
+                    <Navigate to="/dashboard" replace />
+                  ) : (
+                    <>
+                      <Navbar />
+                      <SignupPage onSignUp={handleSignUp} />
+                    </>
+                  )
+                } />
+                <Route path="/dashboard" element={
                   <>
-                    <Navbar />
-                    <SignupPage onSignUp={handleSignUp} />
+                    <Navbar hideDashboardSignOut={true} disableSignOut={isSignedIn} />
+                    <Dashboard />
                   </>
-                )
-              } />
-              <Route path="/dashboard" element={
-                <>
-                  <Navbar hideDashboardSignOut={true} disableSignOut={isSignedIn} />
-                  <Dashboard />
-                </>
-              } />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/rules" element={
-                <>
-                  <Navbar disableSignOut={isSignedIn} />
-                  <RulesPage />
-                </>
-              } />
-              <Route path="/community" element={
-                <>
-                  <Navbar disableSignOut={isSignedIn} />
-                  <CommunityPage />
-                </>
-              } />
-              <Route path="/profile" element={
-                <>
-                  <Navbar disableSignOut={isSignedIn} />
-                  <ProfilePage />
-                </>
-              } />
-              <Route path="/map" element={
-                <>
-                  <Navbar disableSignOut={isSignedIn} />
-                  <GameMap />
-                </>
-              } />
-              <Route path="/nfts" element={<NFTPage disableSignOut={isSignedIn} />} />
-            </Routes>
-          </BrowserRouter>
-        </div>
+                } />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/rules" element={
+                  <>
+                    <Navbar disableSignOut={isSignedIn} />
+                    <RulesPage />
+                  </>
+                } />
+                <Route path="/community" element={
+                  <>
+                    <Navbar disableSignOut={isSignedIn} />
+                    <CommunityPage />
+                  </>
+                } />
+                <Route path="/profile" element={
+                  <>
+                    <Navbar disableSignOut={isSignedIn} />
+                    <ProfilePage />
+                  </>
+                } />
+                <Route path="/map" element={
+                  <>
+                    <Navbar disableSignOut={isSignedIn} />
+                    <GameMap />
+                  </>
+                } />
+                <Route path="/nfts" element={<NFTPage disableSignOut={isSignedIn} />} />
+              </Routes>
+            </BrowserRouter>
+          </div>
+        </DungeonMasterProvider>
       </ProfileProvider>
     </WagmiConfig>
   );
