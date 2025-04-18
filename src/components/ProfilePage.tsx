@@ -121,16 +121,7 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        <div className="profile-tabs">
-          <div className="tab active">Bio</div>
-          <div className="tab">Pinned</div>
-          <div className="tab">Stats</div>
-          <div className="tab">Skills</div>
-          <div className="tab">Pet Café</div>
-          <div className="tab">Posts (0)</div>
-          <div className="tab">Projects (0)</div>
-          <div className="tab">Certificates</div>
-        </div>
+        
 
         <div className="profile-container">
           <div className="profile-main">
