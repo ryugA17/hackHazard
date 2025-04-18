@@ -577,6 +577,8 @@
 
 .cell.obstacle {
   cursor: not-allowed;
+  background-color: rgba(100, 100, 100, 0.85) !important;
+  opacity: 0.9;
 }
 
 .cell.placeable {
@@ -585,19 +587,19 @@
 }
 
 .terrain-grass {
-  background-color: rgba(76, 175, 80, 0.3);
+  background-color: rgba(76, 175, 80, 0.15);
 }
 
 .terrain-water {
-  background-color: rgba(33, 150, 243, 0.4);
+  background-color: rgba(33, 150, 243, 0.2);
 }
 
 .terrain-mountain {
-  background-color: rgba(121, 85, 72, 0.4);
+  background-color: rgba(121, 85, 72, 0.2);
 }
 
 .terrain-forest {
-  background-color: rgba(139, 195, 74, 0.3);
+  background-color: rgba(139, 195, 74, 0.15);
 }
 
 .obstacle-indicator {
@@ -606,8 +608,10 @@
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 16px;
-  opacity: 0.7;
+  opacity: 0.9;
   pointer-events: none;
+  color: white;
+  text-shadow: 0 0 2px black, 0 0 4px black;
 }
 
 .piece {
@@ -736,19 +740,19 @@
 }
 
 .legend-grass {
-  background-color: #a5d6a7;
+  background-color: rgba(76, 175, 80, 0.15);
 }
 
 .legend-water {
-  background-color: #4fc3f7;
+  background-color: rgba(100, 100, 100, 0.85);
 }
 
 .legend-mountain {
-  background-color: #8d6e63;
+  background-color: rgba(100, 100, 100, 0.85);
 }
 
 .legend-forest {
-  background-color: #66bb6a;
+  background-color: rgba(139, 195, 74, 0.15);
 }
 
 .game-footer {
