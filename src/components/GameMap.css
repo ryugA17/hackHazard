@@ -126,6 +126,45 @@
 
 .map-selection-actions {
   margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.music-controls {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.music-error-message {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: rgba(255, 87, 34, 0.2);
+  border: 1px solid #ff5722;
+  color: #ff5722;
+  border-radius: 4px;
+  font-size: 14px;
+  max-width: 400px;
+  text-align: center;
+  animation: pulse-error 2s infinite;
+}
+
+@keyframes pulse-error {
+  0% {
+    background-color: rgba(255, 87, 34, 0.2);
+  }
+  50% {
+    background-color: rgba(255, 87, 34, 0.3);
+  }
+  100% {
+    background-color: rgba(255, 87, 34, 0.2);
+  }
 }
 
 .btn-start-game {
@@ -140,6 +179,27 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   font-weight: bold;
   min-width: 250px;
+  width: 100%;
+}
+
+.music-selection-btn {
+  background-color: #9c27b0;
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  font-weight: bold;
+  min-width: 200px;
+  margin-top: 10px;
+}
+
+.music-selection-btn:hover {
+  background-color: #7b1fa2;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
 }
 
 .btn-start-game:hover {
@@ -149,6 +209,11 @@
 }
 
 .btn-start-game:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.music-selection-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
@@ -243,6 +308,21 @@
 
 .btn-reset {
   background-color: #ff9800;
+}
+
+.btn-music {
+  background-color: #673ab7;
+  min-width: 45px;
+  transition: all 0.2s ease;
+}
+
+.btn-music:hover {
+  background-color: #512da8;
+  transform: scale(1.1);
+}
+
+.btn-music:active {
+  transform: scale(0.95);
 }
 
 .btn-map-selector {

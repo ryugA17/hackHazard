@@ -22,6 +22,10 @@ import robotAvatar from '../assets/avatars/robot.gif';
 import foxboyAvatar from '../assets/avatars/foxboy.gif';
 import foxgirlAvatar from '../assets/avatars/foxgirl.gif';
 
+// Import background music
+// @ts-ignore -- Ignoring TS error for audio file import
+import backgroundMusic from '../assets/aizentheme.mp3';
+
 const { useState, useRef, useEffect, useMemo, useCallback } = React;
 
 // Define map options
@@ -189,7 +193,11 @@ const GameMap: React.FC = () => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showMapSelector, setShowMapSelector] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [isMusicMuted, setIsMusicMuted] = useState(false);
+  const [showMusicError, setShowMusicError] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   
   // Memoize the creation of a new map when selecting a different map
   const createMap = useCallback((mapOption: MapOption) => {
@@ -477,10 +485,109 @@ const GameMap: React.FC = () => {
     setIsPlacingMode(false);
   }, [createMap]);
 
+  // Play background music function
+  const playMusic = useCallback(() => {
+    if (!audioRef.current) return;
+    
+    // Make sure the audio is loaded
+    if (audioRef.current.readyState < 2) {
+      // If audio is not loaded yet, load it first
+      audioRef.current.load();
+      // Add an event listener to play when loaded
+      const onCanPlay = () => {
+        playMusic();
+        audioRef.current?.removeEventListener('canplaythrough', onCanPlay);
+      };
+      audioRef.current.addEventListener('canplaythrough', onCanPlay);
+      return;
+    }
+    
+    // Check if audio context is suspended (browser autoplay policy)
+    const playPromise = audioRef.current.play();
+    
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log("Music started playing");
+          setIsMusicPlaying(true);
+          setShowMusicError(false);
+        })
+        .catch((error: Error) => {
+          console.error("Music playback failed:", error);
+          setShowMusicError(true);
+          // Most browsers require user interaction before audio can play
+          // We'll keep the button visible for manual play
+        });
+    }
+  }, []);
+  
+  // Handle audio loaded
+  useEffect(() => {
+    const audioElement = audioRef.current;
+    
+    if (audioElement) {
+      // Set up audio properties
+      audioElement.volume = 0.5;
+      
+      // Add event listeners
+      const handleCanPlay = () => {
+        console.log("Audio can now be played");
+      };
+      
+      const handleError = (e: Event) => {
+        console.error("Audio error:", e);
+        setShowMusicError(true);
+      };
+      
+      audioElement.addEventListener('canplaythrough', handleCanPlay);
+      audioElement.addEventListener('error', handleError);
+      
+      // Clean up
+      return () => {
+        audioElement.removeEventListener('canplaythrough', handleCanPlay);
+        audioElement.removeEventListener('error', handleError);
+      };
+    }
+  }, []);
+  
   // Start game with selected map
   const startGame = useCallback((): void => {
     setGameStarted(true);
-  }, []);
+    
+    // Try to play background music when game starts
+    setTimeout(() => {
+      // Delayed attempt to play audio after component mounts
+      if (audioRef.current) {
+        audioRef.current.volume = 0.5; // Set volume to 50%
+        playMusic();
+      }
+    }, 1000);
+  }, [playMusic]);
+  
+  // Toggle music play/pause
+  const toggleMusic = useCallback((): void => {
+    if (!audioRef.current) return;
+    
+    if (isMusicPlaying) {
+      audioRef.current.pause();
+      setIsMusicPlaying(false);
+    } else {
+      playMusic();
+    }
+  }, [isMusicPlaying, playMusic]);
+  
+  // Toggle music mute state
+  const toggleMute = useCallback((): void => {
+    if (audioRef.current) {
+      audioRef.current.muted = !audioRef.current.muted;
+      setIsMusicMuted(!isMusicMuted);
+      
+      // If currently not playing and unmuting, try to play
+      if (!isMusicPlaying && isMusicMuted) {
+        playMusic();
+      }
+    }
+  }, [isMusicMuted, isMusicPlaying, playMusic]);
 
   // Return to map selection
   const backToMapSelection = useCallback((): void => {
@@ -491,7 +598,23 @@ const GameMap: React.FC = () => {
     setNextPieceId(1);
     setIsPlacingMode(false);
     setShowMapSelector(false);
-  }, []);
+    
+    // Pause music when returning to map selection
+    if (audioRef.current && isMusicPlaying) {
+      audioRef.current.pause();
+      setIsMusicPlaying(false);
+    }
+  }, [isMusicPlaying]);
+  
+  // Clean up audio on component unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current && isMusicPlaying) {
+        audioRef.current.pause();
+        setIsMusicPlaying(false);
+      }
+    };
+  }, [isMusicPlaying]);
 
   // Get cell style adjustments based on cell size
   const getCellStyle = useCallback((cell: Cell): React.CSSProperties => {
@@ -622,10 +745,45 @@ const GameMap: React.FC = () => {
           >
             Start Game with {selectedMap.name}
           </button>
+          
+          <div className="music-controls">
+            <button 
+              className="btn btn-music music-selection-btn"
+              onClick={toggleMusic}
+              title={isMusicPlaying ? "Pause Music" : "Play Music"}
+            >
+              {isMusicPlaying ? '⏸️ Pause Music' : '▶️ Play Music'}
+            </button>
+            
+            <button 
+              className="btn btn-music music-selection-btn"
+              onClick={toggleMute}
+              title={isMusicMuted ? "Unmute music" : "Mute music"}
+              disabled={!isMusicPlaying}
+            >
+              {isMusicMuted ? '🔇 Unmute' : '🔊 Mute'}
+            </button>
+          </div>
+          
+          {showMusicError && (
+            <div className="music-error-message">
+              Your browser blocked autoplay. Please click "Play Music" to start the music manually.
+            </div>
+          )}
         </div>
+        
+        {/* Audio element for background music */}
+        <audio 
+          ref={audioRef}
+          src={backgroundMusic}
+          loop
+          preload="auto"
+          crossOrigin="anonymous"
+          playsInline
+        />
       </div>
     );
-  }, [handleMapSelect, selectedMap, startGame]);
+  }, [handleMapSelect, selectedMap, startGame, toggleMusic, toggleMute, isMusicPlaying, isMusicMuted, showMusicError]);
 
   // Render the Game Interface
   const renderGameInterface = useCallback(() => {
@@ -676,6 +834,23 @@ const GameMap: React.FC = () => {
               onClick={resetGame}
             >
               🔄 Reset Map
+            </button>
+            
+            <button 
+              className="btn btn-music"
+              onClick={toggleMusic}
+              title={isMusicPlaying ? "Pause Music" : "Play Music"}
+            >
+              {isMusicPlaying ? '⏸️' : '▶️'}
+            </button>
+            
+            <button 
+              className="btn btn-music"
+              onClick={toggleMute}
+              title={isMusicMuted ? "Unmute music" : "Mute music"}
+              disabled={!isMusicPlaying}
+            >
+              {isMusicMuted ? '🔇' : '🔊'}
             </button>
           </div>
 
@@ -795,12 +970,23 @@ const GameMap: React.FC = () => {
         <footer className="game-footer">
           <p>Hover over avatars to see character name • Double-click to remove an avatar</p>
         </footer>
+        
+        {/* Audio element for background music */}
+        <audio 
+          ref={audioRef}
+          src={backgroundMusic}
+          loop
+          preload="auto"
+          crossOrigin="anonymous"
+          playsInline
+        />
       </>
     );
   }, [
-    selectedMap, gridItems, isPlacingMode, selectedPieceId, draggingPiece, showMapSelector, showTooltip, 
-    backToMapSelection, togglePlacingMode, addRandomPiece, removeSelectedPiece, resetGame, 
-    handleMapSelect, gridClickHandler, handleMouseMove, handleMouseUp
+    selectedMap, gridItems, isPlacingMode, selectedPieceId, draggingPiece, 
+    showMapSelector, showTooltip, isMusicMuted,
+    backToMapSelection, togglePlacingMode, addRandomPiece, removeSelectedPiece, 
+    resetGame, handleMapSelect, gridClickHandler, handleMouseMove, handleMouseUp, toggleMusic, toggleMute
   ]);
 
   // Main render

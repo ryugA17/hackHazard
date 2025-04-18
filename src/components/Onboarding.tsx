@@ -11,6 +11,10 @@ import { auth } from '../firebase';
 import { updateProfile } from 'firebase/auth';
 import { useProfile } from '../context/ProfileContext';
 
+// Import background music
+// @ts-ignore -- Ignoring TS error for audio file import
+import backgroundMusic from '../assets/aizentheme.mp3';
+
 // Avatar options with actual images from assets/avatars
 const avatarOptions = [
   { id: 1, src: boyAvatar, alt: 'Boy Character' },
@@ -31,6 +35,12 @@ const Onboarding: React.FC<OnboardingProps> = () => {
   const [currentAvatarIndex, setCurrentAvatarIndex] = React.useState(0);
   const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
+  // Music state
+  const [isMusicPlaying, setIsMusicPlaying] = React.useState(false);
+  const [isMusicMuted, setIsMusicMuted] = React.useState(false);
+  const [showMusicError, setShowMusicError] = React.useState(false);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
 
   // Effect to automatically select the current avatar
   React.useEffect(() => {
@@ -43,6 +53,113 @@ const Onboarding: React.FC<OnboardingProps> = () => {
   const getProgressPercentage = () => {
     return ((currentStep - 1) / 4) * 100;
   };
+
+  // Play background music function
+  const playMusic = React.useCallback(() => {
+    if (!audioRef.current) return;
+    
+    // Make sure the audio is loaded
+    if (audioRef.current.readyState < 2) {
+      // If audio is not loaded yet, load it first
+      audioRef.current.load();
+      // Add an event listener to play when loaded
+      const onCanPlay = () => {
+        playMusic();
+        audioRef.current?.removeEventListener('canplaythrough', onCanPlay);
+      };
+      audioRef.current.addEventListener('canplaythrough', onCanPlay);
+      return;
+    }
+    
+    // Check if audio context is suspended (browser autoplay policy)
+    const playPromise = audioRef.current.play();
+    
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log("Music started playing");
+          setIsMusicPlaying(true);
+          setShowMusicError(false);
+        })
+        .catch((error: Error) => {
+          console.error("Music playback failed:", error);
+          setShowMusicError(true);
+          // Most browsers require user interaction before audio can play
+        });
+    }
+  }, []);
+  
+  // Toggle music play/pause
+  const toggleMusic = React.useCallback((): void => {
+    if (!audioRef.current) return;
+    
+    if (isMusicPlaying) {
+      audioRef.current.pause();
+      setIsMusicPlaying(false);
+    } else {
+      playMusic();
+    }
+  }, [isMusicPlaying, playMusic]);
+  
+  // Toggle music mute state
+  const toggleMute = React.useCallback((): void => {
+    if (audioRef.current) {
+      audioRef.current.muted = !audioRef.current.muted;
+      setIsMusicMuted(!isMusicMuted);
+      
+      // If currently not playing and unmuting, try to play
+      if (!isMusicPlaying && isMusicMuted) {
+        playMusic();
+      }
+    }
+  }, [isMusicMuted, isMusicPlaying, playMusic]);
+
+  // Try to play music when component mounts
+  React.useEffect(() => {
+    // Attempt to play audio after component mounts
+    setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.volume = 0.5; // Set volume to 50%
+        playMusic();
+      }
+    }, 1000);
+    
+    // Clean up function to pause music when component unmounts
+    return () => {
+      if (audioRef.current && isMusicPlaying) {
+        audioRef.current.pause();
+      }
+    };
+  }, [playMusic, isMusicPlaying]);
+  
+  // Handle audio event listeners
+  React.useEffect(() => {
+    const audioElement = audioRef.current;
+    
+    if (audioElement) {
+      // Set up audio properties
+      audioElement.volume = 0.5;
+      
+      // Add event listeners
+      const handleCanPlay = () => {
+        console.log("Audio can now be played");
+      };
+      
+      const handleError = (e: Event) => {
+        console.error("Audio error:", e);
+        setShowMusicError(true);
+      };
+      
+      audioElement.addEventListener('canplaythrough', handleCanPlay);
+      audioElement.addEventListener('error', handleError);
+      
+      // Clean up
+      return () => {
+        audioElement.removeEventListener('canplaythrough', handleCanPlay);
+        audioElement.removeEventListener('error', handleError);
+      };
+    }
+  }, []);
 
   // Save user data and complete onboarding
   const saveUserData = async () => {
@@ -133,8 +250,35 @@ const Onboarding: React.FC<OnboardingProps> = () => {
         <div className="progress-bar">
           <div className="progress-fill" style={{ width: `${getProgressPercentage()}%` }}></div>
         </div>
-        <button className="skip-button" onClick={handleSkip}>Skip</button>
+        <div className="right-buttons">
+          {/* Music controls */}
+          <button 
+            className="music-button" 
+            onClick={toggleMusic}
+            title={isMusicPlaying ? "Pause Music" : "Play Music"}
+          >
+            {isMusicPlaying ? '⏸️' : '▶️'}
+          </button>
+          
+          <button 
+            className="music-button" 
+            onClick={toggleMute}
+            title={isMusicMuted ? "Unmute" : "Mute"}
+            disabled={!isMusicPlaying}
+          >
+            {isMusicMuted ? '🔇' : '🔊'}
+          </button>
+          
+          <button className="skip-button" onClick={handleSkip}>Skip</button>
+        </div>
       </div>
+      
+      {/* Music error message */}
+      {showMusicError && (
+        <div className="music-error-message">
+          Click the ▶️ button to play background music
+        </div>
+      )}
       
       {/* Step 1: Welcome */}
       {currentStep === 1 && (
@@ -248,9 +392,9 @@ const Onboarding: React.FC<OnboardingProps> = () => {
               <h3>Pro Gamer</h3>
               <ul>
                 <li>Structured learning path</li>
-                <li>Access to all games</li>
-                <li>Daily challenges</li>
-                <li>Exclusive tournaments</li>
+                <li>Access to all premium games</li>
+                <li>Daily challenges & rewards</li>
+                <li>Performance analytics</li>
               </ul>
               <button className="select-plan-btn">Select</button>
             </div>
@@ -263,7 +407,7 @@ const Onboarding: React.FC<OnboardingProps> = () => {
               <ul>
                 <li>Multiplayer focus</li>
                 <li>Team challenges</li>
-                <li>Community events</li>
+                <li>Group leaderboards</li>
               </ul>
               <button className="select-plan-btn">Select</button>
             </div>
@@ -274,10 +418,20 @@ const Onboarding: React.FC<OnboardingProps> = () => {
             onClick={handleContinue}
             disabled={!selectedPlan || isSubmitting}
           >
-            {isSubmitting ? 'Saving...' : 'Continue'}
+            {isSubmitting ? 'Creating Account...' : 'Let\'s Begin!'}
           </button>
         </div>
       )}
+      
+      {/* Audio element for background music */}
+      <audio 
+        ref={audioRef}
+        src={backgroundMusic}
+        loop
+        preload="auto"
+        crossOrigin="anonymous"
+        playsInline
+      />
     </div>
   );
 };

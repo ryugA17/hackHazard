@@ -11,41 +11,112 @@
 }
 
 .onboarding-progress {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
   display: flex;
   align-items: center;
-  width: 100%;
-  max-width: 800px;
-  margin-bottom: 40px;
-  padding: 10px;
+  gap: 15px;
 }
 
-.back-button, .skip-button {
-  background: none;
+.back-button {
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-family: inherit;
-  padding: 5px 10px;
-  font-size: 14px;
+  font-weight: bold;
+  transition: background 0.3s;
 }
 
-.back-button:hover, .skip-button:hover {
-  text-decoration: underline;
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .progress-bar {
-  flex-grow: 1;
-  height: 10px;
-  background-color: #353a47;
-  border-radius: 5px;
-  margin: 0 15px;
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background-color: #4cd964;
-  transition: width 0.3s ease;
+  background: var(--brand-gradient);
+  transition: width 0.5s ease;
+}
+
+.right-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.skip-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.skip-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Music control buttons */
+.music-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-size: 14px;
+}
+
+.music-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.music-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Music error message */
+.music-error-message {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 12px;
+  animation: fadeInOut 3s forwards;
+  z-index: 100;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .onboarding-step {
@@ -57,9 +128,10 @@
 }
 
 .computer-icon {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   width: 120px;
   height: 120px;
+  margin-top: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
