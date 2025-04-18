@@ -12,7 +12,7 @@ const RulesPage = () => {
           <div className="rules-content">
             <div className="rules-section">
               <h2>Getting Started</h2>
-              <p>Welcome to Pikadex! Here you'll find all the rules and guidelines for playing the game.</p>
+              <p>Welcome to Gamedex! Here you'll find all the rules and guidelines for playing the game.</p>
               <p>This page is ready for your content. You can add game rules, instructions, and any guidelines here.</p>
             </div>
             

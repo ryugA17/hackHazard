@@ -87,7 +87,7 @@ const Dashboard = () => {
               <div className="pixel-trainer">
                 <img src={loadingicon} alt="Pixel Trainer" />
               </div>
-              <h1 className="welcome-title">Welcome to Pikadex!</h1>
+              <h1 className="welcome-title">Welcome to Gamedex!</h1>
               <p className="welcome-subtitle">Your Gaming journey awaits—but first let's find something to learn.</p>
               <button className="get-started-btn" onClick={handleGetStarted}>
                 {profileData.avatarId ? 'Update Your Profile' : 'Get Started'}

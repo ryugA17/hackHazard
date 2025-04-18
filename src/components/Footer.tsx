@@ -8,7 +8,7 @@ const Footer = () => {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3>Pikadex</h3>
+            <h3>Gamedex</h3>
             <p>Your ultimate Pokémon encyclopedia and community platform.</p>
           </div>
           
@@ -34,14 +34,14 @@ const Footer = () => {
           <div className="footer-section">
             <h3>Contact</h3>
             <ul>
-              <li><a href="mailto:support@pikadex.com">support@pikadex.com</a></li>
+              <li><a href="mailto:support@gamedex.com">support@gamedex.com</a></li>
               <li><a href="tel:+15551234567">+1 555 123 4567</a></li>
             </ul>
           </div>
         </div>
         
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Pikadex. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Gamedex. All rights reserved.</p>
         </div>
       </div>
     </footer>
