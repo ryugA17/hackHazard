@@ -15,7 +15,7 @@ import contrastBeforeMap from '../assets/Maps/Contrast-Before.jpg';
 import contrastAfterMap from '../assets/Maps/Contrast-After.jpg';
 import './GameMap.css';
 
-const { useState, useRef, useEffect } = React;
+const { useState, useRef, useEffect, useMemo, useCallback } = React;
 
 // Define map options
 interface MapOption {
@@ -161,7 +161,7 @@ const createEmptyMap = (gridWidth: number, gridHeight: number, cellSize: number)
 const GameMap: React.FC = () => {
   // State management
   const [selectedMap, setSelectedMap] = useState<MapOption>(MAP_OPTIONS[0]);
-  const [map, setMap] = useState<Cell[][]>(createEmptyMap(
+  const [map, setMap] = useState<Cell[][]>(() => createEmptyMap(
     selectedMap.gridSize.width, 
     selectedMap.gridSize.height, 
     selectedMap.cellSize
@@ -175,9 +175,18 @@ const GameMap: React.FC = () => {
   const [showMapSelector, setShowMapSelector] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
-
+  
+  // Memoize the creation of a new map when selecting a different map
+  const createMap = useCallback((mapOption: MapOption) => {
+    return createEmptyMap(
+      mapOption.gridSize.width,
+      mapOption.gridSize.height,
+      mapOption.cellSize
+    );
+  }, []);
+  
   // Create a new piece
-  const createNewPiece = (x: number, y: number): Piece => {
+  const createNewPiece = useCallback((x: number, y: number): Piece => {
     const newPiece: Piece = {
       id: `piece-${nextPieceId}`,
       x,
@@ -190,14 +199,15 @@ const GameMap: React.FC = () => {
     setPieces((prevPieces: Piece[]) => [...prevPieces, newPiece]);
     setNextPieceId((prev: number) => prev + 1);
     return newPiece;
-  };
+  }, [nextPieceId]);
 
   // Handle cell click to add new piece or move existing piece
-  const handleCellClick = (x: number, y: number): void => {
+  const handleCellClick = useCallback((x: number, y: number): void => {
     // If in placing mode, add a new piece
     if (isPlacingMode) {
       // Check if the cell is empty and not an obstacle
-      if (!pieces.some((piece: Piece) => piece.x === x && piece.y === y) && !map[y][x].isObstacle) {
+      if (!pieces.some((piece: Piece) => piece.x === x && piece.y === y) && 
+          y < map.length && x < map[0].length && !map[y][x].isObstacle) {
         createNewPiece(x, y);
         setIsPlacingMode(false); // Exit placing mode after placing a piece
       }
@@ -206,12 +216,17 @@ const GameMap: React.FC = () => {
     
     // If a piece is already selected, move it
     if (selectedPieceId) {
-      setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) => 
-        piece.id === selectedPieceId
-          ? { ...piece, x, y, isDragging: false }
-          : piece
-      ));
-      setSelectedPieceId(null);
+      // Check if the destination cell is valid (not an obstacle and no other piece)
+      if (y < map.length && x < map[0].length && 
+          !map[y][x].isObstacle && 
+          !pieces.some((p: Piece) => p.x === x && p.y === y)) {
+        setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) => 
+          piece.id === selectedPieceId
+            ? { ...piece, x, y, isDragging: false }
+            : piece
+        ));
+        setSelectedPieceId(null);
+      }
     } else {
       // Check if we clicked on a piece
       const clickedPiece = pieces.find((piece: Piece) => piece.x === x && piece.y === y);
@@ -221,10 +236,10 @@ const GameMap: React.FC = () => {
         setSelectedPieceId(clickedPiece.id);
       }
     }
-  };
+  }, [isPlacingMode, pieces, selectedPieceId, map, createNewPiece]);
 
   // Handle piece click
-  const handlePieceClick = (e: React.MouseEvent, piece: Piece): void => {
+  const handlePieceClick = useCallback((e: React.MouseEvent, piece: Piece): void => {
     e.stopPropagation();
     
     if (selectedPieceId === piece.id) {
@@ -234,10 +249,10 @@ const GameMap: React.FC = () => {
       // Select this piece
       setSelectedPieceId(piece.id);
     }
-  };
+  }, [selectedPieceId]);
 
   // Handle piece drag start
-  const handlePieceDragStart = (e: React.MouseEvent, piece: Piece): void => {
+  const handlePieceDragStart = useCallback((e: React.MouseEvent, piece: Piece): void => {
     e.stopPropagation();
     
     // Start dragging this piece
@@ -248,10 +263,10 @@ const GameMap: React.FC = () => {
     ));
     setDraggingPiece(piece);
     setSelectedPieceId(piece.id);
-  };
+  }, []);
 
   // Handle mouse move during drag
-  const handleMouseMove = (e: React.MouseEvent): void => {
+  const handleMouseMove = useCallback((e: React.MouseEvent): void => {
     if (!draggingPiece || !gridRef.current) return;
 
     const rect = gridRef.current.getBoundingClientRect();
@@ -263,18 +278,22 @@ const GameMap: React.FC = () => {
     const x = Math.floor((e.clientX - offsetX) / cellWithGap);
     const y = Math.floor((e.clientY - offsetY) / cellWithGap);
     
-    // Ensure we're within grid bounds
-    if (x >= 0 && x < selectedMap.gridSize.width && y >= 0 && y < selectedMap.gridSize.height) {
+    // Ensure we're within grid bounds and not on an obstacle or other piece
+    if (x >= 0 && x < selectedMap.gridSize.width && 
+        y >= 0 && y < selectedMap.gridSize.height && 
+        y < map.length && x < map[0].length && 
+        !map[y][x].isObstacle &&
+        !pieces.some((p: Piece) => p.id !== draggingPiece.id && p.x === x && p.y === y)) {
       setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) => 
         p.id === draggingPiece.id
           ? { ...p, x, y }
           : p
       ));
     }
-  };
+  }, [draggingPiece, selectedMap, map, pieces]);
 
   // Handle mouse up to end drag
-  const handleMouseUp = (): void => {
+  const handleMouseUp = useCallback((): void => {
     if (!draggingPiece) return;
     
     setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) => 
@@ -283,19 +302,45 @@ const GameMap: React.FC = () => {
         : p
     ));
     setDraggingPiece(null);
-  };
+  }, [draggingPiece]);
+  
+  // Add global event handlers for mouse movement outside the grid
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (draggingPiece) {
+        const customEvent = e as unknown as React.MouseEvent;
+        handleMouseMove(customEvent);
+      }
+    };
+    
+    const handleGlobalMouseUp = () => {
+      if (draggingPiece) {
+        handleMouseUp();
+      }
+    };
+    
+    // Add the event listeners
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    
+    // Clean up the event listeners when component unmounts
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [draggingPiece, handleMouseMove, handleMouseUp]);
 
   // Handle piece deletion
-  const handleDeletePiece = (e: React.MouseEvent, piece: Piece): void => {
+  const handleDeletePiece = useCallback((e: React.MouseEvent, piece: Piece): void => {
     e.stopPropagation();
     setPieces((prevPieces: Piece[]) => prevPieces.filter((p: Piece) => p.id !== piece.id));
     if (selectedPieceId === piece.id) {
       setSelectedPieceId(null);
     }
-  };
+  }, [selectedPieceId]);
 
   // Get cell class names based on cell properties
-  const getCellClassName = (cell: Cell, x: number, y: number): string => {
+  const getCellClassName = useCallback((cell: Cell, x: number, y: number): string => {
     const isSelected = selectedPieceId !== null && 
       pieces.some((p: Piece) => p.id === selectedPieceId && p.x === x && p.y === y);
     
@@ -314,10 +359,10 @@ const GameMap: React.FC = () => {
     if (isPlaceable) classes += " placeable";
     
     return classes;
-  };
+  }, [isPlacingMode, pieces, selectedPieceId]);
 
   // Get piece class names
-  const getPieceClassName = (piece: Piece): string => {
+  const getPieceClassName = useCallback((piece: Piece): string => {
     let classes = "piece";
     
     if (selectedPieceId === piece.id) {
@@ -329,14 +374,14 @@ const GameMap: React.FC = () => {
     }
     
     return classes;
-  };
+  }, [selectedPieceId]);
 
   // Add random piece function
-  const addRandomPiece = (): void => {
+  const addRandomPiece = useCallback((): void => {
     const emptyCells: {x: number, y: number}[] = [];
     
-    for (let y = 0; y < selectedMap.gridSize.height; y++) {
-      for (let x = 0; x < selectedMap.gridSize.width; x++) {
+    for (let y = 0; y < selectedMap.gridSize.height && y < map.length; y++) {
+      for (let x = 0; x < selectedMap.gridSize.width && x < map[0].length; x++) {
         if (!map[y][x].isObstacle && !pieces.some((p: Piece) => p.x === x && p.y === y)) {
           emptyCells.push({x, y});
         }
@@ -347,49 +392,41 @@ const GameMap: React.FC = () => {
       const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
       createNewPiece(randomCell.x, randomCell.y);
     }
-  };
+  }, [selectedMap.gridSize.height, selectedMap.gridSize.width, map, pieces, createNewPiece]);
 
   // Remove selected piece function
-  const removeSelectedPiece = (): void => {
+  const removeSelectedPiece = useCallback((): void => {
     if (selectedPieceId) {
       setPieces((prevPieces: Piece[]) => prevPieces.filter((p: Piece) => p.id !== selectedPieceId));
       setSelectedPieceId(null);
     }
-  };
+  }, [selectedPieceId]);
 
   // Toggle placing mode function
-  const togglePlacingMode = (): void => {
+  const togglePlacingMode = useCallback((): void => {
     setIsPlacingMode(!isPlacingMode);
     // Deselect any selected piece when entering placing mode
     if (!isPlacingMode) {
       setSelectedPieceId(null);
     }
-  };
+  }, [isPlacingMode]);
 
   // Reset game function
-  const resetGame = (): void => {
-    setMap(createEmptyMap(
-      selectedMap.gridSize.width, 
-      selectedMap.gridSize.height, 
-      selectedMap.cellSize
-    ));
+  const resetGame = useCallback((): void => {
+    setMap(createMap(selectedMap));
     setPieces([]);
     setSelectedPieceId(null);
     setDraggingPiece(null);
     setNextPieceId(1);
     setIsPlacingMode(false);
-  };
+  }, [selectedMap, createMap]);
 
   // Handle map selection
-  const handleMapSelect = (mapOption: MapOption): void => {
+  const handleMapSelect = useCallback((mapOption: MapOption): void => {
     setSelectedMap(mapOption);
     
     // Create a new map with the selected map's grid size
-    setMap(createEmptyMap(
-      mapOption.gridSize.width, 
-      mapOption.gridSize.height, 
-      mapOption.cellSize
-    ));
+    setMap(createMap(mapOption));
     
     // Reset game state
     setPieces([]);
@@ -397,15 +434,15 @@ const GameMap: React.FC = () => {
     setDraggingPiece(null);
     setNextPieceId(1);
     setIsPlacingMode(false);
-  };
+  }, [createMap]);
 
   // Start game with selected map
-  const startGame = (): void => {
+  const startGame = useCallback((): void => {
     setGameStarted(true);
-  };
+  }, []);
 
   // Return to map selection
-  const backToMapSelection = (): void => {
+  const backToMapSelection = useCallback((): void => {
     setGameStarted(false);
     setPieces([]);
     setSelectedPieceId(null);
@@ -413,29 +450,102 @@ const GameMap: React.FC = () => {
     setNextPieceId(1);
     setIsPlacingMode(false);
     setShowMapSelector(false);
-  };
+  }, []);
 
   // Get cell style adjustments based on cell size
-  const getCellStyle = (cell: Cell): React.CSSProperties => {
+  const getCellStyle = useCallback((cell: Cell): React.CSSProperties => {
     return {
       width: selectedMap.cellSize,
       height: selectedMap.cellSize,
       backgroundColor: cell.isObstacle ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)',
     };
-  };
+  }, [selectedMap.cellSize]);
 
   // Get piece style adjustments based on cell size
-  const getPieceStyle = (piece: Piece): React.CSSProperties => {
+  const getPieceStyle = useCallback((piece: Piece): React.CSSProperties => {
     return {
       backgroundColor: piece.color,
       width: `${selectedMap.cellSize * 0.7}px`,
       height: `${selectedMap.cellSize * 0.7}px`,
       fontSize: selectedMap.cellSize < 70 ? '14px' : '18px',
     };
-  };
+  }, [selectedMap.cellSize]);
+
+  // Define a memoized Cell component to optimize rendering
+  const CellComponent = React.memo(({ cell, x, y }: { cell: Cell; x: number; y: number }) => {
+    const cellPieces = pieces.filter((piece: Piece) => piece.x === x && piece.y === y);
+    
+    return (
+      <div
+        className={getCellClassName(cell, x, y)}
+        style={getCellStyle(cell)}
+      >
+        {cellPieces.length > 0 && cellPieces.map((piece: Piece) => (
+          <div
+            key={piece.id}
+            className={getPieceClassName(piece)}
+            style={getPieceStyle(piece)}
+            onMouseDown={(e) => handlePieceDragStart(e, piece)}
+            onClick={(e) => handlePieceClick(e, piece)}
+            onDoubleClick={(e) => handleDeletePiece(e, piece)}
+            title={`${piece.label} (double-click to delete)`}
+          >
+            {piece.label}
+          </div>
+        ))}
+        {cell.isObstacle && (
+          <div className="obstacle-indicator">
+            ⛔
+          </div>
+        )}
+      </div>
+    );
+  });
+
+  // Use useMemo to optimize grid click handler calculation
+  const gridClickHandler = useCallback((e: React.MouseEvent): void => {
+    if (!gridRef.current) return;
+    
+    const rect = gridRef.current.getBoundingClientRect();
+    const offsetX = rect.left + window.scrollX + 10; // Add padding offset
+    const offsetY = rect.top + window.scrollY + 10; // Add padding offset
+    
+    // Calculate position with gap between cells
+    const cellWithGap = selectedMap.cellSize + 4;
+    const x = Math.floor((e.clientX - offsetX) / cellWithGap);
+    const y = Math.floor((e.clientY - offsetY) / cellWithGap);
+    
+    if (x >= 0 && x < selectedMap.gridSize.width && y >= 0 && y < selectedMap.gridSize.height) {
+      handleCellClick(x, y);
+    }
+  }, [selectedMap.cellSize, selectedMap.gridSize.width, selectedMap.gridSize.height, handleCellClick]);
+
+  // Create grid items in a more optimal way
+  const renderGrid = useCallback(() => {
+    const gridItems = [];
+    
+    for (let y = 0; y < selectedMap.gridSize.height && y < map.length; y++) {
+      const row = map[y];
+      for (let x = 0; x < selectedMap.gridSize.width && x < row.length; x++) {
+        gridItems.push(
+          <CellComponent 
+            key={`${x}-${y}`}
+            cell={row[x]} 
+            x={x} 
+            y={y}
+          />
+        );
+      }
+    }
+    
+    return gridItems;
+  }, [map, selectedMap.gridSize, pieces]);
+  
+  // Memoize the grid items to prevent unnecessary re-renders
+  const gridItems = useMemo(() => renderGrid(), [renderGrid]);
 
   // Render the Map Selection Screen
-  const renderMapSelectionScreen = () => {
+  const renderMapSelectionScreen = useCallback(() => {
     return (
       <div className="map-selection-screen">
         <h1 className="game-title">D&D Game Map</h1>
@@ -470,10 +580,10 @@ const GameMap: React.FC = () => {
         </div>
       </div>
     );
-  };
+  }, [handleMapSelect, selectedMap, startGame]);
 
   // Render the Game Interface
-  const renderGameInterface = () => {
+  const renderGameInterface = useCallback(() => {
     return (
       <>
         <header className="game-header">
@@ -595,57 +705,14 @@ const GameMap: React.FC = () => {
               backgroundPosition: 'center',
               width: `${selectedMap.gridSize.width * (selectedMap.cellSize + 4) - 4}px`,
               height: `${selectedMap.gridSize.height * (selectedMap.cellSize + 4) - 4}px`,
+              gap: '4px',
             }}
-            onClick={(e) => {
-              if (!gridRef.current) return;
-              
-              const rect = gridRef.current.getBoundingClientRect();
-              const offsetX = rect.left + window.scrollX + 10; // Add padding offset
-              const offsetY = rect.top + window.scrollY + 10; // Add padding offset
-              
-              // Calculate position with gap between cells
-              const cellWithGap = selectedMap.cellSize + 4;
-              const x = Math.floor((e.clientX - offsetX) / cellWithGap);
-              const y = Math.floor((e.clientY - offsetY) / cellWithGap);
-              
-              if (x >= 0 && x < selectedMap.gridSize.width && y >= 0 && y < selectedMap.gridSize.height) {
-                handleCellClick(x, y);
-              }
-            }}
+            onClick={gridClickHandler}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           >
-            {map.flatMap((row: Cell[], y: number) =>
-              row.map((cell: Cell, x: number) => (
-                <div
-                  key={`${x}-${y}`}
-                  className={getCellClassName(cell, x, y)}
-                  style={getCellStyle(cell)}
-                >
-                  {pieces.some((piece: Piece) => piece.x === x && piece.y === y) && (
-                    pieces.filter((piece: Piece) => piece.x === x && piece.y === y).map((piece: Piece) => (
-                      <div
-                        key={piece.id}
-                        className={getPieceClassName(piece)}
-                        style={getPieceStyle(piece)}
-                        onMouseDown={(e) => handlePieceDragStart(e, piece)}
-                        onClick={(e) => handlePieceClick(e, piece)}
-                        onDoubleClick={(e) => handleDeletePiece(e, piece)}
-                        title={`${piece.label} (double-click to delete)`}
-                      >
-                        {piece.label}
-                      </div>
-                    ))
-                  )}
-                  {cell.isObstacle && (
-                    <div className="obstacle-indicator">
-                      ⛔
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
+            {gridItems}
           </div>
           
           <div className="legend">
@@ -681,7 +748,11 @@ const GameMap: React.FC = () => {
         </footer>
       </>
     );
-  };
+  }, [
+    selectedMap, gridItems, isPlacingMode, selectedPieceId, draggingPiece, showMapSelector, showTooltip, 
+    backToMapSelection, togglePlacingMode, addRandomPiece, removeSelectedPiece, resetGame, 
+    handleMapSelect, gridClickHandler, handleMouseMove, handleMouseUp
+  ]);
 
   // Main render
   return (
