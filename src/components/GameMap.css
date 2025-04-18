@@ -548,12 +548,53 @@
   will-change: transform;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   contain: layout style;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.piece::before {
+  content: attr(title);
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: transform 0.2s, opacity 0.2s;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.piece:hover::before {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+}
+
+.piece::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0));
+  z-index: 1;
+  pointer-events: none;
 }
 
 .piece.selected {
   transform: scale(1.1);
   box-shadow: 0 0 0 3px yellow, 0 0 15px rgba(255, 255, 0, 0.7);
   z-index: 30;
+  border: 2px solid gold;
 }
 
 .piece.dragging {
@@ -561,6 +602,7 @@
   transform: scale(1.15);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
   z-index: 100;
+  border: 2px solid white;
 }
 
 /* Add a pulse animation for placeable cells */

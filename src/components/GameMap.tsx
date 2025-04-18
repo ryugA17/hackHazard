@@ -15,6 +15,13 @@ import contrastBeforeMap from '../assets/Maps/Contrast-Before.jpg';
 import contrastAfterMap from '../assets/Maps/Contrast-After.jpg';
 import './GameMap.css';
 
+// Import avatar images
+import boyAvatar from '../assets/avatars/boy.gif';
+import girlAvatar from '../assets/avatars/girl.gif';
+import robotAvatar from '../assets/avatars/robot.gif';
+import foxboyAvatar from '../assets/avatars/foxboy.gif';
+import foxgirlAvatar from '../assets/avatars/foxgirl.gif';
+
 const { useState, useRef, useEffect, useMemo, useCallback } = React;
 
 // Define map options
@@ -93,7 +100,7 @@ interface Piece {
   id: string;
   x: number;
   y: number;
-  color: string;
+  avatar: string;
   label: string;
   isDragging: boolean;
 }
@@ -119,14 +126,21 @@ const MAP_HEIGHT = 640;
 
 const OBSTACLE_TERRAINS: TerrainType[] = ["water", "mountain"];
 
-// Sample character pieces with different colors
-const CHARACTER_COLORS = [
-  "#FF5252", // Red
-  "#4CAF50", // Green
-  "#2196F3", // Blue
-  "#FFC107", // Yellow
-  "#9C27B0", // Purple
-  "#FF9800", // Orange
+// Sample character pieces with different avatars
+const CHARACTER_AVATARS = [
+  boyAvatar,
+  girlAvatar,
+  robotAvatar,
+  foxboyAvatar,
+  foxgirlAvatar,
+];
+
+const CHARACTER_LABELS = [
+  "Boy",
+  "Girl",
+  "Robot",
+  "Fox Boy",
+  "Fox Girl"
 ];
 
 // Helper functions
@@ -190,16 +204,17 @@ const GameMap: React.FC = () => {
   const createNewPiece = useCallback((x: number, y: number): Piece => {
     // Check if we've reached the maximum number of players
     if (pieces.length >= MAX_PLAYERS) {
-      alert(`Maximum of ${MAX_PLAYERS} tokens allowed on the map.`);
+      alert(`Maximum of ${MAX_PLAYERS} avatars allowed on the map.`);
       return null as unknown as Piece;
     }
 
+    const avatarIndex = nextPieceId % CHARACTER_AVATARS.length;
     const newPiece: Piece = {
       id: `piece-${nextPieceId}`,
       x,
       y,
-      color: CHARACTER_COLORS[nextPieceId % CHARACTER_COLORS.length],
-      label: `P${nextPieceId}`,
+      avatar: CHARACTER_AVATARS[avatarIndex],
+      label: CHARACTER_LABELS[avatarIndex],
       isDragging: false
     };
     
@@ -214,7 +229,7 @@ const GameMap: React.FC = () => {
     if (isPlacingMode) {
       // Check if we've reached the maximum number of players
       if (pieces.length >= MAX_PLAYERS) {
-        alert(`Maximum of ${MAX_PLAYERS} tokens allowed on the map.`);
+        alert(`Maximum of ${MAX_PLAYERS} avatars allowed on the map.`);
         setIsPlacingMode(false);
         return;
       }
@@ -394,7 +409,7 @@ const GameMap: React.FC = () => {
   const addRandomPiece = useCallback((): void => {
     // Check if we've reached the maximum number of players
     if (pieces.length >= MAX_PLAYERS) {
-      alert(`Maximum of ${MAX_PLAYERS} tokens allowed on the map.`);
+      alert(`Maximum of ${MAX_PLAYERS} avatars allowed on the map.`);
       return;
     }
     
@@ -426,7 +441,7 @@ const GameMap: React.FC = () => {
   const togglePlacingMode = useCallback((): void => {
     // If trying to enter placing mode but already at max tokens, show warning
     if (!isPlacingMode && pieces.length >= MAX_PLAYERS) {
-      alert(`Maximum of ${MAX_PLAYERS} tokens allowed on the map.`);
+      alert(`Maximum of ${MAX_PLAYERS} avatars allowed on the map.`);
       return;
     }
     
@@ -490,10 +505,13 @@ const GameMap: React.FC = () => {
   // Get piece style adjustments based on cell size
   const getPieceStyle = useCallback((piece: Piece): React.CSSProperties => {
     return {
-      backgroundColor: piece.color,
-      width: `${selectedMap.cellSize * 0.7}px`,
-      height: `${selectedMap.cellSize * 0.7}px`,
-      fontSize: selectedMap.cellSize < 70 ? '14px' : '18px',
+      width: `${selectedMap.cellSize * 0.8}px`,
+      height: `${selectedMap.cellSize * 0.8}px`,
+      backgroundImage: `url(${piece.avatar})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      borderRadius: '50%',
+      boxShadow: '0 3px 8px rgba(0, 0, 0, 0.6)',
     };
   }, [selectedMap.cellSize]);
 
@@ -514,9 +532,10 @@ const GameMap: React.FC = () => {
             onMouseDown={(e) => handlePieceDragStart(e, piece)}
             onClick={(e) => handlePieceClick(e, piece)}
             onDoubleClick={(e) => handleDeletePiece(e, piece)}
-            title={`${piece.label} (double-click to delete)`}
+            title={piece.label}
+            data-player={piece.label}
           >
-            {piece.label}
+            {/* Avatar is displayed via background image */}
           </div>
         ))}
         {cell.isObstacle && (
@@ -615,7 +634,7 @@ const GameMap: React.FC = () => {
         <header className="game-header">
           <h1 className="game-title">D&D Game Map</h1>
           <p className="game-subtitle">
-            Place and move your character tokens on the interactive game board
+            Place and move your character avatars on the interactive game board
           </p>
         </header>
         
@@ -633,7 +652,7 @@ const GameMap: React.FC = () => {
               onClick={togglePlacingMode}
               disabled={pieces.length >= MAX_PLAYERS}
             >
-              {isPlacingMode ? '✘ Cancel' : '✚ Place Token'}
+              {isPlacingMode ? '✘ Cancel' : '✚ Add Avatar'}
             </button>
             
             <button 
@@ -641,7 +660,7 @@ const GameMap: React.FC = () => {
               onClick={addRandomPiece}
               disabled={pieces.length >= MAX_PLAYERS}
             >
-              🎲 Random Token
+              🎲 Random Avatar
             </button>
             
             <button 
@@ -649,7 +668,7 @@ const GameMap: React.FC = () => {
               onClick={removeSelectedPiece}
               disabled={!selectedPieceId}
             >
-              🗑️ Remove Token
+              🗑️ Remove Avatar
             </button>
             
             <button 
@@ -692,13 +711,13 @@ const GameMap: React.FC = () => {
           
           <div className="status-bar">
             {isPlacingMode ? (
-              <span className="status-placing">✓ Select any empty cell to place a new token</span>
+              <span className="status-placing">✓ Select any empty cell to place a new avatar</span>
             ) : selectedPieceId ? (
-              <span className="status-selected">✓ Token selected - click on a cell to move it</span>
+              <span className="status-selected">✓ Avatar selected - click on a cell to move it</span>
             ) : pieces.length >= MAX_PLAYERS ? (
               <span className="status-max-players">Maximum player limit reached ({MAX_PLAYERS})</span>
             ) : (
-              <span>Select a token to move it or use the buttons above ({pieces.length}/{MAX_PLAYERS} tokens used)</span>
+              <span>Select an avatar to move it or use the buttons above ({pieces.length}/{MAX_PLAYERS} avatars used)</span>
             )}
           </div>
           
@@ -774,7 +793,7 @@ const GameMap: React.FC = () => {
         </div>
         
         <footer className="game-footer">
-          <p>Hover over tokens to see their name • Double-click to remove a token</p>
+          <p>Hover over avatars to see character name • Double-click to remove an avatar</p>
         </footer>
       </>
     );
