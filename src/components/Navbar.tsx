@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../assets/logogogogogogo.png';
-import pikachuRunning from '../assets/pikachu-running.gif';
+import Dragon from '../assets/animated-dragon-image-0129.gif';
 import { auth, signOut } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useProfile } from '../context/ProfileContext';
@@ -59,16 +59,16 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="navbar-logo">
           <Link to="/">
             <img src={logo} alt="Codedex" />
-            <span>Pikadex</span>
-            <img src={pikachuRunning} alt="Pikachu running" className="pikachu-gif" />
+            <span>Gamedex</span>
+            <img src={Dragon} alt="Pikachu running" className="Dragon-gif" />
           </Link>
         </div>
         
         <div className="navbar-links">
-          <Link to="/rules" className="nav-link">Rules</Link>
-          <Link to="/community" className="nav-link">Community</Link>
-          <Link to="/map" className="nav-link">Game Map</Link>
-          <Link to="/nfts" className="nav-link">NFT Gallery</Link>
+          <Link to="/rules" className={`nav-link ${location.pathname === '/rules' ? 'active' : ''}`}>Rules</Link>
+          <Link to="/community" className={`nav-link ${location.pathname === '/community' ? 'active' : ''}`}>Community</Link>
+          <Link to="/map" className={`nav-link ${location.pathname === '/map' ? 'active' : ''}`}>Game Map</Link>
+          <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>Dashboard</Link>
         </div>
         
         <div className="navbar-buttons">

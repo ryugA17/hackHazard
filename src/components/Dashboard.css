@@ -504,4 +504,90 @@
   color: white;
   background-color: #080c19;
   font-size: 16px;
+}
+
+/* NFT Gallery Section */
+.nft-gallery-section {
+  background-color: rgba(25, 30, 45, 0.7);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.section-title {
+  font-size: 18px;
+  margin: 0;
+  font-family: 'Press Start 2P', monospace;
+  color: white;
+}
+
+.see-all-link {
+  color: #4dabf7;
+  text-decoration: none;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.see-all-link:hover {
+  color: #228be6;
+  text-decoration: underline;
+}
+
+.nft-preview-container {
+  margin-top: 15px;
+}
+
+.nft-preview-card {
+  display: flex;
+  align-items: center;
+  background-color: rgba(15, 20, 30, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+  text-decoration: none;
+  color: white;
+  transition: all 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nft-preview-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border-color: rgba(77, 171, 247, 0.5);
+}
+
+.nft-preview-icon {
+  width: 60px;
+  height: 60px;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(77, 171, 247, 0.1);
+  border-radius: 8px;
+}
+
+.nft-preview-icon img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
+.nft-preview-content h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.nft-preview-content p {
+  margin: 0;
+  font-size: 14px;
+  color: #a0b0c0;
+  font-family: system-ui, sans-serif;
 } 

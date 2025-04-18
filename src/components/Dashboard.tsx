@@ -168,6 +168,27 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* NFT Gallery Section */}
+          <div className="nft-gallery-section">
+            <div className="section-header">
+              <h2 className="section-title">My NFT Collection</h2>
+              <Link to="/nfts" className="see-all-link">View All</Link>
+            </div>
+            <div className="nft-preview-container">
+              <Link to="/nfts" className="nft-preview-card">
+                <div className="nft-preview-icon">
+                  <img src="/assets/nft-icon.png" alt="NFT" onError={(e) => {
+                    e.currentTarget.src = "https://placehold.co/40x40/4dabf7/ffffff?text=NFT";
+                  }} />
+                </div>
+                <div className="nft-preview-content">
+                  <h3>Your NFT Collection</h3>
+                  <p>Check out your NFT collection and mint new ones!</p>
+                </div>
+              </Link>
+            </div>
+          </div>
+
           {/* Explore more section */}
           <h2 className="explore-title">Explore more</h2>
           
