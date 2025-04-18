@@ -2,7 +2,7 @@ import React from 'react';
 import './MiddleSection.css';
 import './ScrollAnimations.css';
 import pokeBattle1 from '../assets/dragonssss.jpg';
-import pokeBattle2 from '../assets/poke battle 22.jpg';
+import pokeBattle2 from '../assets/dragon2.webp';
 import codeGif from '../assets/battle.gif';
 import { setupScrollAnimations } from '../utils/scrollAnimations';
 
