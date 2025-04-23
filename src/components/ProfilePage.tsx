@@ -63,7 +63,7 @@ const ProfilePage = () => {
   };
   
   if (loading) {
-    return <div className="loading">Loading profile...</div>;
+    return <div className="loading">Loading your realm profile...</div>;
   }
   
   // Handle save profile changes
@@ -107,21 +107,19 @@ const ProfilePage = () => {
           </div>
           <div className="profile-info">
             <div className="username-container">
-              <h1>{profileData.name}</h1>
+              <h1>{profileData.name || defaultUsername}</h1>
               <button className="edit-profile-btn" onClick={() => {
                 setEditData({...profileData});
                 setIsEditing(true);
-              }}>Edit Profile</button>
+              }}>Edit Your Legend</button>
             </div>
-            <p className="profile-handle">@{profileData.username}</p>
+            <p className="profile-handle">@{profileData.username || defaultHandle.substring(1)}</p>
             <div className="profile-follow-info">
-              <span className="follow-count">0 following</span>
+              <span className="follow-count">0 companions</span>
               <span className="follow-count">0 followers</span>
             </div>
           </div>
         </div>
-
-        
 
         <div className="profile-container">
           <div className="profile-main">
@@ -134,15 +132,15 @@ const ProfilePage = () => {
                 <p className="bio-content">{profileData.bio}</p>
               ) : (
                 <p className="bio-empty-state">
-                  You don't have anything in your bio. 
+                  Your adventurer's tale remains unwritten. 
                   <button onClick={() => {
                     setEditData({...profileData});
                     setIsEditing(true);
-                  }} className="bio-link">Edit profile</button> to add something cool about yourself.
+                  }} className="bio-link">Craft your story</button> to share your quest with fellow adventurers.
                 </p>
               )}
               <div className="profile-joined">
-                <span className="joined-icon">🗓️</span> Joined {joinDate}
+                <span className="joined-icon">🗓️</span> Joined the realm on {joinDate}
               </div>
               {profileData.location && (
                 <div className="profile-location">
@@ -163,7 +161,7 @@ const ProfilePage = () => {
           </div>
 
           <div className="stats-panel">
-            <h2>Your Stats</h2>
+            <h2>Adventure Stats</h2>
             <div className="profile-stats">
               <span className="stat-icon xp-icon">{stats.totalXp}</span>
               <span className="stat-details"><p>Total XP</p></span>
@@ -181,15 +179,15 @@ const ProfilePage = () => {
 
           <div className="profile-section">
             <div className="section-header">
-              <h2>My NFTs</h2>
-              <Link to="/nfts" className="see-all-link">See all</Link>
+              <h2>My Treasure Vault</h2>
+              <Link to="/nfts" className="see-all-link">View all treasures</Link>
             </div>
             <div className="nft-preview">
               <NFTGallery preview={true} maxDisplay={3} />
             </div>
           </div>
 
-          <h2 className="skills-title">Skills</h2>
+          <h2 className="skills-title">Hero Abilities</h2>
           
           <div className="skills-grid">
             <div className="skill-card">
@@ -219,17 +217,17 @@ const ProfilePage = () => {
           </div>
 
           <div className="projects-header">
-            <h2 className="projects-title">Projects</h2>
-            <Link to="/projects" className="see-all-link">See all</Link>
+            <h2 className="projects-title">Epic Quests</h2>
+            <Link to="/projects" className="see-all-link">View all quests</Link>
           </div>
           
           <div className="projects-grid">
             <div className="empty-project">
-              <p>You haven't created any projects yet.</p>
-              <button className="create-project-btn">Create a project</button>
+              <p>You haven't embarked on any quests yet.</p>
+              <button className="create-project-btn">Begin a New Quest</button>
             </div>
           </div>
-        </div>
+        </div> 
       </div>
       <Footer />
     </>
@@ -251,285 +249,177 @@ const EditProfilePage = ({
     { value: 'team', label: 'Team Player' }
   ];
 
-  // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parentProp, childProp] = name.split('.');
-      setProfileData({
-        ...profileData,
-        [parentProp]: {
-          ...profileData[parentProp as keyof typeof profileData] as Record<string, string>,
-          [childProp]: value
-        }
-      });
-    } else {
-      setProfileData({
-        ...profileData,
-        [name]: value
-      });
-    }
+    setProfileData({
+      ...profileData,
+      [name]: value
+    });
   };
 
   return (
-    <>
-      <div className="edit-profile-page">
-        <div className="edit-profile-container">
-          <div className="edit-profile-sidebar">
-            <h2 className="account-heading">Account</h2>
-            <ul className="account-menu">
-              <li className="account-menu-item active">
-                <span className="account-menu-icon">✏️</span> Edit Profile
-              </li>
-              <li className="account-menu-item">
-                <span className="account-menu-icon">💳</span> Billing
-              </li>
-              <li className="account-menu-item">
-                <span className="account-menu-icon">⚙️</span> Settings
-              </li>
-            </ul>
-          </div>
-          
-          <div className="edit-profile-content">
-            <div className="edit-profile-section">
-              <h2 className="section-heading">Personal Information</h2>
-              
-              <div className="form-group">
-                <label htmlFor="name">Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={profileData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter your name"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="username">Username *</label>
-                <div className="username-input-group">
-                  <span className="username-prefix">@</span>
-                  <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    value={profileData.username}
-                    onChange={handleInputChange}
-                    placeholder="Enter your username"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="location">Location</label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={profileData.location}
-                  onChange={handleInputChange}
-                  placeholder="Enter your location here"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="work">Work</label>
-                <input
-                  type="text"
-                  id="work"
-                  name="work"
-                  value={profileData.work}
-                  onChange={handleInputChange}
-                  placeholder="Enter where you work here"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="education">Education</label>
-                <input
-                  type="text"
-                  id="education"
-                  name="education"
-                  value={profileData.education}
-                  onChange={handleInputChange}
-                  placeholder="Enter your school/college here"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="bio">Bio</label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={profileData.bio}
-                  onChange={handleInputChange}
-                  placeholder="Edit your bio here"
-                  rows={5}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="gamePlan">Game Plan</label>
-                <select
-                  id="gamePlan"
-                  name="gamePlan"
-                  value={profileData.gamePlan || ''}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select a Game Plan</option>
-                  {gamePlanOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="edit-profile-section">
-              <h2 className="section-heading">Skill Set</h2>
-              <p className="section-description">Coming soon! You'll be able to edit your skills here.</p>
-            </div>
-            
-            <div className="edit-profile-section">
-              <h2 className="section-heading">Social Profiles</h2>
-              
-              <div className="form-group">
-                <label htmlFor="github">GitHub</label>
-                <div className="social-input-group">
-                  <span className="social-prefix">@</span>
-                  <input
-                    type="text"
-                    id="github"
-                    name="social.github"
-                    value={profileData.social.github}
-                    onChange={handleInputChange}
-                    placeholder="Enter GitHub username"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="instagram">Instagram</label>
-                <div className="social-input-group">
-                  <span className="social-prefix">@</span>
-                  <input
-                    type="text"
-                    id="instagram"
-                    name="social.instagram"
-                    value={profileData.social.instagram}
-                    onChange={handleInputChange}
-                    placeholder="Enter Instagram username"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="twitch">Twitch</label>
-                <div className="social-input-group">
-                  <span className="social-prefix">@</span>
-                  <input
-                    type="text"
-                    id="twitch"
-                    name="social.twitch"
-                    value={profileData.social.twitch}
-                    onChange={handleInputChange}
-                    placeholder="Enter Twitch username"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="tiktok">TikTok</label>
-                <div className="social-input-group">
-                  <span className="social-prefix">@</span>
-                  <input
-                    type="text"
-                    id="tiktok"
-                    name="social.tiktok"
-                    value={profileData.social.tiktok}
-                    onChange={handleInputChange}
-                    placeholder="Enter TikTok username"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="youtube">YouTube</label>
-                <div className="social-input-group">
-                  <span className="social-prefix">@</span>
-                  <input
-                    type="text"
-                    id="youtube"
-                    name="social.youtube"
-                    value={profileData.social.youtube}
-                    onChange={handleInputChange}
-                    placeholder="Enter YouTube username"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="twitter">Twitter</label>
-                <div className="social-input-group">
-                  <span className="social-prefix">@</span>
-                  <input
-                    type="text"
-                    id="twitter"
-                    name="social.twitter"
-                    value={profileData.social.twitter}
-                    onChange={handleInputChange}
-                    placeholder="Enter Twitter username"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="linkedin">LinkedIn</label>
-                <div className="social-input-group">
-                  <span className="social-prefix">in/</span>
-                  <input
-                    type="text"
-                    id="linkedin"
-                    name="social.linkedin"
-                    value={profileData.social.linkedin}
-                    onChange={handleInputChange}
-                    placeholder="Enter LinkedIn username"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="edit-profile-actions">
-              <button className="save-changes-btn" onClick={onSave}>
-                Save Changes
-              </button>
-              <button className="view-profile-btn" onClick={onCancel}>
-                View Profile
-              </button>
-            </div>
-          </div>
-          
-          <div className="profile-picture-section">
-            <div className="profile-picture-container">
-              <img 
-                src={profilePic} 
-                alt="Profile"
-                className="edit-profile-picture" 
-              />
-              <button className="change-picture-btn">
-                <span className="edit-icon">✏️</span>
-              </button>
-            </div>
-            <p className="profile-picture-info">
-              *Recommended ratio 1:1 and file size less than 5 MB
+    <div className="edit-profile-page">
+      <div className="edit-profile-container">
+        <div className="edit-profile-sidebar">
+          <h2 className="account-heading">Account Settings</h2>
+          <ul className="account-menu">
+            <li className="account-menu-item active">
+              <span className="account-menu-icon">👤</span>
+              Profile
+            </li>
+            <li className="account-menu-item">
+              <span className="account-menu-icon">🔐</span>
+              Security
+            </li>
+            <li className="account-menu-item">
+              <span className="account-menu-icon">💰</span>
+              Wallet
+            </li>
+            <li className="account-menu-item">
+              <span className="account-menu-icon">🔔</span>
+              Notifications
+            </li>
+          </ul>
+        </div>
+        
+        <div className="edit-profile-content">
+          <div className="edit-profile-section">
+            <h3 className="section-heading">Your Hero Profile</h3>
+            <p className="section-description">
+              Customize your hero's legend that will be shown to other adventurers in the realm.
             </p>
+            
+            <div className="profile-picture-section">
+              <div className="profile-picture-container">
+                <img 
+                  src={profilePic} 
+                  alt="Profile picture" 
+                  className="edit-profile-picture"
+                  onError={(e) => {
+                    e.currentTarget.src = defaultAvatar;
+                  }}
+                />
+                <div className="change-picture-btn">
+                  <span className="edit-icon">📷</span>
+                  Change
+                </div>
+              </div>
+              <div className="profile-picture-info">
+                <p>Upload a character portrait that represents your heroic identity.</p>
+                <p>Recommended: Square image, at least 400x400 pixels.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="edit-profile-section">
+            <h3 className="section-heading">Hero Details</h3>
+            
+            <div className="form-group">
+              <label htmlFor="name">Display Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={profileData.name || ''}
+                onChange={handleInputChange}
+                placeholder="Enter your display name"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <div className="username-input-group">
+                <span className="username-prefix">@</span>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={profileData.username || ''}
+                  onChange={handleInputChange}
+                  placeholder="username"
+                />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="bio">Bio</label>
+              <textarea
+                id="bio"
+                name="bio"
+                value={profileData.bio || ''}
+                onChange={handleInputChange}
+                placeholder="Write a brief description about yourself and your journey..."
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="gamePlan">Gaming Style</label>
+              <select 
+                id="gamePlan" 
+                name="gamePlan"
+                value={profileData.gamePlan || 'casual'}
+                onChange={handleInputChange}
+              >
+                {gamePlanOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div className="edit-profile-section">
+            <h3 className="section-heading">Personal Details</h3>
+            
+            <div className="form-group">
+              <label htmlFor="location">Kingdom (Location)</label>
+              <input
+                type="text"
+                id="location"
+                name="location"
+                value={profileData.location || ''}
+                onChange={handleInputChange}
+                placeholder="e.g., Stormwind, Azeroth"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="work">Guild (Work/Company)</label>
+              <input
+                type="text"
+                id="work"
+                name="work"
+                value={profileData.work || ''}
+                onChange={handleInputChange}
+                placeholder="e.g., Knight of the Silver Hand"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="education">Training (Education)</label>
+              <input
+                type="text"
+                id="education"
+                name="education"
+                value={profileData.education || ''}
+                onChange={handleInputChange}
+                placeholder="e.g., Mage Academy of Dalaran"
+              />
+            </div>
+          </div>
+          
+          <div className="edit-profile-actions">
+            <button className="save-changes-btn" onClick={onSave}>
+              Save Legend
+            </button>
+            <button className="view-profile-btn" onClick={onCancel}>
+              Cancel
+            </button>
           </div>
         </div>
       </div>
-      <Footer />
-    </>
+    </div>
   );
 };
 
