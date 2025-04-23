@@ -157,7 +157,8 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   background-color: #222;
   animation: float 6s ease-in-out infinite;
-}
+  margin-bottom: 50%;
+  }
 
 .avatar1 {
   animation-delay: 0s;
@@ -305,6 +306,7 @@
 .battle-gif {
   width: 100%;
   display: block;
+  margin-bottom: 40;
 }
 
 @keyframes glowPulse {

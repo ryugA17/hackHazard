@@ -2,7 +2,7 @@ import React from 'react';
 import './MiddleSection.css';
 import './ScrollAnimations.css';
 import pokeBattle1 from '../assets/bg1.png';
-import pokeBattle2 from '../assets/dragon2.webp';
+import pokeBattle2 from '../assets/bg2.png';
 import codeGif from '../assets/battle.gif';
 import robotAvatar from '../assets/avatars/robot.gif';
 import foxboyAvatar from '../assets/avatars/foxboy.gif';
