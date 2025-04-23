@@ -21,6 +21,7 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [user, setUser] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
   const isProfile = location.pathname === '/profile';
@@ -53,22 +54,46 @@ const Navbar: React.FC<NavbarProps> = ({
   // Determine username to display
   const displayName = profileData.name || user?.displayName || '';
 
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-logo">
           <Link to="/">
-            <img src={logo} alt="Codedex" />
-            <span>Gamedex</span>
-            <img src={Dragon} alt="Pikachu running" className="Dragon-gif" />
+            <img src={logo} alt="Logo" className="logo-image" />
+            <span className="logo-text">D&D NFT Realm</span>
+            <img src={Dragon} alt="Dragon" className="dragon-gif" />
           </Link>
         </div>
         
-        <div className="navbar-links">
-          <Link to="/rules" className={`nav-link ${location.pathname === '/rules' ? 'active' : ''}`}>Rules</Link>
-          <Link to="/community" className={`nav-link ${location.pathname === '/community' ? 'active' : ''}`}>Community</Link>
-          <Link to="/map" className={`nav-link ${location.pathname === '/map' ? 'active' : ''}`}>Game Map</Link>
-          <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>Dashboard</Link>
+        <div className="mobile-menu-toggle" onClick={toggleMobileMenu}>
+          <div className={`hamburger ${mobileMenuOpen ? 'active' : ''}`}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        
+        <div className={`navbar-links ${mobileMenuOpen ? 'mobile-active' : ''}`}>
+          <Link to="/rules" className={`nav-link ${location.pathname === '/rules' ? 'active' : ''}`}>
+            <span className="nav-icon">📜</span>
+            <span className="nav-text">Rulebook</span>
+          </Link>
+          <Link to="/community" className={`nav-link ${location.pathname === '/community' ? 'active' : ''}`}>
+            <span className="nav-icon">🏰</span>
+            <span className="nav-text">Tavern</span>
+          </Link>
+          <Link to="/map" className={`nav-link ${location.pathname === '/map' ? 'active' : ''}`}>
+            <span className="nav-icon">🗺️</span>
+            <span className="nav-text">Battlemap</span>
+          </Link>
+          <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
+            <span className="nav-icon">⚔️</span>
+            <span className="nav-text">Quest Board</span>
+          </Link>
         </div>
         
         <div className="navbar-buttons">
@@ -89,12 +114,12 @@ const Navbar: React.FC<NavbarProps> = ({
                   className="signout-btn"
                   disabled={loading}
                 >
-                  {loading ? 'Signing out...' : 'Sign out'}
+                  {loading ? 'Leaving...' : 'Leave Realm'}
                 </button>
               )}
             </div>
           ) : (
-            <Link to="/signup" className="signup-btn">Sign up</Link>
+            <Link to="/signup" className="signup-btn">Join Adventure</Link>
           )}
         </div>
       </div>

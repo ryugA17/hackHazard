@@ -1,10 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SignupPage.css';
-import signupBackground from '../assets/signUp_Page.png';
+import signupBackground from '../assets/dnd.avif';
 import { auth, signInWithGoogle, signUpWithEmailAndPassword, loginWithEmailAndPassword } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
+import boyAvatar from '../assets/avatars/boy.gif';
+import robotAvatar from '../assets/avatars/robot.gif';
+import foxgirlAvatar from '../assets/avatars/foxgirl.gif';
+import Dragon from '../assets/animated-dragon-image-0129.gif';
 
 interface SignupPageProps {
   onSignUp?: () => void;
@@ -185,12 +189,27 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
   };
 
   return (
-    <div className="signup-page" style={{ backgroundImage: `url(${signupBackground})` }}>
+    <div className="signup-page">
+      <div className="signup-background" style={{ backgroundImage: `url(${signupBackground})` }} />
+      
+      <div className="floating-characters">
+        <img src={boyAvatar} alt="Character" className="floating-character avatar1" />
+        <img src={foxgirlAvatar} alt="Character" className="floating-character avatar2" />
+        <img src={robotAvatar} alt="Character" className="floating-character avatar3" />
+        <img src={Dragon} alt="Dragon" className="floating-dragon" />
+      </div>
+      
       <div className="signup-container">
-        <h1 className="signup-title">{isLogin ? 'Welcome Back' : 'Join Your Gaming Adventure'}</h1>
-        <p className="signup-subtitle">
-          {isLogin ? 'Sign in to continue your journey' : 'Create your account and start gaming today'}
-        </p>
+        <div className="signup-header">
+          <h1 className="signup-title">
+            {isLogin ? 'Return to the Realm' : 'Begin Your Legend'}
+          </h1>
+          <p className="signup-subtitle">
+            {isLogin 
+              ? 'Enter your credentials to continue your quest' 
+              : 'Create an account to start your adventure and collect NFT rewards'}
+          </p>
+        </div>
         
         {authError && <div className="auth-error">{authError}</div>}
         
@@ -202,7 +221,7 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
             disabled={loading}
           >
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-            <span>{loading ? 'Processing...' : `Sign ${isLogin ? 'in' : 'up'} with Google`}</span>
+            <span>{loading ? 'Summoning...' : `${isLogin ? 'Enter' : 'Join'} with Google`}</span>
           </button>
         </div>
         
@@ -213,14 +232,14 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
         <form className="signup-form" onSubmit={handleSubmit}>
           {!isLogin && (
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="username">Hero Name</label>
               <input
                 type="text"
                 id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                placeholder="Choose a username"
+                placeholder="Choose your hero name"
                 className={errors.username ? 'input-error' : ''}
               />
               {errors.username && <span className="error-message">{errors.username}</span>}
@@ -228,28 +247,28 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
           )}
           
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">Magical Scroll (Email)</label>
             <input
               type="email"
               id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder="your@email.com"
               className={errors.email ? 'input-error' : ''}
             />
             {errors.email && <span className="error-message">{errors.email}</span>}
           </div>
           
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">Secret Rune (Password)</label>
             <input
               type="password"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder={isLogin ? "Enter your password" : "Create a password"}
+              placeholder="Enter your secret password"
               className={errors.password ? 'input-error' : ''}
             />
             {errors.password && <span className="error-message">{errors.password}</span>}
@@ -257,7 +276,7 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
           
           {!isLogin && (
             <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
+              <label htmlFor="confirmPassword">Confirm Secret Rune</label>
               <input
                 type="password"
                 id="confirmPassword"
@@ -267,31 +286,42 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
                 placeholder="Confirm your password"
                 className={errors.confirmPassword ? 'input-error' : ''}
               />
-              {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+              {errors.confirmPassword && (
+                <span className="error-message">{errors.confirmPassword}</span>
+              )}
             </div>
           )}
           
-          <button type="submit" className="signup-button" disabled={loading}>
-            {loading ? 'Processing...' : isLogin ? 'Login' : 'Create Account'}
+          <button
+            type="submit"
+            className="signup-button"
+            disabled={loading}
+          >
+            {loading 
+              ? 'Casting Spell...' 
+              : isLogin ? 'Enter the Realm' : 'Begin Your Quest'}
           </button>
         </form>
         
         <div className="login-option">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
+          <span>
+            {isLogin 
+              ? "Don't have an account yet?" 
+              : "Already a legendary adventurer?"}
+          </span>
           <button 
+            type="button" 
+            className="toggle-auth-btn" 
             onClick={toggleAuthMode}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              padding: 0, 
-              color: '#ffde59', 
-              textDecoration: 'none',
-              fontWeight: 500,
-              cursor: 'pointer'
-            }}
           >
-            {isLogin ? 'Sign up' : 'Log in'}
+            {isLogin ? 'Sign up now' : 'Login here'}
           </button>
+        </div>
+        
+        <div className="signup-footer">
+          <div className="feature-badge">🎲 Interactive D&D Campaigns</div>
+          <div className="feature-badge">💰 Earn Valuable NFTs</div>
+          <div className="feature-badge">⚔️ Join Epic Adventures</div>
         </div>
       </div>
     </div>
