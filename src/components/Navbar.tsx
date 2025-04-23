@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Navbar.css';
-import logo from '../assets/logogogogogogo.png';
+import logo from '../assets/logonav.png';
 import Dragon from '../assets/animated-dragon-image-0129.gif';
 import { auth, signOut } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -64,7 +64,7 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="navbar-logo">
           <Link to="/">
             <img src={logo} alt="Logo" className="logo-image" />
-            <span className="logo-text">D&D NFT Realm</span>
+            <span className="logo-text">QuestMint</span>
             <img src={Dragon} alt="Dragon" className="dragon-gif" />
           </Link>
         </div>
