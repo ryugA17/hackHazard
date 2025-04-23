@@ -87,7 +87,7 @@ const MiddleSection = () => {
       
       {/* NFT Rewards Section */}
       <div className="nft-rewards-container">
-        <div className="nft-description fade-in">
+        <div className="nft-description slide-in-left">
           <h2 className="nft-title">Unique NFT Rewards</h2>
           <p className="nft-text">
             Your achievements in the game are transformed into exclusive NFTs. These digital assets can be collected, traded, or sold on our marketplace.
@@ -100,13 +100,13 @@ const MiddleSection = () => {
           </ul>
         </div>
         
-        <div className="nft-image-container scale-in stagger-2">
+        <div className="nft-image-container slide-in-right">
           <div className="nft-image">
             <img src={pokeBattle2} alt="NFT Rewards" className="main-nft-image" />
             <div className="nft-glow"></div>
-          </div>
-          <div className="battle-gif-container">
-            <img src={codeGif} alt="Battle Animation" className="battle-gif" />
+            <div className="battle-gif-container">
+              <img src={codeGif} alt="Battle Animation" className="battle-gif" />
+            </div>
           </div>
         </div>
       </div>
