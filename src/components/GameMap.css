@@ -768,15 +768,15 @@
     max-width: 100%;
     overflow: auto;
   }
-  
+
   .map-selection-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
-  
+
   .map-selection-preview {
     height: 150px;
   }
-  
+
   .btn-start-game {
     font-size: 16px;
     padding: 10px 20px;
@@ -788,4 +788,134 @@
   opacity: 0.5;
   cursor: not-allowed;
   background-color: #757575;
-} 
+}
+
+/* Narration Panel */
+.narration-panel {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.narration-panel h3 {
+  margin: 0 0 10px 0;
+  font-size: 20px;
+  color: #ffc107;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 8px;
+}
+
+.narration-panel p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #fff;
+  font-style: italic;
+}
+
+/* Game Controls Panel */
+.game-controls-panel {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.btn-dice {
+  background-color: #9c27b0;
+}
+
+.btn-update {
+  background-color: #00bcd4;
+}
+
+/* Dice Panel */
+.dice-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+}
+
+.dice-panel h3 {
+  margin: 0 0 15px 0;
+  font-size: 20px;
+  color: #ffc107;
+}
+
+.dice-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.dice-buttons button {
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dice-buttons button:hover {
+  background-color: #303f9f;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dice-buttons button:active {
+  transform: translateY(0);
+}
+
+.dice-result {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.dice-result p {
+  margin: 0;
+  font-size: 18px;
+  color: #fff;
+}
+
+.dice-result .individual-rolls {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 5px;
+}
+
+.btn-close {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+  background-color: #d32f2f;
+}

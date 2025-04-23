@@ -1,2 +1,11 @@
 uvicorn
 fastapi
+groq
+python-dotenv
+pillow
+numpy
+opencv-python
+pyautogui
+websockets
+gtts
+pygame

@@ -10,12 +10,12 @@ import foxgirlAvatar from '../assets/avatars/foxgirl.gif';
 import backgroundMusic from '../assets/aizentheme.mp3';
 import './GameMap.css';
 
-const { 
-  useState, 
-  useEffect, 
-  useCallback, 
-  useRef, 
-  useMemo 
+const {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo
 } = React;
 
 // Utility functions
@@ -172,8 +172,8 @@ const GameMap: React.FC = () => {
   const [currentReward, setCurrentReward] = React.useState<string>('');
   const [selectedMap, setSelectedMap] = React.useState<MapOption>(MAP_OPTIONS[0]);
   const [map, setMap] = React.useState<Cell[][]>(() => createEmptyMap(
-    selectedMap.gridSize.width, 
-    selectedMap.gridSize.height, 
+    selectedMap.gridSize.width,
+    selectedMap.gridSize.height,
     selectedMap.cellSize
   ));
   const [pieces, setPieces] = React.useState<Piece[]>([]);
@@ -184,27 +184,56 @@ const GameMap: React.FC = () => {
   const [narration, setNarration] = React.useState<string>("");
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8000/ws/game');
-    
+    // Create a unique session ID for this game session
+    const sessionId = `session-${Date.now()}`;
+    const ws = new WebSocket(`ws://localhost:8000/ws/dnd/${sessionId}`);
+
+    ws.onopen = () => {
+      console.log('Connected to DND Dungeon Master server');
+    };
+
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setNarration(data.narration);
+
+      if (data.type === 'narration') {
+        setNarration(data.content);
+      } else if (data.type === 'error') {
+        console.error('Error from DM server:', data.content);
+      }
     };
-    
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    ws.onclose = () => {
+      console.log('Disconnected from DND Dungeon Master server');
+    };
+
     setWsConnection(ws);
-    return () => ws.close();
-  }, [map, pieces, wsConnection]);
+
+    // Clean up function
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, []);
 
   const sendGameState = useCallback(() => {
-    if (wsConnection) {
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
       wsConnection.send(JSON.stringify({
-        grid_cells: map,
-        tokens: pieces,
-        obstacles: getObstacles(),
-        terrain: getTerrainMap()
+        type: 'get_state',
+        data: {
+          grid_cells: map,
+          tokens: pieces,
+          obstacles: getObstacles(),
+          terrain: getTerrainMap(),
+          selected_map: selectedMap.id
+        }
       }));
     }
-  }, [map, pieces, wsConnection]);
+  }, [map, pieces, wsConnection, selectedMap]);
 
   // State management
   const [isPlacingMode, setIsPlacingMode] = useState(false);
@@ -216,7 +245,7 @@ const GameMap: React.FC = () => {
   const [showMusicError, setShowMusicError] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  
+
   // Memoize the creation of a new map when selecting a different map
   const createMap = useCallback((mapOption: MapOption) => {
     return createEmptyMap(
@@ -225,7 +254,7 @@ const GameMap: React.FC = () => {
       mapOption.cellSize
     );
   }, []);
-  
+
   // Create a new piece
   const createNewPiece = useCallback((x: number, y: number): Piece => {
     // Check if we've reached the maximum number of players
@@ -243,11 +272,24 @@ const GameMap: React.FC = () => {
       label: CHARACTER_LABELS[avatarIndex],
       isDragging: false
     };
-    
+
     setPieces((prevPieces: Piece[]) => [...prevPieces, newPiece]);
     setNextPieceId((prev: number) => prev + 1);
     return newPiece;
   }, [nextPieceId, pieces.length]);
+
+  // Send player action to the DND server
+  const sendPlayerAction = useCallback((action: string, details: any) => {
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+      wsConnection.send(JSON.stringify({
+        type: 'player_action',
+        action: {
+          type: action,
+          ...details
+        }
+      }));
+    }
+  }, [wsConnection]);
 
   // Handle cell click to add new piece or move existing piece
   const handleCellClick = useCallback((x: number, y: number): void => {
@@ -259,44 +301,74 @@ const GameMap: React.FC = () => {
         setIsPlacingMode(false);
         return;
       }
-      
+
       // Check if the cell is empty and not an obstacle
-      if (!pieces.some((piece: Piece) => piece.x === x && piece.y === y) && 
+      if (!pieces.some((piece: Piece) => piece.x === x && piece.y === y) &&
           y < map.length && x < map[0].length && !map[y][x].isObstacle) {
-        createNewPiece(x, y);
+        const newPiece = createNewPiece(x, y);
         setIsPlacingMode(false); // Exit placing mode after placing a piece
+
+        // Notify the DM about the new character
+        sendPlayerAction('add_character', {
+          character_id: newPiece.id,
+          character_type: newPiece.label,
+          position: { x, y }
+        });
       }
       return;
     }
-    
+
     // If a piece is already selected, move it
     if (selectedPieceId) {
       // Check if the destination cell is valid (not an obstacle and no other piece)
-      if (y < map.length && x < map[0].length && 
-          !map[y][x].isObstacle && 
+      if (y < map.length && x < map[0].length &&
+          !map[y][x].isObstacle &&
           !pieces.some((p: Piece) => p.x === x && p.y === y)) {
-        setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) => 
+
+        // Find the selected piece
+        const selectedPiece = pieces.find((p: Piece) => p.id === selectedPieceId);
+
+        // Update the piece position
+        setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) =>
           piece.id === selectedPieceId
             ? { ...piece, x, y, isDragging: false }
             : piece
         ));
+
+        // Notify the DM about the movement
+        if (selectedPiece) {
+          sendPlayerAction('move_character', {
+            character_id: selectedPieceId,
+            character_type: selectedPiece.label,
+            from: { x: selectedPiece.x, y: selectedPiece.y },
+            to: { x, y }
+          });
+        }
+
         setSelectedPieceId(null);
       }
     } else {
       // Check if we clicked on a piece
       const clickedPiece = pieces.find((piece: Piece) => piece.x === x && piece.y === y);
-      
+
       if (clickedPiece) {
         // Select this piece for movement
         setSelectedPieceId(clickedPiece.id);
+
+        // Notify the DM about the selection
+        sendPlayerAction('select_character', {
+          character_id: clickedPiece.id,
+          character_type: clickedPiece.label,
+          position: { x, y }
+        });
       }
     }
-  }, [isPlacingMode, pieces, selectedPieceId, map, createNewPiece]);
+  }, [isPlacingMode, pieces, selectedPieceId, map, createNewPiece, sendPlayerAction]);
 
   // Handle piece click
   const handlePieceClick = useCallback((e: React.MouseEvent, piece: Piece): void => {
     e.stopPropagation();
-    
+
     if (selectedPieceId === piece.id) {
       // Deselect if already selected
       setSelectedPieceId(null);
@@ -309,9 +381,9 @@ const GameMap: React.FC = () => {
   // Handle piece drag start
   const handlePieceDragStart = useCallback((e: React.MouseEvent, piece: Piece): void => {
     e.stopPropagation();
-    
+
     // Start dragging this piece
-    setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) => 
+    setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) =>
       p.id === piece.id
         ? { ...p, isDragging: true }
         : p
@@ -327,19 +399,19 @@ const GameMap: React.FC = () => {
     const rect = gridRef.current.getBoundingClientRect();
     const offsetX = rect.left + window.scrollX + 10; // Add padding offset
     const offsetY = rect.top + window.scrollY + 10; // Add padding offset
-    
+
     // Calculate grid position, accounting for gap between cells (4px)
     const cellWithGap = selectedMap.cellSize + 4; // Cell size plus gap
     const x = Math.floor((e.clientX - offsetX) / cellWithGap);
     const y = Math.floor((e.clientY - offsetY) / cellWithGap);
-    
+
     // Ensure we're within grid bounds and not on an obstacle or other piece
-    if (x >= 0 && x < selectedMap.gridSize.width && 
-        y >= 0 && y < selectedMap.gridSize.height && 
-        y < map.length && x < map[0].length && 
+    if (x >= 0 && x < selectedMap.gridSize.width &&
+        y >= 0 && y < selectedMap.gridSize.height &&
+        y < map.length && x < map[0].length &&
         !map[y][x].isObstacle &&
         !pieces.some((p: Piece) => p.id !== draggingPiece.id && p.x === x && p.y === y)) {
-      setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) => 
+      setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) =>
         p.id === draggingPiece.id
           ? { ...p, x, y }
           : p
@@ -350,15 +422,15 @@ const GameMap: React.FC = () => {
   // Handle mouse up to end drag
   const handleMouseUp = useCallback((): void => {
     if (!draggingPiece) return;
-    
-    setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) => 
+
+    setPieces((prevPieces: Piece[]) => prevPieces.map((p: Piece) =>
       p.id === draggingPiece.id
         ? { ...p, isDragging: false }
         : p
     ));
     setDraggingPiece(null);
   }, [draggingPiece]);
-  
+
   // Add global event handlers for mouse movement outside the grid
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -367,17 +439,17 @@ const GameMap: React.FC = () => {
         handleMouseMove(customEvent);
       }
     };
-    
+
     const handleGlobalMouseUp = () => {
       if (draggingPiece) {
         handleMouseUp();
       }
     };
-    
+
     // Add the event listeners
     window.addEventListener('mousemove', handleGlobalMouseMove);
     window.addEventListener('mouseup', handleGlobalMouseUp);
-    
+
     // Clean up the event listeners when component unmounts
     return () => {
       window.removeEventListener('mousemove', handleGlobalMouseMove);
@@ -389,45 +461,53 @@ const GameMap: React.FC = () => {
   const handleDeletePiece = useCallback((e: React.MouseEvent, piece: Piece): void => {
     e.stopPropagation();
     setPieces((prevPieces: Piece[]) => prevPieces.filter((p: Piece) => p.id !== piece.id));
+
+    // Notify the DM about the character removal
+    sendPlayerAction('remove_character', {
+      character_id: piece.id,
+      character_type: piece.label,
+      position: { x: piece.x, y: piece.y }
+    });
+
     if (selectedPieceId === piece.id) {
       setSelectedPieceId(null);
     }
-  }, [selectedPieceId]);
+  }, [selectedPieceId, sendPlayerAction]);
 
   // Get cell class names based on cell properties
   const getCellClassName = useCallback((cell: Cell, x: number, y: number): string => {
-    const isSelected = selectedPieceId !== null && 
+    const isSelected = selectedPieceId !== null &&
       pieces.some((p: Piece) => p.id === selectedPieceId && p.x === x && p.y === y);
-    
-    const isPlaceable = isPlacingMode && 
-      !pieces.some((piece: Piece) => piece.x === x && piece.y === y) && 
+
+    const isPlaceable = isPlacingMode &&
+      !pieces.some((piece: Piece) => piece.x === x && piece.y === y) &&
       !cell.isObstacle;
-    
+
     let classes = "cell";
-    
+
     // Add terrain classes
     classes += ` terrain-${cell.terrain}`;
-    
+
     // Add state classes
     if (isSelected) classes += " selected";
     if (cell.isObstacle) classes += " obstacle";
     if (isPlaceable) classes += " placeable";
-    
+
     return classes;
   }, [isPlacingMode, pieces, selectedPieceId]);
 
   // Get piece class names
   const getPieceClassName = useCallback((piece: Piece): string => {
     let classes = "piece";
-    
+
     if (selectedPieceId === piece.id) {
       classes += " selected";
     }
-    
+
     if (piece.isDragging) {
       classes += " dragging";
     }
-    
+
     return classes;
   }, [selectedPieceId]);
 
@@ -438,9 +518,9 @@ const GameMap: React.FC = () => {
       alert(`Maximum of ${MAX_PLAYERS} avatars allowed on the map.`);
       return;
     }
-    
+
     const emptyCells: {x: number, y: number}[] = [];
-    
+
     for (let y = 0; y < selectedMap.gridSize.height && y < map.length; y++) {
       for (let x = 0; x < selectedMap.gridSize.width && x < map[0].length; x++) {
         if (!map[y][x].isObstacle && !pieces.some((p: Piece) => p.x === x && p.y === y)) {
@@ -448,7 +528,7 @@ const GameMap: React.FC = () => {
         }
       }
     }
-    
+
     if (emptyCells.length > 0) {
       const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
       createNewPiece(randomCell.x, randomCell.y);
@@ -470,7 +550,7 @@ const GameMap: React.FC = () => {
       alert(`Maximum of ${MAX_PLAYERS} avatars allowed on the map.`);
       return;
     }
-    
+
     setIsPlacingMode(!isPlacingMode);
     // Deselect any selected piece when entering placing mode
     if (!isPlacingMode) {
@@ -491,10 +571,10 @@ const GameMap: React.FC = () => {
   // Handle map selection
   const handleMapSelect = useCallback((mapOption: MapOption): void => {
     setSelectedMap(mapOption);
-    
+
     // Create a new map with the selected map's grid size
     setMap(createMap(mapOption));
-    
+
     // Reset game state
     setPieces([]);
     setSelectedPieceId(null);
@@ -506,7 +586,7 @@ const GameMap: React.FC = () => {
   // Play background music function
   const playMusic = useCallback(() => {
     if (!audioRef.current) return;
-    
+
     // Make sure the audio is loaded
     if (audioRef.current.readyState < 2) {
       // If audio is not loaded yet, load it first
@@ -519,10 +599,10 @@ const GameMap: React.FC = () => {
       audioRef.current.addEventListener('canplaythrough', onCanPlay);
       return;
     }
-    
+
     // Check if audio context is suspended (browser autoplay policy)
     const playPromise = audioRef.current.play();
-    
+
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
@@ -538,28 +618,28 @@ const GameMap: React.FC = () => {
         });
     }
   }, []);
-  
+
   // Handle audio loaded
   useEffect(() => {
     const audioElement = audioRef.current;
-    
+
     if (audioElement) {
       // Set up audio properties
       audioElement.volume = 0.5;
-      
+
       // Add event listeners
       const handleCanPlay = () => {
         console.log("Audio can now be played");
       };
-      
+
       const handleError = (e: Event) => {
         console.error("Audio error:", e);
         setShowMusicError(true);
       };
-      
+
       audioElement.addEventListener('canplaythrough', handleCanPlay);
       audioElement.addEventListener('error', handleError);
-      
+
       // Clean up
       return () => {
         audioElement.removeEventListener('canplaythrough', handleCanPlay);
@@ -567,11 +647,11 @@ const GameMap: React.FC = () => {
       };
     }
   }, []);
-  
+
   // Start game with selected map
   const startGame = useCallback((): void => {
     setGameStarted(true);
-    
+
     // Try to play background music when game starts
     setTimeout(() => {
       // Delayed attempt to play audio after component mounts
@@ -581,11 +661,11 @@ const GameMap: React.FC = () => {
       }
     }, 1000);
   }, [playMusic]);
-  
+
   // Toggle music play/pause
   const toggleMusic = useCallback((): void => {
     if (!audioRef.current) return;
-    
+
     if (isMusicPlaying) {
       audioRef.current.pause();
       setIsMusicPlaying(false);
@@ -593,13 +673,13 @@ const GameMap: React.FC = () => {
       playMusic();
     }
   }, [isMusicPlaying, playMusic]);
-  
+
   // Toggle music mute state
   const toggleMute = useCallback((): void => {
     if (audioRef.current) {
       audioRef.current.muted = !audioRef.current.muted;
       setIsMusicMuted(!isMusicMuted);
-      
+
       // If currently not playing and unmuting, try to play
       if (!isMusicPlaying && isMusicMuted) {
         playMusic();
@@ -616,14 +696,14 @@ const GameMap: React.FC = () => {
     setNextPieceId(1);
     setIsPlacingMode(false);
     setShowMapSelector(false);
-    
+
     // Pause music when returning to map selection
     if (audioRef.current && isMusicPlaying) {
       audioRef.current.pause();
       setIsMusicPlaying(false);
     }
   }, [isMusicPlaying]);
-  
+
   // Clean up audio on component unmount
   useEffect(() => {
     return () => {
@@ -659,7 +739,7 @@ const GameMap: React.FC = () => {
   // Define a memoized Cell component to optimize rendering
   const CellComponent = React.memo(({ cell, x, y }: { cell: Cell; x: number; y: number }) => {
     const cellPieces = pieces.filter((piece: Piece) => piece.x === x && piece.y === y);
-    
+
     return (
       <div
         className={getCellClassName(cell, x, y)}
@@ -691,16 +771,16 @@ const GameMap: React.FC = () => {
   // Use useMemo to optimize grid click handler calculation
   const gridClickHandler = useCallback((e: React.MouseEvent): void => {
     if (!gridRef.current) return;
-    
+
     const rect = gridRef.current.getBoundingClientRect();
     const offsetX = rect.left + window.scrollX + 10; // Add padding offset
     const offsetY = rect.top + window.scrollY + 10; // Add padding offset
-    
+
     // Calculate position with gap between cells
     const cellWithGap = selectedMap.cellSize + 4;
     const x = Math.floor((e.clientX - offsetX) / cellWithGap);
     const y = Math.floor((e.clientY - offsetY) / cellWithGap);
-    
+
     if (x >= 0 && x < selectedMap.gridSize.width && y >= 0 && y < selectedMap.gridSize.height) {
       handleCellClick(x, y);
     }
@@ -709,24 +789,24 @@ const GameMap: React.FC = () => {
   // Create grid items in a more optimal way
   const renderGrid = useCallback(() => {
     const gridItems = [];
-    
+
     for (let y = 0; y < selectedMap.gridSize.height && y < map.length; y++) {
       const row = map[y];
       for (let x = 0; x < selectedMap.gridSize.width && x < row.length; x++) {
         gridItems.push(
-          <CellComponent 
+          <CellComponent
             key={`${x}-${y}`}
-            cell={row[x]} 
-            x={x} 
+            cell={row[x]}
+            x={x}
             y={y}
           />
         );
       }
     }
-    
+
     return gridItems;
   }, [map, selectedMap.gridSize, pieces]);
-  
+
   // Memoize the grid items to prevent unnecessary re-renders
   const gridItems = useMemo(() => renderGrid(), [renderGrid]);
 
@@ -736,11 +816,11 @@ const GameMap: React.FC = () => {
       <div className="map-selection-screen">
         <h1 className="game-title">D&D Game Map</h1>
         <p className="game-subtitle">Select a map to begin your adventure</p>
-        
+
         <div className="map-selection-grid">
           {MAP_OPTIONS.map(mapOption => (
-            <div 
-              key={mapOption.id} 
+            <div
+              key={mapOption.id}
               className={`map-selection-card ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
               onClick={() => handleMapSelect(mapOption)}
             >
@@ -755,25 +835,25 @@ const GameMap: React.FC = () => {
             </div>
           ))}
         </div>
-        
+
         <div className="map-selection-actions">
-          <button 
+          <button
             className="btn btn-start-game"
             onClick={startGame}
           >
             Start Game with {selectedMap.name}
           </button>
-          
+
           <div className="music-controls">
-            <button 
+            <button
               className="btn btn-music music-selection-btn"
               onClick={toggleMusic}
               title={isMusicPlaying ? "Pause Music" : "Play Music"}
             >
               {isMusicPlaying ? '⏸️ Pause Music' : '▶️ Play Music'}
             </button>
-            
-            <button 
+
+            <button
               className="btn btn-music music-selection-btn"
               onClick={toggleMute}
               title={isMusicMuted ? "Unmute music" : "Mute music"}
@@ -782,16 +862,16 @@ const GameMap: React.FC = () => {
               {isMusicMuted ? '🔇 Unmute' : '🔊 Mute'}
             </button>
           </div>
-          
+
           {showMusicError && (
             <div className="music-error-message">
               Your browser blocked autoplay. Please click "Play Music" to start the music manually.
             </div>
           )}
         </div>
-        
+
         {/* Audio element for background music */}
-        <audio 
+        <audio
           ref={audioRef}
           src={backgroundMusic}
           loop
@@ -813,56 +893,56 @@ const GameMap: React.FC = () => {
             Place and move your character avatars on the interactive game board
           </p>
         </header>
-        
+
         <div className="game-board">
           <div className="controls">
-            <button 
+            <button
               className="btn btn-back"
               onClick={backToMapSelection}
             >
               ← Change Map
             </button>
 
-            <button 
+            <button
               className={`btn btn-place ${isPlacingMode ? 'active' : ''}`}
               onClick={togglePlacingMode}
               disabled={pieces.length >= MAX_PLAYERS}
             >
               {isPlacingMode ? '✘ Cancel' : '✚ Add Avatar'}
             </button>
-            
-            <button 
+
+            <button
               className="btn btn-random"
               onClick={addRandomPiece}
               disabled={pieces.length >= MAX_PLAYERS}
             >
               🎲 Random Avatar
             </button>
-            
-            <button 
+
+            <button
               className="btn btn-remove"
               onClick={removeSelectedPiece}
               disabled={!selectedPieceId}
             >
               🗑️ Remove Avatar
             </button>
-            
-            <button 
+
+            <button
               className="btn btn-reset"
               onClick={resetGame}
             >
               🔄 Reset Map
             </button>
-            
-            <button 
+
+            <button
               className="btn btn-music"
               onClick={toggleMusic}
               title={isMusicPlaying ? "Pause Music" : "Play Music"}
             >
               {isMusicPlaying ? '⏸️' : '▶️'}
             </button>
-            
-            <button 
+
+            <button
               className="btn btn-music"
               onClick={toggleMute}
               title={isMusicMuted ? "Unmute music" : "Mute music"}
@@ -877,8 +957,8 @@ const GameMap: React.FC = () => {
               <h3>Select a Map</h3>
               <div className="map-options">
                 {MAP_OPTIONS.map(mapOption => (
-                  <div 
-                    key={mapOption.id} 
+                  <div
+                    key={mapOption.id}
                     className={`map-option ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
                     onClick={() => handleMapSelect(mapOption)}
                   >
@@ -893,7 +973,7 @@ const GameMap: React.FC = () => {
                   </div>
                 ))}
               </div>
-              <button 
+              <button
                 className="btn btn-close-selector"
                 onClick={() => setShowMapSelector(false)}
               >
@@ -901,7 +981,7 @@ const GameMap: React.FC = () => {
               </button>
             </div>
           )}
-          
+
           <div className="status-bar">
             {isPlacingMode ? (
               <span className="status-placing">✓ Select any empty cell to place a new avatar</span>
@@ -913,11 +993,11 @@ const GameMap: React.FC = () => {
               <span>Select an avatar to move it or use the buttons above ({pieces.length}/{MAX_PLAYERS} avatars used)</span>
             )}
           </div>
-          
+
           <div className="help-button" onClick={() => setShowTooltip(!showTooltip)}>
             ?
           </div>
-          
+
           {showTooltip && (
             <div className="tooltip">
               <h3>Color Guide:</h3>
@@ -927,7 +1007,7 @@ const GameMap: React.FC = () => {
                 <li>Brown tiles: Mountains (obstacle)</li>
                 <li>Light green: Grass</li>
               </ul>
-              <button 
+              <button
                 className="tooltip-close"
                 onClick={() => setShowTooltip(false)}
               >
@@ -935,7 +1015,7 @@ const GameMap: React.FC = () => {
               </button>
             </div>
           )}
-          
+
           <div
             ref={gridRef}
             className={`grid ${isPlacingMode ? 'cursor-crosshair' : draggingPiece ? 'cursor-grabbing' : ''}`}
@@ -956,7 +1036,7 @@ const GameMap: React.FC = () => {
           >
             {gridItems}
           </div>
-          
+
           <div className="legend">
             <div className="legend-item">
               <div className="legend-color legend-grass"></div>
@@ -984,13 +1064,13 @@ const GameMap: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <footer className="game-footer">
           <p>Hover over avatars to see character name • Double-click to remove an avatar</p>
         </footer>
-        
+
         {/* Audio element for background music */}
-        <audio 
+        <audio
           ref={audioRef}
           src={backgroundMusic}
           loop
@@ -1001,20 +1081,125 @@ const GameMap: React.FC = () => {
       </>
     );
   }, [
-    selectedMap, gridItems, isPlacingMode, selectedPieceId, draggingPiece, 
+    selectedMap, gridItems, isPlacingMode, selectedPieceId, draggingPiece,
     showMapSelector, showTooltip, isMusicMuted,
-    backToMapSelection, togglePlacingMode, addRandomPiece, removeSelectedPiece, 
+    backToMapSelection, togglePlacingMode, addRandomPiece, removeSelectedPiece,
     resetGame, handleMapSelect, gridClickHandler, handleMouseMove, handleMouseUp, toggleMusic, toggleMute
   ]);
+
+  // Roll dice function
+  const rollDice = useCallback((diceType: string) => {
+    // Parse dice type (e.g., "d20", "2d6", etc.)
+    const match = diceType.match(/^(\d*)d(\d+)$/i);
+    if (!match) {
+      console.error(`Invalid dice format: ${diceType}`);
+      return;
+    }
+
+    const count = match[1] ? parseInt(match[1]) : 1;
+    const sides = parseInt(match[2]);
+
+    // Roll the dice
+    let total = 0;
+    const rolls = [];
+
+    for (let i = 0; i < count; i++) {
+      const roll = Math.floor(Math.random() * sides) + 1;
+      rolls.push(roll);
+      total += roll;
+    }
+
+    // Send the roll to the DM
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+      wsConnection.send(JSON.stringify({
+        type: 'roll_dice',
+        dice_type: diceType,
+        result: total,
+        individual_rolls: rolls
+      }));
+    }
+
+    // Return the result for UI display
+    return { total, rolls };
+  }, [wsConnection]);
+
+  // State for dice rolling
+  const [diceResult, setDiceResult] = useState<{ type: string; total: number; rolls: number[] } | null>(null);
+  const [showDicePanel, setShowDicePanel] = useState(false);
+
+  // Handle dice roll button click
+  const handleDiceRoll = useCallback((diceType: string) => {
+    const result = rollDice(diceType);
+    if (result) {
+      setDiceResult({
+        type: diceType,
+        total: result.total,
+        rolls: result.rolls
+      });
+    }
+  }, [rollDice]);
 
   // Main render
   return (
     <div className="game-container">
       {!gameStarted ? renderMapSelectionScreen() : renderGameInterface()}
+
+      <div className="game-controls-panel">
+        <button
+          className="btn btn-dice"
+          onClick={() => setShowDicePanel(!showDicePanel)}
+        >
+          🎲 Dice
+        </button>
+
+        <button
+          className="btn btn-update"
+          onClick={sendGameState}
+        >
+          🔄 Update
+        </button>
+      </div>
+
+      {showDicePanel && (
+        <div className="dice-panel">
+          <h3>Roll Dice</h3>
+          <div className="dice-buttons">
+            <button onClick={() => handleDiceRoll('d4')}>d4</button>
+            <button onClick={() => handleDiceRoll('d6')}>d6</button>
+            <button onClick={() => handleDiceRoll('d8')}>d8</button>
+            <button onClick={() => handleDiceRoll('d10')}>d10</button>
+            <button onClick={() => handleDiceRoll('d12')}>d12</button>
+            <button onClick={() => handleDiceRoll('d20')}>d20</button>
+            <button onClick={() => handleDiceRoll('2d6')}>2d6</button>
+          </div>
+
+          {diceResult && (
+            <div className="dice-result">
+              <p>
+                <strong>{diceResult.type} Roll:</strong> {diceResult.total}
+              </p>
+              {diceResult.rolls.length > 1 && (
+                <p className="individual-rolls">
+                  Individual rolls: {diceResult.rolls.join(', ')}
+                </p>
+              )}
+            </div>
+          )}
+
+          <button
+            className="btn btn-close"
+            onClick={() => setShowDicePanel(false)}
+          >
+            Close
+          </button>
+        </div>
+      )}
+
       <div className="narration-panel">
         <h3>Dungeon Master</h3>
         <p>{narration}</p>
       </div>
+
       {showRewardModal && (
         <div className="reward-modal">
           <h2>Achievement Unlocked!</h2>
