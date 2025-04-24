@@ -196,9 +196,69 @@ const GameMap: React.FC = () => {
       const data = JSON.parse(event.data);
 
       if (data.type === 'narration') {
+        // Update the narration panel
         setNarration(data.content);
+
+        // Also add to chat history if AI is controlling the game
+        // We'll check the current state inside the message handler
+        const isAiControlled = document.querySelector('.chat-panel') !== null;
+        if (isAiControlled) {
+          setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [...prev, { role: 'dm', content: data.content }]);
+        }
+      } else if (data.type === 'dm_response') {
+        // Add DM response to chat history
+        setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [...prev, { role: 'dm', content: data.content }]);
+
+        // Check if DM is requesting a dice roll
+        if (data.request_dice_roll) {
+          setWaitingForDiceRoll(true);
+          setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
+            ...prev,
+            {
+              role: 'dm',
+              content: `Please roll a ${data.dice_type || 'd20'} to determine the outcome.`
+            }
+          ]);
+        }
+
+        // Check if DM is moving a character
+        if (data.move_character) {
+          const { character_id, to_x, to_y } = data.move_character;
+
+          // Find the character and move it
+          setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) =>
+            piece.id === character_id
+              ? { ...piece, x: to_x, y: to_y }
+              : piece
+          ));
+        }
+
+        // Check if DM is adding a new character/monster
+        if (data.add_character) {
+          const { type, x, y, label } = data.add_character;
+
+          // Create a new piece with the specified properties
+          const newPiece: Piece = {
+            id: `piece-${Date.now()}`,
+            x,
+            y,
+            label: label || type,
+            avatar: type === 'monster' ? CHARACTER_AVATARS[0] : CHARACTER_AVATARS[Math.floor(Math.random() * CHARACTER_AVATARS.length)],
+            isDragging: false
+          };
+
+          // Add the new piece to the map
+          setPieces((prevPieces: Piece[]) => [...prevPieces, newPiece]);
+        }
       } else if (data.type === 'error') {
         console.error('Error from DM server:', data.content);
+        setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
+          ...prev,
+          {
+            role: 'dm',
+            content: `Error: ${data.content}`
+          }
+        ]);
       }
     };
 
@@ -222,16 +282,50 @@ const GameMap: React.FC = () => {
 
   const sendGameState = useCallback(() => {
     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-      wsConnection.send(JSON.stringify({
+      // Create a more detailed game state object
+      const detailedGameState = {
         type: 'get_state',
         data: {
+          // Map information
           grid_cells: map,
-          tokens: pieces,
+          tokens: pieces.map((piece: Piece) => ({
+            ...piece,
+            terrain: piece.y < map.length && piece.x < map[0].length
+              ? map[piece.y][piece.x].terrain
+              : "unknown"
+          })),
           obstacles: getObstacles(),
           terrain: getTerrainMap(),
-          selected_map: selectedMap.id
+          selected_map: selectedMap.id,
+
+          // Map metadata
+          map_data: {
+            id: selectedMap.id,
+            name: selectedMap.name,
+            description: selectedMap.description,
+            gridSize: selectedMap.gridSize,
+            cellSize: selectedMap.cellSize
+          },
+
+          // Game state
+          game_state: {
+            current_map: selectedMap.id,
+            characters: pieces.map((piece: Piece) => ({
+              id: piece.id,
+              type: piece.label
+            })),
+            player_positions: pieces.reduce((acc: Record<string, { x: number, y: number }>, piece: Piece) => {
+              acc[piece.id] = { x: piece.x, y: piece.y };
+              return acc;
+            }, {} as Record<string, { x: number, y: number }>),
+            in_combat: false, // You could add a combat state to your game
+            last_action: null // This will be set by action handlers
+          }
         }
-      }));
+      };
+
+      wsConnection.send(JSON.stringify(detailedGameState));
+      console.log("Sent detailed game state to DM", detailedGameState);
     }
   }, [map, pieces, wsConnection, selectedMap]);
 
@@ -243,8 +337,11 @@ const GameMap: React.FC = () => {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [isMusicMuted, setIsMusicMuted] = useState(false);
   const [showMusicError, setShowMusicError] = useState(false);
+  const [aiControlled, setAiControlled] = useState<boolean>(false);
+  const [chatHistory, setChatHistory] = useState<Array<{role: 'user' | 'dm', content: string}>>([]);
   const gridRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Memoize the creation of a new map when selecting a different map
   const createMap = useCallback((mapOption: MapOption) => {
@@ -281,15 +378,25 @@ const GameMap: React.FC = () => {
   // Send player action to the DND server
   const sendPlayerAction = useCallback((action: string, details: any) => {
     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+      // Create the action object
+      const actionObject = {
+        type: action,
+        ...details
+      };
+
+      // Send the action to the server
       wsConnection.send(JSON.stringify({
         type: 'player_action',
-        action: {
-          type: action,
-          ...details
-        }
+        action: actionObject
       }));
+
+      console.log("Sent player action to DM", actionObject);
+
+      // After sending an action, also send the updated game state
+      // This ensures the DM has the most current information
+      setTimeout(() => sendGameState(), 100);
     }
-  }, [wsConnection]);
+  }, [wsConnection, sendGameState]);
 
   // Handle cell click to add new piece or move existing piece
   const handleCellClick = useCallback((x: number, y: number): void => {
@@ -659,8 +766,15 @@ const GameMap: React.FC = () => {
         audioRef.current.volume = 0.5; // Set volume to 50%
         playMusic();
       }
+
+      // Send initial game state to the DM after a short delay
+      // This ensures the WebSocket connection is established
+      setTimeout(() => {
+        sendGameState();
+        console.log("Sent initial game state to DM");
+      }, 1000);
     }, 1000);
-  }, [playMusic]);
+  }, [playMusic, sendGameState]);
 
   // Toggle music play/pause
   const toggleMusic = useCallback((): void => {
@@ -713,6 +827,28 @@ const GameMap: React.FC = () => {
       }
     };
   }, [isMusicPlaying]);
+
+  // Set up periodic state updates to keep the DM informed
+  useEffect(() => {
+    if (!gameStarted) return;
+
+    // Send game state every 10 seconds
+    const intervalId = setInterval(() => {
+      if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+        sendGameState();
+      }
+    }, 10000);
+
+    // Clean up interval on unmount or when game ends
+    return () => clearInterval(intervalId);
+  }, [gameStarted, wsConnection, sendGameState]);
+
+  // Scroll chat to bottom when new messages arrive
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory]);
 
   // Get cell style adjustments based on cell size
   const getCellStyle = useCallback((cell: Cell): React.CSSProperties => {
@@ -1127,6 +1263,10 @@ const GameMap: React.FC = () => {
   const [diceResult, setDiceResult] = useState<{ type: string; total: number; rolls: number[] } | null>(null);
   const [showDicePanel, setShowDicePanel] = useState(false);
 
+  // State for chat interface
+  const [userInput, setUserInput] = useState<string>("");
+  const [waitingForDiceRoll, setWaitingForDiceRoll] = useState<boolean>(false);
+
   // Handle dice roll button click
   const handleDiceRoll = useCallback((diceType: string) => {
     const result = rollDice(diceType);
@@ -1136,8 +1276,81 @@ const GameMap: React.FC = () => {
         total: result.total,
         rolls: result.rolls
       });
+
+      // If we were waiting for a dice roll, add it to chat history
+      if (waitingForDiceRoll) {
+        setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
+          ...prev,
+          {
+            role: 'user',
+            content: `🎲 Rolled ${diceType}: ${result.total}${result.rolls.length > 1 ? ` (${result.rolls.join(', ')})` : ''}`
+          }
+        ]);
+        setWaitingForDiceRoll(false);
+
+        // Send the dice roll to the DM for interpretation
+        if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+          wsConnection.send(JSON.stringify({
+            type: 'user_input',
+            content: `I rolled a ${result.total} on ${diceType}.`,
+            dice_roll: {
+              type: diceType,
+              result: result.total,
+              rolls: result.rolls
+            }
+          }));
+        }
+      }
     }
-  }, [rollDice]);
+  }, [rollDice, waitingForDiceRoll, wsConnection]);
+
+  // Handle user chat input
+  const handleUserInput = useCallback(() => {
+    if (!userInput.trim()) return;
+
+    // Add user message to chat history
+    setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [...prev, { role: 'user', content: userInput }]);
+
+    // Send user input to the DM
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+      wsConnection.send(JSON.stringify({
+        type: 'user_input',
+        content: userInput
+      }));
+    }
+
+    // Clear input field
+    setUserInput('');
+  }, [userInput, wsConnection]);
+
+  // Handle AI taking control of the game
+  const handleAIControl = useCallback(() => {
+    if (pieces.length === 0) {
+      alert("Please place at least one character on the map first!");
+      return;
+    }
+
+    setAiControlled(true);
+
+    // Notify the DM that AI is now controlling the game
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+      wsConnection.send(JSON.stringify({
+        type: 'ai_control',
+        data: {
+          enabled: true
+        }
+      }));
+
+      // Add a message to the chat history
+      setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
+        ...prev,
+        {
+          role: 'dm',
+          content: "The Dungeon Master has taken control of the game. Your fate now lies in the hands of the dice. Describe your actions, and I will guide you through this adventure."
+        }
+      ]);
+    }
+  }, [pieces.length, wsConnection]);
 
   // Main render
   return (
@@ -1195,9 +1408,68 @@ const GameMap: React.FC = () => {
         </div>
       )}
 
-      <div className="narration-panel">
-        <h3>Dungeon Master</h3>
-        <p>{narration}</p>
+      <div className="game-panels">
+        <div className="narration-panel">
+          <h3>Dungeon Master</h3>
+          <p>{narration}</p>
+
+          {!aiControlled && pieces.length > 0 && (
+            <button
+              className="btn btn-ai-control"
+              onClick={handleAIControl}
+            >
+              Let AI Take Control
+            </button>
+          )}
+        </div>
+
+        {aiControlled && (
+          <div className="chat-panel">
+            <h3>Adventure Chat</h3>
+            <div className="chat-messages">
+              {chatHistory.map((message: {role: 'user' | 'dm', content: string}, index: number) => (
+                <div key={index} className={`chat-message ${message.role}`}>
+                  <div className="message-header">
+                    {message.role === 'user' ? 'You' : 'Dungeon Master'}:
+                  </div>
+                  <div className="message-content">{message.content}</div>
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+
+            <div className="chat-input">
+              <input
+                type="text"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleUserInput()}
+                placeholder="Describe your action..."
+                disabled={waitingForDiceRoll}
+              />
+              <button
+                onClick={handleUserInput}
+                disabled={!userInput.trim() || waitingForDiceRoll}
+              >
+                Send
+              </button>
+            </div>
+
+            {waitingForDiceRoll && (
+              <div className="dice-prompt">
+                <p>Roll the dice to determine your fate!</p>
+                <div className="dice-buttons-small">
+                  <button onClick={() => handleDiceRoll('d4')}>d4</button>
+                  <button onClick={() => handleDiceRoll('d6')}>d6</button>
+                  <button onClick={() => handleDiceRoll('d8')}>d8</button>
+                  <button onClick={() => handleDiceRoll('d10')}>d10</button>
+                  <button onClick={() => handleDiceRoll('d12')}>d12</button>
+                  <button onClick={() => handleDiceRoll('d20')}>d20</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {showRewardModal && (
