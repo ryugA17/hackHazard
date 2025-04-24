@@ -1,7 +1,7 @@
 /* GameMap.css */
 .game-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+  background: linear-gradient(135deg, #0d0d0d, #1a2a6c, #b21f1f);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,6 +9,20 @@
   padding: 20px;
   font-family: Arial, sans-serif;
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* Map Selection Screen Styles */
@@ -21,14 +35,19 @@
   padding: 30px;
   background-color: rgba(0, 0, 0, 0.7);
   border-radius: 15px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 50px rgba(255, 140, 0, 0.3);
   text-align: center;
+  z-index: 2;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 140, 0, 0.2);
 }
 
 .map-selection-screen .game-title {
+  font-family: 'Cinzel', serif;
   font-size: 42px;
   margin-bottom: 15px;
   text-shadow: 0 3px 5px rgba(0, 0, 0, 0.5);
+  color: #ffd700;
 }
 
 .map-selection-screen .game-subtitle {
@@ -66,8 +85,8 @@
 }
 
 .map-selection-card.selected {
-  border-color: #ffc107;
-  background-color: rgba(255, 193, 7, 0.15);
+  border-color: #ffd700;
+  background-color: rgba(255, 215, 0, 0.15);
   transform: scale(1.05);
 }
 
@@ -230,12 +249,16 @@
 .game-header {
   margin-bottom: 20px;
   text-align: center;
+  z-index: 2;
+  position: relative;
 }
 
 .game-title {
+  font-family: 'Cinzel', serif;
   font-size: 36px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
   margin: 0 0 10px 0;
+  color: #ffd700;
 }
 
 .game-subtitle {
@@ -245,18 +268,34 @@
   margin: 0 auto;
 }
 
+.game-title-underline {
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(to right, #ff8c00, #ff4500);
+  margin: 0 auto 40px;
+  border-radius: 2px;
+}
+
 .game-board {
-  background-color: rgba(0,0,0,0.6);
+  background-color: rgba(20, 20, 20, 0.8);
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  border-radius: 15px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 50px rgba(255, 140, 0, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
-  transform: translateZ(0);
+  transform: translateZ(0) perspective(1000px) rotateY(-2deg);
   backface-visibility: hidden;
   perspective: 1000px;
+  transition: transform 0.5s ease;
+  border: 1px solid rgba(255, 140, 0, 0.2);
+  backdrop-filter: blur(10px);
+  z-index: 2;
+}
+
+.game-board:hover {
+  transform: translateZ(0) perspective(1000px) rotateY(0deg);
 }
 
 .controls {
@@ -798,71 +837,92 @@
   margin-top: 20px;
   width: 100%;
   max-width: 800px;
+  z-index: 2;
 }
 
 /* Narration Panel */
 .narration-panel {
-  background-color: rgba(0, 0, 0, 0.8);
-  border-radius: 10px;
+  background-color: rgba(20, 20, 20, 0.8);
+  border-radius: 15px;
   padding: 20px;
   width: 100%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3), 0 0 50px rgba(255, 140, 0, 0.2);
+  border: 1px solid rgba(255, 140, 0, 0.2);
+  backdrop-filter: blur(10px);
+  transform: perspective(1000px) rotateY(-1deg);
+  transition: transform 0.5s ease;
+}
+
+.narration-panel:hover {
+  transform: perspective(1000px) rotateY(0deg);
 }
 
 .narration-panel h3 {
+  font-family: 'Cinzel', serif;
   margin: 0 0 10px 0;
   font-size: 20px;
-  color: #ffc107;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 8px;
+  color: #ffd700;
+  border-bottom: 2px solid rgba(255, 140, 0, 0.3);
+  padding-bottom: 10px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
 .narration-panel p {
   margin: 0 0 15px 0;
   font-size: 16px;
   line-height: 1.6;
-  color: #fff;
+  color: #e0e0e0;
   font-style: italic;
 }
 
 /* AI Control Button */
 .btn-ai-control {
-  background-color: #9c27b0;
+  background: linear-gradient(to right, #9c27b0, #673ab7);
   color: white;
   border: none;
   border-radius: 5px;
   padding: 10px 15px;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   margin-top: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .btn-ai-control:hover {
-  background-color: #7b1fa2;
-  transform: translateY(-2px);
+  background: linear-gradient(to right, #7b1fa2, #512da8);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
 }
 
 /* Chat Panel */
 .chat-panel {
-  background-color: rgba(0, 0, 0, 0.8);
-  border-radius: 10px;
+  background-color: rgba(20, 20, 20, 0.8);
+  border-radius: 15px;
   padding: 20px;
   width: 100%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3), 0 0 50px rgba(255, 140, 0, 0.2);
+  border: 1px solid rgba(255, 140, 0, 0.2);
   display: flex;
   flex-direction: column;
   height: 400px;
+  backdrop-filter: blur(10px);
+  transform: perspective(1000px) rotateY(1deg);
+  transition: transform 0.5s ease;
+}
+
+.chat-panel:hover {
+  transform: perspective(1000px) rotateY(0deg);
 }
 
 .chat-panel h3 {
+  font-family: 'Cinzel', serif;
   margin: 0 0 10px 0;
   font-size: 20px;
-  color: #ffc107;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 8px;
+  color: #ffd700;
+  border-bottom: 2px solid rgba(255, 140, 0, 0.3);
+  padding-bottom: 10px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
 .chat-messages {
@@ -985,14 +1045,63 @@
   gap: 10px;
   margin-top: 20px;
   justify-content: center;
+  z-index: 10;
+}
+
+.btn-place, .btn-random, .btn-remove, .btn-reset, .btn-music {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-place:hover, .btn-random:hover, .btn-remove:hover, .btn-reset:hover, .btn-music:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.btn-place {
+  background: linear-gradient(to right, #1976d2, #2196f3);
+}
+
+.btn-place.active {
+  background: linear-gradient(to right, #2e7d32, #388e3c);
+}
+
+.btn-random {
+  background: linear-gradient(to right, #7b1fa2, #9c27b0);
+}
+
+.btn-remove {
+  background: linear-gradient(to right, #d32f2f, #f44336);
+}
+
+.btn-reset {
+  background: linear-gradient(to right, #e65100, #ff9800);
+}
+
+.btn-music {
+  background: linear-gradient(to right, #512da8, #673ab7);
 }
 
 .btn-dice {
-  background-color: #9c27b0;
+  background: linear-gradient(to right, #7b1fa2, #9c27b0);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-dice:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
 }
 
 .btn-update {
-  background-color: #00bcd4;
+  background: linear-gradient(to right, #00838f, #00bcd4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-update:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
 }
 
 /* Dice Panel */
@@ -1001,15 +1110,16 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.9);
-  border-radius: 10px;
+  background-color: rgba(20, 20, 20, 0.9);
+  border-radius: 15px;
   padding: 20px;
   width: 90%;
   max-width: 400px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 50px rgba(255, 140, 0, 0.3);
   z-index: 1000;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 140, 0, 0.2);
   text-align: center;
+  backdrop-filter: blur(10px);
 }
 
 .dice-panel h3 {

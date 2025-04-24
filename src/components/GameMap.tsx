@@ -9,6 +9,8 @@ import foxboyAvatar from '../assets/avatars/foxboy.gif';
 import foxgirlAvatar from '../assets/avatars/foxgirl.gif';
 import backgroundMusic from '../assets/aizentheme.mp3';
 import './GameMap.css';
+import './ScrollAnimations.css';
+import { setupScrollAnimations } from '../utils/scrollAnimations';
 
 const {
   useState,
@@ -167,6 +169,12 @@ const createEmptyMap = (gridWidth: number, gridHeight: number, cellSize: number)
 
 // Main component
 const GameMap: React.FC = () => {
+  // Add scroll animations setup
+  React.useEffect(() => {
+    // Set up scroll animations
+    setupScrollAnimations();
+  }, []);
+
   const { issueReward } = React.useContext(DungeonMasterContext);
   const [showRewardModal, setShowRewardModal] = React.useState(false);
   const [currentReward, setCurrentReward] = React.useState<string>('');
@@ -951,10 +959,11 @@ const GameMap: React.FC = () => {
     return (
       <div className="map-selection-screen">
         <h1 className="game-title">D&D Game Map</h1>
+        <div className="game-title-underline"></div>
         <p className="game-subtitle">Select a map to begin your adventure</p>
 
         <div className="map-selection-grid">
-          {MAP_OPTIONS.map(mapOption => (
+          {MAP_OPTIONS.map((mapOption, index) => (
             <div
               key={mapOption.id}
               className={`map-selection-card ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
@@ -1025,6 +1034,7 @@ const GameMap: React.FC = () => {
       <>
         <header className="game-header">
           <h1 className="game-title">D&D Game Map</h1>
+          <div className="game-title-underline"></div>
           <p className="game-subtitle">
             Place and move your character avatars on the interactive game board
           </p>
