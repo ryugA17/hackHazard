@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import React from 'react';
 import { DungeonMasterContext } from '../context/DungeonMasterContext';
-import mapImage from '../assets/Map.png';
 import boyAvatar from '../assets/avatars/boy.gif';
 import girlAvatar from '../assets/avatars/girl.gif';
 import robotAvatar from '../assets/avatars/robot.gif';
@@ -40,53 +39,8 @@ interface MapOption {
     height: number;
   };
   cellSize: number;
+  terrainDistribution?: Record<string, number>;
 }
-
-// Temporary placeholder for missing images
-const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN8/x8AAuMB8DtXNJsAAAAASUVORK5CYII=';
-
-const MAP_OPTIONS: MapOption[] = [
-  {
-    id: 'default',
-    name: 'Default Map',
-    image: mapImage,
-    description: 'The original D&D campaign map',
-    gridSize: { width: 5, height: 5 },
-    cellSize: 100
-  },
-  {
-    id: 'sea',
-    name: 'Coastal Adventure',
-    image: placeholderImage, // Temporarily use placeholder
-    description: 'A seaside village with coastal areas',
-    gridSize: { width: 8, height: 6 },
-    cellSize: 80
-  },
-  {
-    id: 'gridless',
-    name: 'Open Plains',
-    image: placeholderImage, // Temporarily use placeholder
-    description: 'Wide open battle ground',
-    gridSize: { width: 10, height: 8 },
-    cellSize: 60
-  },
-  {
-    id: 'contrast-before',
-    name: 'Ancient Ruins',
-    image: placeholderImage, // Temporarily use placeholder
-    description: 'Mysterious ruins with ancient magic',
-    gridSize: { width: 7, height: 7 },
-    cellSize: 70
-  },
-  {
-    id: 'contrast-after',
-    name: 'Forest Encampment',
-    image: placeholderImage, // Temporarily use placeholder
-    description: 'Forest campsite with tactical positions',
-    gridSize: { width: 6, height: 5 },
-    cellSize: 90
-  }
-];
 
 // Define types
 interface Piece {
@@ -98,25 +52,21 @@ interface Piece {
   isDragging: boolean;
 }
 
-type TerrainType = "grass" | "water" | "mountain" | "forest";
+type TerrainType = "grass" | "water" | "mountain" | "forest" | "swamp" | "desert" | "cave";
 
 interface Cell {
   type: "fog" | "revealed";
   terrain: TerrainType;
   isObstacle?: boolean;
-  // Add coordinates for background image positioning
-  bgX: number;
-  bgY: number;
+  x: number;
+  y: number;
 }
 
 // Constants
 const VISION_RANGE = 2;
 const MAX_PLAYERS = 5; // Set maximum number of players/tokens
 
-// Background map image
-const MAP_WIDTH = 640;
-const MAP_HEIGHT = 640;
-
+// Obstacle terrain types
 const OBSTACLE_TERRAINS: TerrainType[] = ["water", "mountain"];
 
 // Sample character pieces with different avatars
@@ -136,32 +86,46 @@ const CHARACTER_LABELS = [
   "Fox Girl"
 ];
 
-// Helper functions
-const getRandomTerrain = (): TerrainType => {
-  const terrains: TerrainType[] = ["grass", "water", "mountain", "forest"];
-  const weights = [0.7, 0.1, 0.1, 0.1]; // More grass for playable area
-  const random = Math.random();
-  let sum = 0;
-  for (let i = 0; i < weights.length; i++) {
-    sum += weights[i];
-    if (random < sum) return terrains[i];
-  }
-  return "grass";
+// Default map configuration while waiting for a generated map
+const DEFAULT_MAP: MapOption = {
+  id: 'loading',
+  name: 'Loading Adventure Map...',
+  image: '',
+  description: 'The Dungeon Master is creating your adventure map...',
+  gridSize: { width: 8, height: 6 },
+  cellSize: 80
 };
 
-const createEmptyMap = (gridWidth: number, gridHeight: number, cellSize: number): Cell[][] => {
+// Helper function to create a placeholder empty map
+const createEmptyMap = (gridWidth: number, gridHeight: number): Cell[][] => {
   return Array.from({ length: gridHeight }, (_, y) =>
     Array.from({ length: gridWidth }, (_, x) => {
-      const terrain = getRandomTerrain();
       return {
         type: "revealed",
-        terrain,
-        isObstacle: OBSTACLE_TERRAINS.includes(terrain),
-        // Calculate background position based on grid coordinates
-        bgX: -(x * cellSize) % MAP_WIDTH,
-        bgY: -(y * cellSize) % MAP_HEIGHT
+        terrain: "grass",
+        isObstacle: false,
+        x,
+        y
       };
     })
+  );
+};
+
+// Convert server-generated map data to our map format
+const convertMapDataToGrid = (mapData: any): Cell[][] => {
+  if (!mapData || !mapData.grid || !Array.isArray(mapData.grid)) {
+    console.error("Invalid map data received:", mapData);
+    return createEmptyMap(8, 6);
+  }
+
+  return mapData.grid.map((row: any[], y: number) =>
+    row.map((cell: any, x: number) => ({
+      type: cell.type || "revealed",
+      terrain: cell.terrain || "grass",
+      isObstacle: cell.is_obstacle || false,
+      x,
+      y
+    }))
   );
 };
 
@@ -170,11 +134,11 @@ const GameMap: React.FC = () => {
   const { issueReward } = React.useContext(DungeonMasterContext);
   const [showRewardModal, setShowRewardModal] = React.useState(false);
   const [currentReward, setCurrentReward] = React.useState<string>('');
-  const [selectedMap, setSelectedMap] = React.useState<MapOption>(MAP_OPTIONS[0]);
+  const [availableMaps, setAvailableMaps] = useState<MapOption[]>([]);
+  const [selectedMap, setSelectedMap] = React.useState<MapOption>(DEFAULT_MAP);
   const [map, setMap] = React.useState<Cell[][]>(() => createEmptyMap(
-    selectedMap.gridSize.width,
-    selectedMap.gridSize.height,
-    selectedMap.cellSize
+    DEFAULT_MAP.gridSize.width,
+    DEFAULT_MAP.gridSize.height
   ));
   const [pieces, setPieces] = React.useState<Piece[]>([]);
   const [selectedPieceId, setSelectedPieceId] = React.useState<string | null>(null);
@@ -182,6 +146,7 @@ const GameMap: React.FC = () => {
   const [nextPieceId, setNextPieceId] = React.useState(1);
   const [wsConnection, setWsConnection] = React.useState<WebSocket | null>(null);
   const [narration, setNarration] = React.useState<string>("");
+  const [loadingMap, setLoadingMap] = useState(true);
 
   useEffect(() => {
     // Create a unique session ID for this game session
@@ -250,6 +215,43 @@ const GameMap: React.FC = () => {
           // Add the new piece to the map
           setPieces((prevPieces: Piece[]) => [...prevPieces, newPiece]);
         }
+
+        // Check if we received a new map
+        if (data.map_data) {
+          const mapData = data.map_data;
+          
+          // Create a new map option from the received data
+          const newMap: MapOption = {
+            id: mapData.id || `map-${Date.now()}`,
+            name: mapData.name || "Adventure Map",
+            description: mapData.description || "A mysterious realm awaits",
+            image: '',
+            gridSize: {
+              width: mapData.width || mapData.grid[0].length || 8,
+              height: mapData.height || mapData.grid.length || 6
+            },
+            cellSize: 80,
+            terrainDistribution: mapData.terrain_distribution || {}
+          };
+          
+          // Convert the map grid data
+          const newGrid = convertMapDataToGrid(mapData);
+          
+          // Update state with new map
+          setSelectedMap(newMap);
+          setMap(newGrid);
+          setLoadingMap(false);
+          
+          // Add to available maps
+          setAvailableMaps((prev: MapOption[]) => {
+            // Check if this map already exists (by ID)
+            const exists = prev.some((m: MapOption) => m.id === newMap.id);
+            if (!exists) {
+              return [...prev, newMap];
+            }
+            return prev;
+          });
+        }
       } else if (data.type === 'error') {
         console.error('Error from DM server:', data.content);
         setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
@@ -304,7 +306,8 @@ const GameMap: React.FC = () => {
             name: selectedMap.name,
             description: selectedMap.description,
             gridSize: selectedMap.gridSize,
-            cellSize: selectedMap.cellSize
+            cellSize: selectedMap.cellSize,
+            terrainDistribution: selectedMap.terrainDistribution
           },
 
           // Game state
@@ -329,6 +332,22 @@ const GameMap: React.FC = () => {
     }
   }, [map, pieces, wsConnection, selectedMap]);
 
+  // Request a dynamically generated map
+  const requestGeneratedMap = useCallback((theme?: string) => {
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+      setLoadingMap(true);
+      
+      const request = {
+        type: 'generate_map',
+        theme: theme || 'fantasy adventure',
+        content: 'Create a dynamic map for my adventure'
+      };
+      
+      wsConnection.send(JSON.stringify(request));
+      console.log("Requested a generated map with theme:", theme || 'fantasy adventure');
+    }
+  }, [wsConnection]);
+
   // State management
   const [isPlacingMode, setIsPlacingMode] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -342,15 +361,6 @@ const GameMap: React.FC = () => {
   const gridRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-
-  // Memoize the creation of a new map when selecting a different map
-  const createMap = useCallback((mapOption: MapOption) => {
-    return createEmptyMap(
-      mapOption.gridSize.width,
-      mapOption.gridSize.height,
-      mapOption.cellSize
-    );
-  }, []);
 
   // Create a new piece
   const createNewPiece = useCallback((x: number, y: number): Piece => {
@@ -667,20 +677,30 @@ const GameMap: React.FC = () => {
 
   // Reset game function
   const resetGame = useCallback((): void => {
-    setMap(createMap(selectedMap));
     setPieces([]);
     setSelectedPieceId(null);
     setDraggingPiece(null);
     setNextPieceId(1);
     setIsPlacingMode(false);
-  }, [selectedMap, createMap]);
+    
+    // Request a new map
+    requestGeneratedMap();
+  }, [requestGeneratedMap]);
 
   // Handle map selection
   const handleMapSelect = useCallback((mapOption: MapOption): void => {
     setSelectedMap(mapOption);
-
-    // Create a new map with the selected map's grid size
-    setMap(createMap(mapOption));
+    
+    // If this is a saved map from the server, request its details
+    if (mapOption.id !== 'loading') {
+      // Send request to get the map details
+      if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send(JSON.stringify({
+          type: 'get_map',
+          map_id: mapOption.id
+        }));
+      }
+    }
 
     // Reset game state
     setPieces([]);
@@ -688,7 +708,7 @@ const GameMap: React.FC = () => {
     setDraggingPiece(null);
     setNextPieceId(1);
     setIsPlacingMode(false);
-  }, [createMap]);
+  }, [wsConnection]);
 
   // Play background music function
   const playMusic = useCallback(() => {
@@ -755,9 +775,12 @@ const GameMap: React.FC = () => {
     }
   }, []);
 
-  // Start game with selected map
+  // Start game with the AI-generated map
   const startGame = useCallback((): void => {
     setGameStarted(true);
+
+    // Request a generated map when starting the game
+    requestGeneratedMap();
 
     // Try to play background music when game starts
     setTimeout(() => {
@@ -774,7 +797,7 @@ const GameMap: React.FC = () => {
         console.log("Sent initial game state to DM");
       }, 1000);
     }, 1000);
-  }, [playMusic, sendGameState]);
+  }, [playMusic, sendGameState, requestGeneratedMap]);
 
   // Toggle music play/pause
   const toggleMusic = useCallback((): void => {
@@ -852,11 +875,31 @@ const GameMap: React.FC = () => {
 
   // Get cell style adjustments based on cell size
   const getCellStyle = useCallback((cell: Cell): React.CSSProperties => {
-    return {
+    // Base cell styles
+    const baseStyle: React.CSSProperties = {
       width: selectedMap.cellSize,
       height: selectedMap.cellSize,
-      backgroundColor: cell.isObstacle ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)',
     };
+
+    // Add background color based on terrain type
+    switch (cell.terrain) {
+      case 'grass':
+        return { ...baseStyle, backgroundColor: 'rgba(76, 175, 80, 0.15)' };
+      case 'water':
+        return { ...baseStyle, backgroundColor: 'rgba(33, 150, 243, 0.2)' };
+      case 'mountain':
+        return { ...baseStyle, backgroundColor: 'rgba(121, 85, 72, 0.2)' };
+      case 'forest':
+        return { ...baseStyle, backgroundColor: 'rgba(139, 195, 74, 0.15)' };
+      case 'swamp':
+        return { ...baseStyle, backgroundColor: 'rgba(121, 134, 203, 0.2)' };
+      case 'desert':
+        return { ...baseStyle, backgroundColor: 'rgba(255, 235, 59, 0.15)' };
+      case 'cave':
+        return { ...baseStyle, backgroundColor: 'rgba(66, 66, 66, 0.2)' };
+      default:
+        return { ...baseStyle, backgroundColor: 'rgba(255, 255, 255, 0.1)' };
+    }
   }, [selectedMap.cellSize]);
 
   // Get piece style adjustments based on cell size
@@ -951,33 +994,14 @@ const GameMap: React.FC = () => {
     return (
       <div className="map-selection-screen">
         <h1 className="game-title">D&D Game Map</h1>
-        <p className="game-subtitle">Select a map to begin your adventure</p>
-
-        <div className="map-selection-grid">
-          {MAP_OPTIONS.map(mapOption => (
-            <div
-              key={mapOption.id}
-              className={`map-selection-card ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
-              onClick={() => handleMapSelect(mapOption)}
-            >
-              <div className="map-selection-preview" style={{ backgroundImage: `url(${mapOption.image})` }} />
-              <div className="map-selection-info">
-                <h2>{mapOption.name}</h2>
-                <p>{mapOption.description}</p>
-                <div className="map-selection-grid-info">
-                  Grid: {mapOption.gridSize.width}×{mapOption.gridSize.height}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="game-subtitle">Start your adventure with an AI-generated map</p>
 
         <div className="map-selection-actions">
           <button
             className="btn btn-start-game"
             onClick={startGame}
           >
-            Start Game with {selectedMap.name}
+            Generate Adventure Map
           </button>
 
           <div className="music-controls">
@@ -1006,6 +1030,17 @@ const GameMap: React.FC = () => {
           )}
         </div>
 
+        <div className="map-generation-themes">
+          <h3>Or generate a map with a specific theme:</h3>
+          <div className="theme-buttons">
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('medieval fantasy') }}>Medieval Fantasy</button>
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('dark dungeon') }}>Dark Dungeon</button>
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('forest adventure') }}>Forest Adventure</button>
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('mountain pass') }}>Mountain Pass</button>
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('coastal kingdom') }}>Coastal Kingdom</button>
+          </div>
+        </div>
+
         {/* Audio element for background music */}
         <audio
           ref={audioRef}
@@ -1017,7 +1052,7 @@ const GameMap: React.FC = () => {
         />
       </div>
     );
-  }, [handleMapSelect, selectedMap, startGame, toggleMusic, toggleMute, isMusicPlaying, isMusicMuted, showMusicError]);
+  }, [startGame, toggleMusic, toggleMute, isMusicPlaying, isMusicMuted, showMusicError, requestGeneratedMap]);
 
   // Render the Game Interface
   const renderGameInterface = useCallback(() => {
@@ -1067,7 +1102,7 @@ const GameMap: React.FC = () => {
               className="btn btn-reset"
               onClick={resetGame}
             >
-              🔄 Reset Map
+              🔄 Generate New Map
             </button>
 
             <button
@@ -1092,22 +1127,25 @@ const GameMap: React.FC = () => {
             <div className="map-selector">
               <h3>Select a Map</h3>
               <div className="map-options">
-                {MAP_OPTIONS.map(mapOption => (
-                  <div
-                    key={mapOption.id}
-                    className={`map-option ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
-                    onClick={() => handleMapSelect(mapOption)}
-                  >
-                    <div className="map-preview" style={{ backgroundImage: `url(${mapOption.image})` }} />
-                    <div className="map-info">
-                      <h4>{mapOption.name}</h4>
-                      <p>{mapOption.description}</p>
-                      <div className="map-grid-info">
-                        Grid: {mapOption.gridSize.width}×{mapOption.gridSize.height}
+                {availableMaps.length > 0 ? (
+                  availableMaps.map((mapOption: MapOption) => (
+                    <div
+                      key={mapOption.id}
+                      className={`map-option ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
+                      onClick={() => handleMapSelect(mapOption)}
+                    >
+                      <div className="map-info">
+                        <h4>{mapOption.name}</h4>
+                        <p>{mapOption.description}</p>
+                        <div className="map-grid-info">
+                          Grid: {mapOption.gridSize.width}×{mapOption.gridSize.height}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p>No maps available yet. Use "Generate New Map" to create one.</p>
+                )}
               </div>
               <button
                 className="btn btn-close-selector"
@@ -1119,7 +1157,9 @@ const GameMap: React.FC = () => {
           )}
 
           <div className="status-bar">
-            {isPlacingMode ? (
+            {loadingMap ? (
+              <span>Generating your adventure map...</span>
+            ) : isPlacingMode ? (
               <span className="status-placing">✓ Select any empty cell to place a new avatar</span>
             ) : selectedPieceId ? (
               <span className="status-selected">✓ Avatar selected - click on a cell to move it</span>
@@ -1136,12 +1176,15 @@ const GameMap: React.FC = () => {
 
           {showTooltip && (
             <div className="tooltip">
-              <h3>Color Guide:</h3>
+              <h3>Terrain Guide:</h3>
               <ul>
-                <li>Green tiles: Forests</li>
-                <li>Blue tiles: Water (obstacle)</li>
-                <li>Brown tiles: Mountains (obstacle)</li>
-                <li>Light green: Grass</li>
+                <li>Light Green: Grass</li>
+                <li>Blue: Water (obstacle)</li>
+                <li>Brown: Mountains (obstacle)</li>
+                <li>Dark Green: Forest</li>
+                <li>Purple: Swamp</li>
+                <li>Yellow: Desert</li>
+                <li>Gray: Cave</li>
               </ul>
               <button
                 className="tooltip-close"
@@ -1152,26 +1195,30 @@ const GameMap: React.FC = () => {
             </div>
           )}
 
-          <div
-            ref={gridRef}
-            className={`grid ${isPlacingMode ? 'cursor-crosshair' : draggingPiece ? 'cursor-grabbing' : ''}`}
-            style={{
-              gridTemplateColumns: `repeat(${selectedMap.gridSize.width}, ${selectedMap.cellSize}px)`,
-              gridTemplateRows: `repeat(${selectedMap.gridSize.height}, ${selectedMap.cellSize}px)`,
-              backgroundImage: `url(${selectedMap.image})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              width: `${selectedMap.gridSize.width * (selectedMap.cellSize + 4) - 4}px`,
-              height: `${selectedMap.gridSize.height * (selectedMap.cellSize + 4) - 4}px`,
-              gap: '4px',
-            }}
-            onClick={gridClickHandler}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            {gridItems}
-          </div>
+          {loadingMap ? (
+            <div className="loading-map">
+              <p>The Dungeon Master is creating your adventure map...</p>
+              <div className="spinner"></div>
+            </div>
+          ) : (
+            <div
+              ref={gridRef}
+              className={`grid ${isPlacingMode ? 'cursor-crosshair' : draggingPiece ? 'cursor-grabbing' : ''}`}
+              style={{
+                gridTemplateColumns: `repeat(${selectedMap.gridSize.width}, ${selectedMap.cellSize}px)`,
+                gridTemplateRows: `repeat(${selectedMap.gridSize.height}, ${selectedMap.cellSize}px)`,
+                width: `${selectedMap.gridSize.width * (selectedMap.cellSize + 4) - 4}px`,
+                height: `${selectedMap.gridSize.height * (selectedMap.cellSize + 4) - 4}px`,
+                gap: '4px',
+              }}
+              onClick={gridClickHandler}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              {gridItems}
+            </div>
+          )}
 
           <div className="legend">
             <div className="legend-item">
@@ -1190,6 +1237,24 @@ const GameMap: React.FC = () => {
               <div className="legend-color legend-forest"></div>
               <span>Forest</span>
             </div>
+            {selectedMap.terrainDistribution && selectedMap.terrainDistribution.swamp > 0 && (
+              <div className="legend-item">
+                <div className="legend-color legend-swamp"></div>
+                <span>Swamp</span>
+              </div>
+            )}
+            {selectedMap.terrainDistribution && selectedMap.terrainDistribution.desert > 0 && (
+              <div className="legend-item">
+                <div className="legend-color legend-desert"></div>
+                <span>Desert</span>
+              </div>
+            )}
+            {selectedMap.terrainDistribution && selectedMap.terrainDistribution.cave > 0 && (
+              <div className="legend-item">
+                <div className="legend-color legend-cave"></div>
+                <span>Cave</span>
+              </div>
+            )}
           </div>
 
           <div className="current-map-info">
@@ -1218,9 +1283,9 @@ const GameMap: React.FC = () => {
     );
   }, [
     selectedMap, gridItems, isPlacingMode, selectedPieceId, draggingPiece,
-    showMapSelector, showTooltip, isMusicMuted,
+    showMapSelector, showTooltip, isMusicMuted, loadingMap, availableMaps,
     backToMapSelection, togglePlacingMode, addRandomPiece, removeSelectedPiece,
-    resetGame, handleMapSelect, gridClickHandler, handleMouseMove, handleMouseUp, toggleMusic, toggleMute
+    resetGame, handleMapSelect, gridClickHandler, handleMouseMove, handleMouseUp, toggleMusic, toggleMute, pieces.length
   ]);
 
   // Roll dice function
