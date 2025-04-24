@@ -1,28 +1,63 @@
 .rules-page {
-  background-color: #080c19;
+  background-color: #0d0d0d;
   color: white;
   min-height: calc(100vh - 60px);
-  padding: 40px 0;
+  padding: 6rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.rules-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .rules-container {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 20px;
+  position: relative;
+  z-index: 2;
 }
 
 .rules-title {
-  font-size: 2.5rem;
+  font-family: 'Cinzel', serif;
+  font-size: 2.8rem;
   text-align: center;
-  margin-bottom: 40px;
-  font-family: 'Press Start 2P', monospace;
-  color: #ffde59;
+  margin-bottom: 2rem;
+  color: #ffd700;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+  letter-spacing: 2px;
+}
+
+.rules-title-underline {
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(to right, #ff8c00, #ff4500);
+  margin: 0 auto 40px;
+  border-radius: 2px;
 }
 
 .rules-content {
-  background-color: rgba(25, 30, 45, 0.7);
-  border-radius: 8px;
-  padding: 30px;
+  background: rgba(20, 20, 20, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 140, 0, 0.2);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 50px rgba(255, 140, 0, 0.3);
+  transform: perspective(1000px) rotateY(-2deg);
+  transition: transform 0.5s ease;
+}
+
+.rules-content:hover {
+  transform: perspective(1000px) rotateY(0deg);
 }
 
 .rules-section {
@@ -34,35 +69,51 @@
 }
 
 .rules-section h2 {
+  font-family: 'Cinzel', serif;
   font-size: 1.5rem;
   margin-bottom: 15px;
-  color: #d4af37;
-  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+  color: #ffd700;
+  border-bottom: 2px solid rgba(255, 140, 0, 0.3);
   padding-bottom: 10px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
 .rules-section p {
   margin-bottom: 15px;
   line-height: 1.6;
+  color: #e0e0e0;
 }
 
 .rules-section ul {
   padding-left: 20px;
   margin-bottom: 15px;
+  list-style: none;
 }
 
 .rules-section li {
+  padding: 0.8rem 0;
   margin-bottom: 10px;
   line-height: 1.6;
+  color: #d4d4d4;
+  border-bottom: 1px solid rgba(255, 140, 0, 0.2);
+  display: flex;
+  align-items: center;
+}
+
+.rules-section li::before {
+  content: '🔮';
+  margin-right: 12px;
+  color: #ff8c00;
 }
 
 @media (max-width: 768px) {
   .rules-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   
   .rules-content {
     padding: 20px;
+    transform: none;
   }
   
   .rules-section h2 {
