@@ -1,4 +1,4 @@
-.dashboard {
+.dashboard-page {
   background-color: #080c19;
   color: white;
   min-height: calc(100vh - 60px); /* Subtracting navbar height */
@@ -590,4 +590,4 @@
   font-size: 14px;
   color: #a0b0c0;
   font-family: system-ui, sans-serif;
-} 
+}

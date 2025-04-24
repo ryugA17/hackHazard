@@ -1,3 +1,6 @@
+/* Import Press Start 2P font */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 .stats-section {
   position: relative;
   padding: 8rem 2rem;
@@ -50,7 +53,7 @@
 }
 
 .cta-title {
-  font-family: 'Cinzel', serif;
+  font-family: 'IM Fell English SC', serif;
   font-size: 3rem;
   margin-bottom: 1.5rem;
   color: #ffd700;
@@ -113,13 +116,14 @@
   font-size: 1.25rem;
   font-weight: bold;
   cursor: pointer;
-  font-family: 'Cinzel', serif;
+  font-family: 'Press Start 2P', cursive;
   text-transform: uppercase;
   transition: all 0.3s ease;
   box-shadow: 0 0 15px rgba(255, 140, 0, 0.5);
   letter-spacing: 1px;
   display: block;
   width: max-content;
+  margin: 0 auto; /* Added this to center the button */
 }
 
 .join-now-btn:hover {
@@ -286,4 +290,4 @@
   .characters-showcase {
     gap: 1rem;
   }
-} 
+}

@@ -28,13 +28,21 @@
 }
 
 .rules-title {
-  font-family: 'Cinzel', serif;
-  font-size: 2.8rem;
-  text-align: center;
-  margin-bottom: 2rem;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
   color: #ffd700;
-  text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-  letter-spacing: 2px;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.rules-header h1 {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  color: #ffd700;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .rules-title-underline {
@@ -69,13 +77,12 @@
 }
 
 .rules-section h2 {
-  font-family: 'Cinzel', serif;
-  font-size: 1.5rem;
-  margin-bottom: 15px;
-  color: #ffd700;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 1.8rem;
+  margin-bottom: 1.2rem;
+  color: #ff8c00;
   border-bottom: 2px solid rgba(255, 140, 0, 0.3);
-  padding-bottom: 10px;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+  padding-bottom: 0.5rem;
 }
 
 .rules-section p {
@@ -119,4 +126,4 @@
   .rules-section h2 {
     font-size: 1.3rem;
   }
-} 
+}

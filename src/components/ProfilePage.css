@@ -90,12 +90,11 @@
 }
 
 .profile-info h1 {
-  font-size: 26px;
-  margin: 0 0 5px 0;
-  font-family: 'Cinzel', serif;
+  font-family: 'IM Fell English SC', serif;
+  font-weight: 600;
+  margin-bottom: 10px;
   color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .profile-handle {
@@ -502,6 +501,16 @@
 
 .nft-preview {
   padding: 10px 0;
+}
+
+.profile-section-title {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #ff8c00;
+  padding-bottom: 5px;
+  border-bottom: 2px solid rgba(255, 140, 0, 0.3);
 }
 
 /* Game Plan Badge */

@@ -26,12 +26,13 @@
 }
 
 .section-title {
-  font-family: 'Cinzel', serif;
-  font-size: 2.8rem;
-  color: #ffd700;
+  font-family: 'IM Fell English SC', serif;
+  font-size: 2.5rem;
   margin-bottom: 1rem;
-  text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-  letter-spacing: 2px;
+  color: #ff8c00;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  position: relative;
+  text-align: center;
 }
 
 .section-title-underline {
@@ -85,14 +86,24 @@
   justify-content: center;
   margin-bottom: 1.5rem;
   box-shadow: 0 0 20px rgba(255, 140, 0, 0.4);
+  position: relative;
 }
 
-.feature-icon {
+.feature-icon-container .feature-icon {
   font-size: 2rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
 }
 
 .feature-title {
-  font-family: 'Cinzel', serif;
+  font-family: 'IM Fell English SC', serif;
   font-size: 1.5rem;
   margin-bottom: 1rem;
   color: #ffd700;
@@ -178,7 +189,7 @@
 }
 
 .game-title {
-  font-family: 'Cinzel', serif;
+  font-family: 'IM Fell English SC', serif;
   font-size: 2.2rem;
   margin-bottom: 1.5rem;
   color: #ffd700;
@@ -228,7 +239,7 @@
 }
 
 .nft-title {
-  font-family: 'Cinzel', serif;
+  font-family: 'IM Fell English SC', serif;
   font-size: 2.2rem;
   margin-bottom: 1.5rem;
   color: #ffd700;
@@ -403,4 +414,4 @@
   .section-title {
     font-size: 1.8rem;
   }
-} 
+}
