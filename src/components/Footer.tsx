@@ -15,10 +15,10 @@ const Footer = () => {
           <div className="footer-section">
             <h3>Explore</h3>
             <ul>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/pokedex">QuestMint</Link></li>
+              <li><Link to="/" onClick={() => window.scrollTo(0, 0)}>Home</Link></li>
               <li><Link to="/rules">Game Rules</Link></li>
               <li><Link to="/community">Community</Link></li>
+              <li><Link to="/map">Battlemap</Link></li>
             </ul>
           </div>
           
