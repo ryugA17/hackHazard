@@ -151,7 +151,7 @@ const GameMap: React.FC = () => {
   useEffect(() => {
     // Create a unique session ID for this game session
     const sessionId = `session-${Date.now()}`;
-    const ws = new WebSocket(`ws://localhost:8000/ws/dnd/${sessionId}`);
+    const ws = new WebSocket(`ws://localhost:8001/ws/dnd/${sessionId}`);
 
     ws.onopen = () => {
       console.log('Connected to DND Dungeon Master server');
@@ -170,6 +170,52 @@ const GameMap: React.FC = () => {
         if (isAiControlled) {
           setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [...prev, { role: 'dm', content: data.content }]);
         }
+      } else if (data.type === 'map_data') {
+        console.log("Received map data:", data);
+
+        // The map data could be in data.map_data or directly in data
+        const mapData = data.map_data || data;
+
+        if (!mapData || !mapData.grid) {
+          console.error("Invalid map data received:", mapData);
+          return;
+        }
+
+        // Create a new map option from the received data
+        const newMap: MapOption = {
+          id: mapData.id || `map-${Date.now()}`,
+          name: mapData.name || "Adventure Map",
+          description: mapData.description || "A mysterious realm awaits",
+          image: '',
+          gridSize: {
+            width: mapData.width || (mapData.grid && mapData.grid[0] ? mapData.grid[0].length : 8),
+            height: mapData.height || (mapData.grid ? mapData.grid.length : 6)
+          },
+          cellSize: 80,
+          terrainDistribution: mapData.terrain_distribution || {}
+        };
+
+        console.log("Created map option:", newMap);
+
+        // Convert the map grid data
+        const newGrid = convertMapDataToGrid(mapData);
+
+        console.log("Converted grid:", newGrid);
+
+        // Update state with new map
+        setSelectedMap(newMap);
+        setMap(newGrid);
+        setLoadingMap(false);
+
+        // Add to available maps
+        setAvailableMaps((prev: MapOption[]) => {
+          // Check if this map already exists (by ID)
+          const exists = prev.some((m: MapOption) => m.id === newMap.id);
+          if (!exists) {
+            return [...prev, newMap];
+          }
+          return prev;
+        });
       } else if (data.type === 'dm_response') {
         // Add DM response to chat history
         setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [...prev, { role: 'dm', content: data.content }]);
@@ -214,43 +260,6 @@ const GameMap: React.FC = () => {
 
           // Add the new piece to the map
           setPieces((prevPieces: Piece[]) => [...prevPieces, newPiece]);
-        }
-
-        // Check if we received a new map
-        if (data.map_data) {
-          const mapData = data.map_data;
-          
-          // Create a new map option from the received data
-          const newMap: MapOption = {
-            id: mapData.id || `map-${Date.now()}`,
-            name: mapData.name || "Adventure Map",
-            description: mapData.description || "A mysterious realm awaits",
-            image: '',
-            gridSize: {
-              width: mapData.width || mapData.grid[0].length || 8,
-              height: mapData.height || mapData.grid.length || 6
-            },
-            cellSize: 80,
-            terrainDistribution: mapData.terrain_distribution || {}
-          };
-          
-          // Convert the map grid data
-          const newGrid = convertMapDataToGrid(mapData);
-          
-          // Update state with new map
-          setSelectedMap(newMap);
-          setMap(newGrid);
-          setLoadingMap(false);
-          
-          // Add to available maps
-          setAvailableMaps((prev: MapOption[]) => {
-            // Check if this map already exists (by ID)
-            const exists = prev.some((m: MapOption) => m.id === newMap.id);
-            if (!exists) {
-              return [...prev, newMap];
-            }
-            return prev;
-          });
         }
       } else if (data.type === 'error') {
         console.error('Error from DM server:', data.content);
@@ -336,13 +345,13 @@ const GameMap: React.FC = () => {
   const requestGeneratedMap = useCallback((theme?: string) => {
     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
       setLoadingMap(true);
-      
+
       const request = {
         type: 'generate_map',
         theme: theme || 'fantasy adventure',
         content: 'Create a dynamic map for my adventure'
       };
-      
+
       wsConnection.send(JSON.stringify(request));
       console.log("Requested a generated map with theme:", theme || 'fantasy adventure');
     }
@@ -682,7 +691,7 @@ const GameMap: React.FC = () => {
     setDraggingPiece(null);
     setNextPieceId(1);
     setIsPlacingMode(false);
-    
+
     // Request a new map
     requestGeneratedMap();
   }, [requestGeneratedMap]);
@@ -690,7 +699,7 @@ const GameMap: React.FC = () => {
   // Handle map selection
   const handleMapSelect = useCallback((mapOption: MapOption): void => {
     setSelectedMap(mapOption);
-    
+
     // If this is a saved map from the server, request its details
     if (mapOption.id !== 'loading') {
       // Send request to get the map details
