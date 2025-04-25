@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Game Sound Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .control-panel {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .sound-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px;
+            background-color: #4a5568;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2d3748;
+        }
+        .volume-controls {
+            margin-top: 20px;
+        }
+        .volume-control {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+        }
+        input[type="range"] {
+            width: 200px;
+            vertical-align: middle;
+        }
+        .log-panel {
+            background-color: #2d3748;
+            color: #a0aec0;
+            border-radius: 8px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+        .log-entry {
+            margin: 5px 0;
+            border-bottom: 1px solid #4a5568;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>D&D Game Sound Test</h1>
+    
+    <div class="control-panel">
+        <h2>Sound Controls</h2>
+        
+        <div class="volume-controls">
+            <div class="volume-control">
+                <label for="master-volume">Master Volume:</label>
+                <input type="range" id="master-volume" min="0" max="100" value="50">
+                <span id="master-volume-value">50%</span>
+            </div>
+            
+            <div class="volume-control">
+                <label for="music-volume">Music Volume:</label>
+                <input type="range" id="music-volume" min="0" max="100" value="30">
+                <span id="music-volume-value">30%</span>
+            </div>
+            
+            <div class="volume-control">
+                <label for="effects-volume">Effects Volume:</label>
+                <input type="range" id="effects-volume" min="0" max="100" value="70">
+                <span id="effects-volume-value">70%</span>
+            </div>
+        </div>
+        
+        <button id="toggle-mute">Mute</button>
+        <button id="stop-all">Stop All Sounds</button>
+        
+        <div class="sound-buttons">
+            <button class="sound-button" data-sound="/sounds/move.mp3">Move</button>
+            <button class="sound-button" data-sound="/sounds/attack.mp3">Attack</button>
+            <button class="sound-button" data-sound="/sounds/dice.mp3">Dice</button>
+            <button class="sound-button" data-sound="/sounds/chat.mp3">Chat</button>
+            <button class="sound-button" data-sound="/sounds/trapped.mp3">Trapped</button>
+            <button class="sound-button" data-sound="/sounds/background.mp3" data-music="true">Background Music</button>
+            <button class="sound-button" data-sound="/sounds/victory.mp3">Victory</button>
+            <button class="sound-button" data-sound="/sounds/defeat.mp3">Defeat</button>
+        </div>
+    </div>
+    
+    <div class="control-panel">
+        <h2>WebSocket Test</h2>
+        <button id="connect-ws">Connect WebSocket</button>
+        <button id="disconnect-ws" disabled>Disconnect</button>
+        <div id="ws-status">Not connected</div>
+    </div>
+    
+    <div class="log-panel" id="log-panel"></div>
+    
+    <script src="sound_handler.js"></script>
+    <script>
+        // DOM Elements
+        const masterVolumeSlider = document.getElementById('master-volume');
+        const masterVolumeValue = document.getElementById('master-volume-value');
+        const musicVolumeSlider = document.getElementById('music-volume');
+        const musicVolumeValue = document.getElementById('music-volume-value');
+        const effectsVolumeSlider = document.getElementById('effects-volume');
+        const effectsVolumeValue = document.getElementById('effects-volume-value');
+        const toggleMuteButton = document.getElementById('toggle-mute');
+        const stopAllButton = document.getElementById('stop-all');
+        const soundButtons = document.querySelectorAll('.sound-button');
+        const connectWsButton = document.getElementById('connect-ws');
+        const disconnectWsButton = document.getElementById('disconnect-ws');
+        const wsStatus = document.getElementById('ws-status');
+        const logPanel = document.getElementById('log-panel');
+        
+        // WebSocket connection
+        let socket = null;
+        
+        // Log function
+        function log(message) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logPanel.appendChild(entry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+        
+        // Volume slider events
+        masterVolumeSlider.addEventListener('input', function() {
+            const value = this.value;
+            masterVolumeValue.textContent = `${value}%`;
+            window.GameSounds.setMasterVolume(value / 100);
+        });
+        
+        musicVolumeSlider.addEventListener('input', function() {
+            const value = this.value;
+            musicVolumeValue.textContent = `${value}%`;
+            window.GameSounds.setMusicVolume(value / 100);
+        });
+        
+        effectsVolumeSlider.addEventListener('input', function() {
+            const value = this.value;
+            effectsVolumeValue.textContent = `${value}%`;
+            window.GameSounds.setEffectsVolume(value / 100);
+        });
+        
+        // Toggle mute button
+        toggleMuteButton.addEventListener('click', function() {
+            const isMuted = window.GameSounds.toggleMute();
+            this.textContent = isMuted ? 'Unmute' : 'Mute';
+            log(`Sound ${isMuted ? 'muted' : 'unmuted'}`);
+        });
+        
+        // Stop all sounds button
+        stopAllButton.addEventListener('click', function() {
+            window.GameSounds.stopAllSounds();
+            log('Stopped all sounds');
+        });
+        
+        // Sound buttons
+        soundButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const soundUrl = this.getAttribute('data-sound');
+                const isMusic = this.getAttribute('data-music') === 'true';
+                window.GameSounds.playSound(soundUrl, isMusic);
+                log(`Playing ${isMusic ? 'music' : 'sound'}: ${soundUrl}`);
+            });
+        });
+        
+        // WebSocket connection
+        connectWsButton.addEventListener('click', function() {
+            if (socket) {
+                log('Already connected');
+                return;
+            }
+            
+            // Create WebSocket connection
+            const sessionId = 'test-' + Math.floor(Math.random() * 1000);
+            socket = new WebSocket(`ws://localhost:8001/ws/dnd/${sessionId}`);
+            
+            socket.onopen = function() {
+                log('WebSocket connected');
+                wsStatus.textContent = 'Connected';
+                wsStatus.style.color = 'green';
+                connectWsButton.disabled = true;
+                disconnectWsButton.disabled = false;
+            };
+            
+            socket.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                log(`Received message: ${message.type}`);
+                
+                // Handle sound messages
+                if (message.type === 'play_sound') {
+                    window.GameSounds.handleSoundMessage(message);
+                }
+            };
+            
+            socket.onclose = function() {
+                log('WebSocket disconnected');
+                wsStatus.textContent = 'Disconnected';
+                wsStatus.style.color = 'red';
+                connectWsButton.disabled = false;
+                disconnectWsButton.disabled = true;
+                socket = null;
+            };
+            
+            socket.onerror = function(error) {
+                log(`WebSocket error: ${error}`);
+                wsStatus.textContent = 'Error';
+                wsStatus.style.color = 'red';
+            };
+        });
+        
+        disconnectWsButton.addEventListener('click', function() {
+            if (socket) {
+                socket.close();
+                socket = null;
+                log('WebSocket disconnected');
+                wsStatus.textContent = 'Disconnected';
+                wsStatus.style.color = 'red';
+                connectWsButton.disabled = false;
+                disconnectWsButton.disabled = true;
+            }
+        });
+        
+        // Initialize
+        log('Sound test initialized');
+    </script>
+</body>
+</html>

@@ -779,11 +779,17 @@
 /* Game Panels Container */
 .game-panels {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 20px;
   margin-top: 20px;
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
+}
+
+@media (max-width: 992px) {
+  .game-panels {
+    flex-direction: column;
+  }
 }
 
 /* Narration Panel */
@@ -968,9 +974,29 @@
 /* Game Controls Panel */
 .game-controls-panel {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   margin-top: 20px;
-  justify-content: center;
+  align-items: center;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+.sound-toggle {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 8px 12px;
+  border-radius: 5px;
+  color: white;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.sound-toggle input {
+  margin-right: 8px;
 }
 
 .btn-dice {

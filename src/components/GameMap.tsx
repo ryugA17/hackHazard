@@ -7,6 +7,7 @@ import robotAvatar from '../assets/avatars/robot.gif';
 import foxboyAvatar from '../assets/avatars/foxboy.gif';
 import foxgirlAvatar from '../assets/avatars/foxgirl.gif';
 import backgroundMusic from '../assets/aizentheme.mp3';
+import DungeonChat from './DungeonChat';
 import './GameMap.css';
 
 const {
@@ -148,13 +149,41 @@ const GameMap: React.FC = () => {
   const [narration, setNarration] = React.useState<string>("");
   const [loadingMap, setLoadingMap] = useState(true);
 
+  // Define playSoundEffect function before using it in useEffect
+  // Play sound effect
+  const playSoundEffect = useCallback((soundUrl: string) => {
+    if (!soundEffectRef.current) return;
+
+    // Check if sound is enabled
+    const soundEnabled = document.getElementById('sound-enabled') as HTMLInputElement;
+    if (soundEnabled && !soundEnabled.checked) return;
+
+    console.log('Playing sound effect:', soundUrl);
+
+    // Set the source and play the sound
+    soundEffectRef.current.src = `http://localhost:8001${soundUrl}`;
+    soundEffectRef.current.play().catch((error: Error) => {
+      console.error('Error playing sound effect:', error);
+    });
+  }, []);
+
   useEffect(() => {
     // Create a unique session ID for this game session
     const sessionId = `session-${Date.now()}`;
+    console.log('Connecting to WebSocket server with session ID:', sessionId);
     const ws = new WebSocket(`ws://localhost:8001/ws/dnd/${sessionId}`);
 
     ws.onopen = () => {
       console.log('Connected to DND Dungeon Master server');
+      setWsConnection(ws);
+
+      // Enable AI control
+      ws.send(JSON.stringify({
+        type: 'ai_control',
+        data: {
+          enabled: true
+        }
+      }));
     };
 
     ws.onmessage = (event) => {
@@ -175,6 +204,8 @@ const GameMap: React.FC = () => {
 
         // The map data could be in data.map_data or directly in data
         const mapData = data.map_data || data;
+
+        console.log("Extracted map data:", mapData);
 
         if (!mapData || !mapData.grid) {
           console.error("Invalid map data received:", mapData);
@@ -231,6 +262,16 @@ const GameMap: React.FC = () => {
             }
           ]);
         }
+      } else if (data.type === 'chat_message') {
+        // Add chat message to chat history
+        console.log('Received chat message:', data);
+        setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
+          ...prev,
+          {
+            role: data.sender === 'Player' ? 'user' : 'dm',
+            content: data.content
+          }
+        ]);
 
         // Check if DM is moving a character
         if (data.move_character) {
@@ -270,6 +311,12 @@ const GameMap: React.FC = () => {
             content: `Error: ${data.content}`
           }
         ]);
+      } else if (data.type === 'play_sound') {
+        // Play the sound effect
+        if (data.sound_url) {
+          console.log('Received sound effect request:', data.sound_url);
+          playSoundEffect(data.sound_url);
+        }
       }
     };
 
@@ -352,8 +399,11 @@ const GameMap: React.FC = () => {
         content: 'Create a dynamic map for my adventure'
       };
 
+      console.log("Sending map generation request:", request);
       wsConnection.send(JSON.stringify(request));
       console.log("Requested a generated map with theme:", theme || 'fantasy adventure');
+    } else {
+      console.error("WebSocket not connected. Connection state:", wsConnection ? wsConnection.readyState : "null");
     }
   }, [wsConnection]);
 
@@ -369,6 +419,7 @@ const GameMap: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<Array<{role: 'user' | 'dm', content: string}>>([]);
   const gridRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const soundEffectRef = useRef<HTMLAudioElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Create a new piece
@@ -1397,6 +1448,8 @@ const GameMap: React.FC = () => {
     setUserInput('');
   }, [userInput, wsConnection]);
 
+
+
   // Handle AI taking control of the game
   const handleAIControl = useCallback(() => {
     if (pieces.length === 0) {
@@ -1445,6 +1498,11 @@ const GameMap: React.FC = () => {
         >
           🔄 Update
         </button>
+
+        <div className="sound-toggle">
+          <input type="checkbox" id="sound-enabled" defaultChecked={true} />
+          <label htmlFor="sound-enabled">🔊 Sound</label>
+        </div>
       </div>
 
       {showDicePanel && (
@@ -1498,51 +1556,23 @@ const GameMap: React.FC = () => {
         </div>
 
         {aiControlled && (
-          <div className="chat-panel">
-            <h3>Adventure Chat</h3>
-            <div className="chat-messages">
-              {chatHistory.map((message: {role: 'user' | 'dm', content: string}, index: number) => (
-                <div key={index} className={`chat-message ${message.role}`}>
-                  <div className="message-header">
-                    {message.role === 'user' ? 'You' : 'Dungeon Master'}:
-                  </div>
-                  <div className="message-content">{message.content}</div>
-                </div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
+          <DungeonChat
+            chatHistory={chatHistory}
+            onSendMessage={(message: string) => {
+              // Add user message to chat history
+              setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [...prev, { role: 'user', content: message }]);
 
-            <div className="chat-input">
-              <input
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleUserInput()}
-                placeholder="Describe your action..."
-                disabled={waitingForDiceRoll}
-              />
-              <button
-                onClick={handleUserInput}
-                disabled={!userInput.trim() || waitingForDiceRoll}
-              >
-                Send
-              </button>
-            </div>
-
-            {waitingForDiceRoll && (
-              <div className="dice-prompt">
-                <p>Roll the dice to determine your fate!</p>
-                <div className="dice-buttons-small">
-                  <button onClick={() => handleDiceRoll('d4')}>d4</button>
-                  <button onClick={() => handleDiceRoll('d6')}>d6</button>
-                  <button onClick={() => handleDiceRoll('d8')}>d8</button>
-                  <button onClick={() => handleDiceRoll('d10')}>d10</button>
-                  <button onClick={() => handleDiceRoll('d12')}>d12</button>
-                  <button onClick={() => handleDiceRoll('d20')}>d20</button>
-                </div>
-              </div>
-            )}
-          </div>
+              // Send user input to the DM
+              if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                wsConnection.send(JSON.stringify({
+                  type: 'user_input',
+                  content: message
+                }));
+              }
+            }}
+            onRollDice={handleDiceRoll}
+            waitingForDiceRoll={waitingForDiceRoll}
+          />
         )}
       </div>
 
@@ -1557,6 +1587,23 @@ const GameMap: React.FC = () => {
           </Link>
         </div>
       )}
+
+      {/* Audio element for background music */}
+      <audio
+        ref={audioRef}
+        src={backgroundMusic}
+        loop
+        preload="auto"
+        crossOrigin="anonymous"
+        playsInline
+      />
+
+      {/* Audio element for sound effects */}
+      <audio
+        ref={soundEffectRef}
+        preload="auto"
+        crossOrigin="anonymous"
+      />
     </div>
   );
 };

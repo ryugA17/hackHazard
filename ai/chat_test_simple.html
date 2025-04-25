@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        #input-container {
+            display: flex;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 5px;
+            margin-right: 10px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #e6f7ff;
+            text-align: right;
+        }
+        .dm-message {
+            background-color: #f0f0f0;
+        }
+        .narration {
+            background-color: #ffe6cc;
+            font-style: italic;
+        }
+        .log {
+            color: #999;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple D&D Chat Test</h1>
+    
+    <div id="chat-container"></div>
+    
+    <div id="input-container">
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button id="send-button">Send</button>
+    </div>
+    
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        
+        // Generate a random session ID
+        const sessionId = 'test-' + Math.floor(Math.random() * 10000);
+        
+        // Create WebSocket connection
+        const socket = new WebSocket(`ws://localhost:8001/ws/dnd/${sessionId}`);
+        
+        // Connection opened
+        socket.addEventListener('open', (event) => {
+            addMessage('Connected to server', 'log');
+            
+            // Generate a map
+            socket.send(JSON.stringify({
+                type: "generate_map",
+                theme: "fantasy adventure",
+                content: "Create a dynamic map for my adventure"
+            }));
+            
+            // Add a character
+            setTimeout(() => {
+                socket.send(JSON.stringify({
+                    type: "player_action",
+                    action: {
+                        type: "add_character",
+                        character_id: "player-1",
+                        character_type: "Adventurer",
+                        position: { x: 2, y: 2 }
+                    }
+                }));
+                addMessage('Added a character to the map', 'log');
+            }, 1000);
+        });
+        
+        // Listen for messages
+        socket.addEventListener('message', (event) => {
+            const message = JSON.parse(event.data);
+            console.log('Received message:', message);
+            
+            if (message.type === 'narration') {
+                addMessage(message.content, 'narration');
+            } else if (message.type === 'chat_message') {
+                addMessage(`${message.sender}: ${message.content}`, 'dm-message');
+            } else if (message.type === 'play_sound') {
+                addMessage(`Sound played: ${message.sound_url}`, 'log');
+            }
+        });
+        
+        // Connection closed
+        socket.addEventListener('close', (event) => {
+            addMessage('Disconnected from server', 'log');
+        });
+        
+        // Send message
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message) {
+                // Send the message to the server using the user_input type
+                socket.send(JSON.stringify({
+                    type: "user_input",
+                    content: message
+                }));
+                
+                // Add the message to the chat
+                addMessage(`You: ${message}`, 'user-message');
+                
+                // Clear the input
+                messageInput.value = '';
+            }
+        }
+        
+        // Add message to chat
+        function addMessage(content, type) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${type}`;
+            messageElement.textContent = content;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

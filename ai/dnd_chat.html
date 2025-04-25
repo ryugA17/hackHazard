@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Dungeon Master Chat</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0e6d2;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #7b3f00;
+            color: #f0e6d2;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 5px solid #5a2d00;
+        }
+        h1 {
+            margin: 0;
+            font-family: 'Luminari', 'Fantasy', cursive;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .game-area {
+            display: flex;
+            margin-top: 20px;
+        }
+        .chat-panel {
+            flex: 1;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-right: 20px;
+        }
+        .controls-panel {
+            width: 300px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #f9f5eb;
+        }
+        .chat-input {
+            display: flex;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #7b3f00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #5a2d00;
+        }
+        .control-group {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 15px;
+        }
+        .control-group h3 {
+            margin-top: 0;
+            color: #7b3f00;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            position: relative;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .player-message {
+            background-color: #e2f0ff;
+            margin-left: auto;
+            border-bottom-right-radius: 0;
+            text-align: right;
+        }
+        .dm-message {
+            background-color: #f0e6d2;
+            margin-right: auto;
+            border-bottom-left-radius: 0;
+        }
+        .narration {
+            background-color: #f5f5f5;
+            font-style: italic;
+            margin: 10px auto;
+            text-align: center;
+            border-left: 3px solid #7b3f00;
+            border-right: 3px solid #7b3f00;
+        }
+        .dice-result {
+            background-color: #e6ffe6;
+            text-align: center;
+            margin: 10px auto;
+            border: 1px dashed #7b3f00;
+        }
+        .status {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .dice-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .dice-controls select {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .sound-toggle {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .sound-toggle input {
+            margin-right: 10px;
+        }
+        .character-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f9f5eb;
+            border-radius: 5px;
+            border-left: 3px solid #7b3f00;
+        }
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            gap: 5px;
+        }
+        .suggestion-chip {
+            background-color: #e2f0ff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .suggestion-chip:hover {
+            background-color: #c5e1ff;
+        }
+        .audio-player {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>D&D Dungeon Master Chat</h1>
+    </header>
+    
+    <div class="container">
+        <div class="game-area">
+            <div class="chat-panel">
+                <div class="chat-messages" id="chat-messages"></div>
+                
+                <div class="suggestion-chips">
+                    <div class="suggestion-chip" onclick="sendSuggestion('Hello Dungeon Master')">Hello Dungeon Master</div>
+                    <div class="suggestion-chip" onclick="sendSuggestion('Tell me about this world')">Tell me about this world</div>
+                    <div class="suggestion-chip" onclick="sendSuggestion('I want to explore')">I want to explore</div>
+                    <div class="suggestion-chip" onclick="sendSuggestion('Are there any quests?')">Are there any quests?</div>
+                    <div class="suggestion-chip" onclick="sendSuggestion('Roll a skill check')">Roll a skill check</div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="Type your message to the Dungeon Master...">
+                    <button id="send-chat">Send</button>
+                </div>
+                
+                <div class="status" id="connection-status">Not connected</div>
+            </div>
+            
+            <div class="controls-panel">
+                <div class="control-group">
+                    <h3>Connection</h3>
+                    <button id="connect-ws">Connect to Game</button>
+                    <button id="disconnect-ws" disabled>Disconnect</button>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Character</h3>
+                    <div>
+                        <label for="character-type">Character Type:</label>
+                        <select id="character-type">
+                            <option value="Warrior">Warrior</option>
+                            <option value="Wizard">Wizard</option>
+                            <option value="Rogue">Rogue</option>
+                            <option value="Cleric">Cleric</option>
+                            <option value="Bard">Bard</option>
+                            <option value="Ranger">Ranger</option>
+                            <option value="Paladin">Paladin</option>
+                            <option value="Druid">Druid</option>
+                        </select>
+                    </div>
+                    <button id="add-character" disabled>Add Character</button>
+                    
+                    <div class="character-info" id="character-info">
+                        No character added yet
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Dice</h3>
+                    <div class="dice-controls">
+                        <select id="dice-type">
+                            <option value="d4">d4</option>
+                            <option value="d6">d6</option>
+                            <option value="d8">d8</option>
+                            <option value="d10">d10</option>
+                            <option value="d12">d12</option>
+                            <option value="d20" selected>d20</option>
+                            <option value="d100">d100</option>
+                        </select>
+                        <button id="roll-dice" disabled>Roll Dice</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Sound</h3>
+                    <div class="sound-toggle">
+                        <input type="checkbox" id="sound-enabled" checked>
+                        <label for="sound-enabled">Enable sound effects</label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Spawn Monster</h3>
+                    <div>
+                        <label for="monster-type">Monster Type:</label>
+                        <select id="monster-type">
+                            <option value="Goblin">Goblin</option>
+                            <option value="Orc">Orc</option>
+                            <option value="Dragon">Dragon</option>
+                            <option value="Skeleton">Skeleton</option>
+                            <option value="Zombie">Zombie</option>
+                            <option value="Troll">Troll</option>
+                        </select>
+                    </div>
+                    <button id="spawn-monster" disabled>Spawn Monster</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <audio id="audio-player" class="audio-player"></audio>
+    
+    <script>
+        // DOM Elements
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatButton = document.getElementById('send-chat');
+        const connectButton = document.getElementById('connect-ws');
+        const disconnectButton = document.getElementById('disconnect-ws');
+        const connectionStatus = document.getElementById('connection-status');
+        const addCharacterButton = document.getElementById('add-character');
+        const characterTypeSelect = document.getElementById('character-type');
+        const characterInfo = document.getElementById('character-info');
+        const rollDiceButton = document.getElementById('roll-dice');
+        const diceTypeSelect = document.getElementById('dice-type');
+        const soundEnabledCheckbox = document.getElementById('sound-enabled');
+        const spawnMonsterButton = document.getElementById('spawn-monster');
+        const monsterTypeSelect = document.getElementById('monster-type');
+        const audioPlayer = document.getElementById('audio-player');
+        
+        // Game state
+        let socket = null;
+        const sessionId = 'dnd-' + Math.floor(Math.random() * 10000);
+        let characterId = null;
+        let characterType = null;
+        let mapGenerated = false;
+        
+        // Connect to WebSocket
+        connectButton.addEventListener('click', function() {
+            if (socket) {
+                addNarration('Already connected to the game.');
+                return;
+            }
+            
+            // Create WebSocket connection
+            socket = new WebSocket(`ws://localhost:8001/ws/dnd/${sessionId}`);
+            
+            socket.onopen = function() {
+                connectionStatus.textContent = 'Connected to game server';
+                connectionStatus.style.color = 'green';
+                connectButton.disabled = true;
+                disconnectButton.disabled = false;
+                
+                // Generate a map
+                socket.send(JSON.stringify({
+                    type: "generate_map",
+                    theme: "fantasy adventure",
+                    content: "Create a dynamic map for my adventure"
+                }));
+                
+                addNarration('Connecting to the realm...');
+            };
+            
+            socket.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                
+                if (message.type === 'map_data') {
+                    mapGenerated = true;
+                    addCharacterButton.disabled = false;
+                    addNarration('The world has been created. You can now add your character.');
+                }
+                
+                if (message.type === 'chat_message') {
+                    addDMMessage(message.sender, message.content);
+                }
+                
+                if (message.type === 'narration') {
+                    addNarration(message.content);
+                }
+                
+                if (message.type === 'dice_result') {
+                    addDiceResult(message.content);
+                }
+                
+                if (message.type === 'play_sound' && soundEnabledCheckbox.checked) {
+                    playSound(message.sound_url);
+                }
+            };
+            
+            socket.onclose = function() {
+                connectionStatus.textContent = 'Disconnected from game server';
+                connectionStatus.style.color = 'red';
+                connectButton.disabled = false;
+                disconnectButton.disabled = true;
+                addCharacterButton.disabled = true;
+                rollDiceButton.disabled = true;
+                spawnMonsterButton.disabled = true;
+                socket = null;
+                
+                addNarration('You have been disconnected from the realm.');
+            };
+            
+            socket.onerror = function(error) {
+                connectionStatus.textContent = 'Error connecting to game server';
+                connectionStatus.style.color = 'red';
+                addNarration('There was an error connecting to the realm.');
+            };
+        });
+        
+        // Disconnect from WebSocket
+        disconnectButton.addEventListener('click', function() {
+            if (socket) {
+                socket.close();
+            }
+        });
+        
+        // Add character
+        addCharacterButton.addEventListener('click', function() {
+            if (!socket || !mapGenerated) {
+                addNarration('You must be connected to a game first.');
+                return;
+            }
+            
+            characterType = characterTypeSelect.value;
+            characterId = 'player-' + sessionId;
+            
+            // Random position between 1-8 for x and 1-6 for y
+            const position = {
+                x: Math.floor(Math.random() * 8) + 1,
+                y: Math.floor(Math.random() * 6) + 1
+            };
+            
+            socket.send(JSON.stringify({
+                type: "player_action",
+                action: {
+                    type: "add_character",
+                    character_id: characterId,
+                    character_type: characterType,
+                    position: position
+                }
+            }));
+            
+            characterInfo.textContent = `${characterType} added at position (${position.x}, ${position.y})`;
+            rollDiceButton.disabled = false;
+            spawnMonsterButton.disabled = false;
+            addCharacterButton.disabled = true;
+        });
+        
+        // Roll dice
+        rollDiceButton.addEventListener('click', function() {
+            if (!socket || !characterId) {
+                addNarration('You must have a character in the game to roll dice.');
+                return;
+            }
+            
+            const diceType = diceTypeSelect.value;
+            
+            socket.send(JSON.stringify({
+                type: "player_action",
+                action: {
+                    type: "roll_dice",
+                    dice_type: diceType,
+                    num_dice: 1,
+                    character_id: characterId
+                }
+            }));
+        });
+        
+        // Spawn monster
+        spawnMonsterButton.addEventListener('click', function() {
+            if (!socket || !mapGenerated) {
+                addNarration('You must be connected to a game first.');
+                return;
+            }
+            
+            const monsterType = monsterTypeSelect.value;
+            
+            // Random position between 1-8 for x and 1-6 for y
+            const position = {
+                x: Math.floor(Math.random() * 8) + 1,
+                y: Math.floor(Math.random() * 6) + 1
+            };
+            
+            socket.send(JSON.stringify({
+                type: "player_action",
+                action: {
+                    type: "spawn_ai",
+                    character_type: monsterType,
+                    position: position
+                }
+            }));
+        });
+        
+        // Send chat message
+        function sendChatMessage() {
+            if (!socket) {
+                addNarration('You must be connected to a game to chat.');
+                return;
+            }
+            
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            socket.send(JSON.stringify({
+                type: "user_input",
+                content: message
+            }));
+            
+            addPlayerMessage('You', message);
+            chatInput.value = '';
+        }
+        
+        // Send suggestion
+        function sendSuggestion(suggestion) {
+            chatInput.value = suggestion;
+            sendChatMessage();
+        }
+        
+        // Add player message to chat
+        function addPlayerMessage(sender, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message player-message';
+            messageDiv.innerHTML = `<strong>${sender}:</strong> ${content}`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Add DM message to chat
+        function addDMMessage(sender, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message dm-message';
+            messageDiv.innerHTML = `<strong>${sender}:</strong> ${content}`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Add narration to chat
+        function addNarration(content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message narration';
+            messageDiv.textContent = content;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Add dice result to chat
+        function addDiceResult(content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message dice-result';
+            messageDiv.textContent = content;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Play sound
+        function playSound(soundUrl) {
+            audioPlayer.src = soundUrl;
+            audioPlayer.play().catch(e => console.error('Error playing sound:', e));
+        }
+        
+        // Event listeners
+        sendChatButton.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        });
+        
+        // Initialize
+        addNarration('Welcome to the D&D Dungeon Master Chat! Click "Connect to Game" to begin your adventure.');
+    </script>
+</body>
+</html>
