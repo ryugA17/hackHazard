@@ -69,24 +69,24 @@ const StatsSection = () => {
         </div>
         
         <div className="characters-showcase scale-in stagger-2">
-          <div className="character-container">
-            <img src={boyAvatar} alt="Character" className="character-image char1" />
+          <div className="character-container character-warrior">
+            <img src={boyAvatar} alt="Warrior" className="character-image char1" />
             <div className="character-label">Warrior</div>
           </div>
-          <div className="character-container">
-            <img src={girlAvatar} alt="Character" className="character-image char2" />
+          <div className="character-container character-ranger">
+            <img src={girlAvatar} alt="Ranger" className="character-image char2" />
             <div className="character-label">Ranger</div>
           </div>
-          <div className="character-container">
-            <img src={robotAvatar} alt="Character" className="character-image char3" />
+          <div className="character-container character-artificer">
+            <img src={robotAvatar} alt="Artificer" className="character-image char3" />
             <div className="character-label">Artificer</div>
           </div>
-          <div className="character-container">
-            <img src={foxboyAvatar} alt="Character" className="character-image char4" />
+          <div className="character-container character-druid">
+            <img src={foxboyAvatar} alt="Druid" className="character-image char4" />
             <div className="character-label">Druid</div>
           </div>
-          <div className="character-container">
-            <img src={foxgirlAvatar} alt="Character" className="character-image char5" />
+          <div className="character-container character-sorcerer">
+            <img src={foxgirlAvatar} alt="Sorcerer" className="character-image char5" />
             <div className="character-label">Sorcerer</div>
           </div>
           <img src={Dragon} alt="Dragon" className="dragon-image" />

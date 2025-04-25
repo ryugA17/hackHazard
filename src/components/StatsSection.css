@@ -138,23 +138,57 @@
 .characters-showcase {
   flex: 1;
   min-width: 400px;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-areas:
+    "warrior ranger artificer druid"
+    ". sorcerer sorcerer .";
   position: relative;
+  max-width: 550px;
+  margin: 0 auto;
+  justify-items: center;
+  row-gap: 50px;
+  column-gap: 10px;
+  padding: 1rem;
 }
 
 .character-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  justify-content: center;
+  position: relative;
+  height: 130px;
+  width: 80px;
+}
+
+.character-warrior {
+  grid-area: warrior;
+}
+
+.character-ranger {
+  grid-area: ranger;
+}
+
+.character-artificer {
+  grid-area: artificer;
+}
+
+.character-druid {
+  grid-area: druid;
+}
+
+.character-sorcerer {
+  grid-area: sorcerer;
+  margin-top: 1rem;
 }
 
 .character-image {
-  width: 100px;
-  height: 100px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   border: 3px solid #ffd700;
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
@@ -166,12 +200,21 @@
 .character-image:hover {
   transform: scale(1.1);
   box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+  z-index: 2;
 }
 
 .character-label {
-  margin-top: 0.8rem;
-  font-size: 0.9rem;
-  color: #e0e0e0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: 0.85rem;
+  color: #ffd700;
+  font-family: 'IM Fell English SC', serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  text-align: center;
 }
 
 .char1 {
@@ -243,17 +286,16 @@
     min-width: 100%;
   }
   
-  .character-image {
-    width: 80px;
-    height: 80px;
+  .characters-showcase {
+    max-width: 500px;
+    margin: 0 auto;
   }
   
   .dragon-image {
     width: 150px;
-    position: relative;
-    bottom: 0;
-    right: 0;
-    margin-top: 2rem;
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
   }
 }
 
@@ -279,15 +321,46 @@
     width: 100%;
     padding: 1rem 2rem;
   }
+  
+  .characters-showcase {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas:
+      "warrior ranger"
+      "artificer druid"
+      "sorcerer sorcerer";
+    row-gap: 50px;
+  }
+  
+  .character-sorcerer {
+    margin-top: 0;
+  }
+  
+  .dragon-image {
+    position: relative;
+    bottom: 0;
+    right: 0;
+    margin: 40px auto 0;
+    display: block;
+  }
 }
 
 @media (max-width: 480px) {
-  .character-image {
-    width: 60px;
-    height: 60px;
+  .characters-showcase {
+    row-gap: 40px;
+    padding: 0;
   }
   
-  .characters-showcase {
-    gap: 1rem;
+  .character-container {
+    height: 110px;
+    width: 70px;
+  }
+  
+  .character-image {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .character-label {
+    font-size: 0.8rem;
   }
 }
