@@ -114,17 +114,25 @@ const Dashboard = () => {
             </div>
             
             <div className="profile-stats">
-              <span className="stat-icon xp-icon">8</span>
-              <span className="stat-details"><p>Total XP</p></span>
+              <div className="stat-item">
+                <span className="stat-icon xp-icon">8</span>
+                <span className="stat-details"><p>XP</p></span>
+              </div>
               
-              <span className="stat-icon rank-icon">Bronze</span>
-              <span className="stat-details"><p>Rank</p></span>
+              <div className="stat-item">
+                <span className="stat-icon badges-icon">8</span>
+                <span className="stat-details"><p>BADGES</p></span>
+              </div>
               
-              <span className="stat-icon badges-icon">8</span>
-              <span className="stat-details"><p>Badges</p></span>
+              <div className="stat-item">
+                <span className="stat-icon rank-icon">BRONZE</span>
+                <span className="stat-details"><p>RANK</p></span>
+              </div>
               
-              <span className="stat-icon streak-icon">{profileData.level || 2}</span>
-              <span className="stat-details"><p>Day streak</p></span>
+              <div className="stat-item">
+                <span className="stat-icon streak-icon">{profileData.level || 2}</span>
+                <span className="stat-details"><p>STREAK</p></span>
+              </div>
             </div>
             
             <button className="view-profile-btn" onClick={() => navigate('/profile')}>View profile</button>
