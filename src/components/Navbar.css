@@ -420,6 +420,7 @@
   background: linear-gradient(to right, transparent, #ffd700, transparent);
   animation: fadeIn 0.5s ease-in-out;
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  transform: none;
 }
 
 @keyframes fadeIn {
@@ -435,12 +436,12 @@
   content: '';
   position: absolute;
   bottom: -5px;
-  left: 50%;
+  left: 0;
   width: 0;
   height: 3px;
   background: linear-gradient(to right, transparent, #ffd700, transparent);
   transition: all 0.3s ease;
-  transform: translateX(-50%);
+  transform: none;
 }
 
 .nav-link:hover::after {
