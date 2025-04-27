@@ -66,13 +66,20 @@ Our key breakthrough was developing a hybrid approach that uses AI to enhance st
 - ✅ **Profile Customization:** Create and personalize your adventurer profile
 
 ## 📸 Screenshots
-**Home Screen**
+### Home Screen:
+
 ![Screenshot 1](./src/assets/feature_ss/ss4.png)
-**Interactive Quest Board:**
+
+### Interactive Quest Board:
+
 ![Screenshot 2](./src/assets/feature_ss/ss1.jpg)
-**Community Page:**
+
+### Community Page:
+
 ![Screenshot 3](./src/assets/feature_ss/ss2.jpg)
-**Profile Customization:**
+
+### Profile Customization:
+
 ![Screenshot 4](./src/assets/feature_ss/ss3.jpg)
 
 ## 📽️ Demo & Deliverables
