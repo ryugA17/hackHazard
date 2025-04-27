@@ -172,42 +172,44 @@ const Dashboard = () => {
             <button className="view-profile-btn" onClick={() => navigate('/profile')}>View profile</button>
           </div>
 
-          {/* Events panel */}
+          {/* Gaming Events panel */}
           <div className="events-panel">
-            <h2>Upcoming Events</h2>
+            <h2 className="events-title">Upcoming Gaming Events</h2>
             
             <div className="event-item">
-              <div className="event-date">
-                <span className="event-month">APR</span>
-                <span className="event-day">16</span>
+              <div className="event-icon">
+                <img src={require('../assets/battle.gif')} alt="Pokémon Battle" />
               </div>
               <div className="event-details">
-                <h3>Smash Karts Tournament</h3>
-                <p>Wed Apr 16th @ 3:00pm ET</p>
+                <h3>Pokémon Tournament</h3>
+                <p>Sat May 20 • 2:00pm ET</p>
+                <span className="event-badge">Battle Arena</span>
               </div>
             </div>
             
             <div className="event-item">
-              <div className="event-date">
-                <span className="event-month">APR</span>
-                <span className="event-day">23</span>
+              <div className="event-icon">
+                <img src={require('../assets/pikachu-running.gif')} alt="Game Workshop" />
               </div>
               <div className="event-details">
-                <h3>Node.js Workshop</h3>
-                <p>Wed Apr 23rd @ 3:00pm ET</p>
+                <h3>Speedrun Challenge</h3>
+                <p>Wed May 25 • 4:00pm ET</p>
+                <span className="event-badge">Competition</span>
               </div>
             </div>
             
             <div className="event-item">
-              <div className="event-date">
-                <span className="event-month">MAY</span>
-                <span className="event-day">7</span>
+              <div className="event-icon">
+                <img src={require('../assets/animated-dragon-image-0129.gif')} alt="Game Night" />
               </div>
               <div className="event-details">
-                <h3>Resume Review Workshop</h3>
-                <p>Wed May 7th @ 3:00pm ET</p>
+                <h3>Dragon Quest Night</h3>
+                <p>Fri June 3 • 7:00pm ET</p>
+                <span className="event-badge">Group Play</span>
               </div>
             </div>
+
+            <button className="view-all-events-btn">Browse All Events</button>
           </div>
 
           {/* NFT Gallery Section */}
