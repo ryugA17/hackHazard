@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import Footer from './Footer';
 import { auth } from '../firebase';
@@ -10,7 +10,11 @@ import rocketIcon from '../assets/random component.gif';
 import eggIcon from '../assets/egg-icon.png';
 import codeIcon from '../assets/code-icon.png';
 import loadingicon from '../assets/ass.gif';
+import monadLogo from '../assets/monad logo.webp';
+import groqLogo from '../assets/groq logo.png';
+import screenpipeLogo from '../assets/screenpipe logo.png';
 import { useProfile } from '../context/ProfileContext';
+import ScrollToTopLink from './ScrollToTopLink';
 
 const Dashboard = () => {
   const [user, setUser] = React.useState<any>(null);
@@ -114,17 +118,25 @@ const Dashboard = () => {
             </div>
             
             <div className="profile-stats">
-              <span className="stat-icon xp-icon">8</span>
-              <span className="stat-details"><p>Total XP</p></span>
+              <div className="stat-item">
+                <span className="stat-icon xp-icon">8</span>
+                <span className="stat-details"><p>XP</p></span>
+              </div>
               
-              <span className="stat-icon rank-icon">Bronze</span>
-              <span className="stat-details"><p>Rank</p></span>
+              <div className="stat-item">
+                <span className="stat-icon badges-icon">8</span>
+                <span className="stat-details"><p>BADGES</p></span>
+              </div>
               
-              <span className="stat-icon badges-icon">8</span>
-              <span className="stat-details"><p>Badges</p></span>
+              <div className="stat-item">
+                <span className="stat-icon rank-icon">BRONZE</span>
+                <span className="stat-details"><p>RANK</p></span>
+              </div>
               
-              <span className="stat-icon streak-icon">{profileData.level || 2}</span>
-              <span className="stat-details"><p>Day streak</p></span>
+              <div className="stat-item">
+                <span className="stat-icon streak-icon">{profileData.level || 2}</span>
+                <span className="stat-details"><p>STREAK</p></span>
+              </div>
             </div>
             
             <button className="view-profile-btn" onClick={() => navigate('/profile')}>View profile</button>
@@ -172,10 +184,10 @@ const Dashboard = () => {
           <div className="nft-gallery-section">
             <div className="section-header">
               <h2 className="section-title">My NFT Collection</h2>
-              <Link to="/nfts" className="see-all-link">View All</Link>
+              <ScrollToTopLink to="/nfts" className="see-all-link">View All</ScrollToTopLink>
             </div>
             <div className="nft-preview-container">
-              <Link to="/nfts" className="nft-preview-card">
+              <ScrollToTopLink to="/nfts" className="nft-preview-card">
                 <div className="nft-preview-icon">
                   <img src="/assets/nft-icon.png" alt="NFT" onError={(e) => {
                     e.currentTarget.src = "https://placehold.co/40x40/4dabf7/ffffff?text=NFT";
@@ -185,104 +197,42 @@ const Dashboard = () => {
                   <h3>Your NFT Collection</h3>
                   <p>Check out your NFT collection and mint new ones!</p>
                 </div>
-              </Link>
+              </ScrollToTopLink>
             </div>
           </div>
 
-          {/* Explore more section */}
-          <h2 className="explore-title">Explore more</h2>
+          {/* Sponsors section */}
+          <h2 className="sponsors-title">Our Technology Partners</h2>
+          <p className="sponsors-subtitle">Powered by cutting-edge technology for the best gaming experience</p>
           
-          <div className="feature-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src={userAvatar} alt="Challenge" />
+          <div className="sponsors-grid">
+            <div className="sponsor-card">
+              <div className="sponsor-icon">
+                <img src={monadLogo} alt="Monad" className="sponsor-logo" />
               </div>
-              <div className="feature-content">
-                <h3>Challenge Packs</h3>
-                <p>Practice what you learned with bite-sized code challenges.</p>
-              </div>
-            </div>
-            
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src={rocketIcon} alt="Rocket" />
-              </div>
-              <div className="feature-content">
-                <h3>Project Tutorials</h3>
-                <p>Explore fun, step-by-step projects from beginner to advanced.</p>
+              <div className="sponsor-content">
+                <h3>Monad</h3>
+                <p>Powering our blockchain infrastructure with high-performance Layer-1 technology.</p>
               </div>
             </div>
             
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src={eggIcon} alt="Egg" />
+            <div className="sponsor-card">
+              <div className="sponsor-icon">
+                <img src={groqLogo} alt="Groq" className="sponsor-logo" />
               </div>
-              <div className="feature-content">
-                <h3>#30NitesOfCode</h3>
-                <p>Commit to 30 days of learning and building—while raising a virtual pet!</p>
-              </div>
-            </div>
-            
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src={codeIcon} alt="Code" />
-              </div>
-              <div className="feature-content">
-                <h3>Builds</h3>
-                <p>Create and share code snippets and projects directly in the browser.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* New tutorials section */}
-          <div className="tutorials-header">
-            <h2 className="tutorials-title"></h2>
-            <Link to="/tutorials" className="see-all-link">See all</Link>
-          </div>
-          
-          <div className="tutorials-grid">
-            <div className="tutorial-card">
-              <div className="tutorial-image">
-                {/* Placeholder for tutorial image */}
-                <div className="image-placeholder" style={{backgroundColor: "lightblue"}}></div>
-              </div>
-              <div className="tutorial-info">
-                <span className="tutorial-label">TUTORIAL</span>
-                <h3>Animate Images with CSS keyframes</h3>
-                <div className="tutorial-tags">
-                  <span className="tag level-tag">BEGINNER</span>
-                  <span className="tag language-tag">HTML</span>
-                </div>
+              <div className="sponsor-content">
+                <h3>Groq</h3>
+                <p>Advanced AI processing with cutting-edge LPU technology for lightning-fast responses.</p>
               </div>
             </div>
             
-            <div className="tutorial-card">
-              <div className="tutorial-image">
-                {/* Placeholder for tutorial image */}
-                <div className="image-placeholder" style={{backgroundColor: "lightgreen"}}></div>
+            <div className="sponsor-card">
+              <div className="sponsor-icon">
+                <img src={screenpipeLogo} alt="Screenpipe" className="sponsor-logo" />
               </div>
-              <div className="tutorial-info">
-                <span className="tutorial-label">TUTORIAL</span>
-                <h3>Analyze U.S. Census Data with SciPy</h3>
-                <div className="tutorial-tags">
-                  <span className="tag level-tag">INTERMEDIATE</span>
-                  <span className="tag language-tag">PYTHON</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="tutorial-card">
-              <div className="tutorial-image">
-                {/* Placeholder for tutorial image */}
-                <div className="image-placeholder" style={{backgroundColor: "purple"}}></div>
-              </div>
-              <div className="tutorial-info">
-                <span className="tutorial-label">TUTORIAL</span>
-                <h3>Build a Chat Game with p5.js</h3>
-                <div className="tutorial-tags">
-                  <span className="tag level-tag">INTERMEDIATE</span>
-                  <span className="tag language-tag">JAVASCRIPT</span>
-                </div>
+              <div className="sponsor-content">
+                <h3>Screenpipe</h3>
+                <p>Revolutionary screen reading technology for enhanced gaming accessibility.</p>
               </div>
             </div>
           </div>

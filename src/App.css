@@ -1,3 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&display=swap');
+
+/* Apply Castellar font globally */
+* {
+  font-family: 'Castellar', serif;
+}
+
+/* Apply IM Fell English SC font to headings */
+h1, h2, h3, h4, h5, h6, .nft-title, .nft-card-title {
+  font-family: 'IM Fell English SC', serif;
+}
+
 .app {
   min-height: 100vh;
   display: flex;

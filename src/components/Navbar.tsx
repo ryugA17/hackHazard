@@ -1,12 +1,13 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import './Navbar.css';
-import logo from '../assets/logonav.png';
+import logo from '../assets/webpage logo.png';
 import Dragon from '../assets/animated-dragon-image-0129.gif';
 import { auth, signOut } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useProfile } from '../context/ProfileContext';
 import { WalletConnect } from './WalletConnect';
+import ScrollToTopLink from './ScrollToTopLink';
 
 // Properly type the interface
 interface NavbarProps {
@@ -62,11 +63,11 @@ const Navbar: React.FC<NavbarProps> = ({
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-logo">
-          <Link to="/">
+          <ScrollToTopLink to="/">
             <img src={logo} alt="Logo" className="logo-image" />
             <span className="logo-text">QuestMint</span>
             <img src={Dragon} alt="Dragon" className="dragon-gif" />
-          </Link>
+          </ScrollToTopLink>
         </div>
         
         <div className="mobile-menu-toggle" onClick={toggleMobileMenu}>
@@ -78,22 +79,22 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
         
         <div className={`navbar-links ${mobileMenuOpen ? 'mobile-active' : ''}`}>
-          <Link to="/rules" className={`nav-link ${location.pathname === '/rules' ? 'active' : ''}`}>
+          <ScrollToTopLink to="/rules" className={`nav-link ${location.pathname === '/rules' ? 'active' : ''}`}>
             <span className="nav-icon">📜</span>
             <span className="nav-text">Rulebook</span>
-          </Link>
-          <Link to="/community" className={`nav-link ${location.pathname === '/community' ? 'active' : ''}`}>
+          </ScrollToTopLink>
+          <ScrollToTopLink to="/community" className={`nav-link ${location.pathname === '/community' ? 'active' : ''}`}>
             <span className="nav-icon">🏰</span>
             <span className="nav-text">Tavern</span>
-          </Link>
-          <Link to="/map" className={`nav-link ${location.pathname === '/map' ? 'active' : ''}`}>
+          </ScrollToTopLink>
+          <ScrollToTopLink to="/map" className={`nav-link ${location.pathname === '/map' ? 'active' : ''}`}>
             <span className="nav-icon">🗺️</span>
             <span className="nav-text">Battlemap</span>
-          </Link>
-          <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
+          </ScrollToTopLink>
+          <ScrollToTopLink to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
             <span className="nav-icon">⚔️</span>
             <span className="nav-text">Quest Board</span>
-          </Link>
+          </ScrollToTopLink>
         </div>
         
         <div className="navbar-buttons">
@@ -101,12 +102,12 @@ const Navbar: React.FC<NavbarProps> = ({
           
           {user ? (
             <div className="user-menu">
-              <Link to="/profile" className="user-profile-link">
+              <ScrollToTopLink to="/profile" className="user-profile-link">
                 <div className="user-avatar">
                   <img src={profilePic} alt={displayName || 'User'} />
                 </div>
                 {displayName && <span className="user-name">{displayName}</span>}
-              </Link>
+              </ScrollToTopLink>
               {/* Hide sign out button if required */}
               {!hideSignOutButton && (
                 <button 
@@ -119,7 +120,7 @@ const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
           ) : (
-            <Link to="/signup" className="signup-btn">Join Adventure</Link>
+            <ScrollToTopLink to="/signup" className="signup-btn">Join Adventure</ScrollToTopLink>
           )}
         </div>
       </div>

@@ -58,15 +58,15 @@ const HeroSection = () => {
           <div className="hero-features">
             <div className="feature">
               <div className="feature-icon">🎲</div>
-              <div className="feature-text">Interactive D&D Campaigns</div>
+              <div className="feature-text special-font">Immersive Fantasy Experience</div>
             </div>
             <div className="feature">
               <div className="feature-icon">💰</div>
-              <div className="feature-text">Earn NFT Rewards</div>
+              <div className="feature-text special-font">Unique NFT Rewards</div>
             </div>
             <div className="feature">
               <div className="feature-icon">🧙‍♂️</div>
-              <div className="feature-text">Create Your Hero</div>
+              <div className="feature-text special-font">Join the Adventure</div>
             </div>
           </div>
           
@@ -85,4 +85,4 @@ const HeroSection = () => {
   );
 };
 
-export default HeroSection; 
+export default HeroSection;

@@ -1,7 +1,7 @@
 /* GameMap.css */
 .game-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+  background: linear-gradient(135deg, #0d0d0d, #1a2a6c, #b21f1f);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,6 +9,20 @@
   padding: 20px;
   font-family: Arial, sans-serif;
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* Map Selection Screen Styles */
@@ -21,14 +35,19 @@
   padding: 30px;
   background-color: rgba(0, 0, 0, 0.7);
   border-radius: 15px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 50px rgba(255, 140, 0, 0.3);
   text-align: center;
+  z-index: 2;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 140, 0, 0.2);
 }
 
 .map-selection-screen .game-title {
+  font-family: 'IM Fell English SC', serif;
   font-size: 42px;
   margin-bottom: 15px;
   text-shadow: 0 3px 5px rgba(0, 0, 0, 0.5);
+  color: #ffd700;
 }
 
 .map-selection-screen .game-subtitle {
@@ -149,8 +168,8 @@
 }
 
 .map-selection-card.selected {
-  border-color: #ffc107;
-  background-color: rgba(255, 193, 7, 0.15);
+  border-color: #ffd700;
+  background-color: rgba(255, 215, 0, 0.15);
   transform: scale(1.05);
 }
 
@@ -313,12 +332,16 @@
 .game-header {
   margin-bottom: 20px;
   text-align: center;
+  z-index: 2;
+  position: relative;
 }
 
 .game-title {
+  font-family: 'IM Fell English SC', serif;
   font-size: 36px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
   margin: 0 0 10px 0;
+  color: #ffd700;
 }
 
 .game-subtitle {
@@ -328,18 +351,34 @@
   margin: 0 auto;
 }
 
+.game-title-underline {
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(to right, #ff8c00, #ff4500);
+  margin: 0 auto 40px;
+  border-radius: 2px;
+}
+
 .game-board {
-  background-color: rgba(0,0,0,0.6);
+  background-color: rgba(20, 20, 20, 0.8);
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  border-radius: 15px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 50px rgba(255, 140, 0, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
-  transform: translateZ(0);
+  transform: translateZ(0) perspective(1000px) rotateY(-2deg);
   backface-visibility: hidden;
   perspective: 1000px;
+  transition: transform 0.5s ease;
+  border: 1px solid rgba(255, 140, 0, 0.2);
+  backdrop-filter: blur(10px);
+  z-index: 2;
+}
+
+.game-board:hover {
+  transform: translateZ(0) perspective(1000px) rotateY(0deg);
 }
 
 .controls {
