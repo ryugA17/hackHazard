@@ -115,7 +115,7 @@ Our key breakthrough was developing a hybrid approach that uses AI to enhance st
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/hackhazard
+git clone https://github.com/ryugA17/hackhazard
 cd hackhazard
 
 # Frontend Setup
