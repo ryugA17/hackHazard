@@ -1,43 +1,108 @@
-# HackHazard
+![project-banner](src/assets/logo.svg)
 
-This is a React/TypeScript clone of the Codedex coding education platform's landing page with blockchain integration.
+# 🚀 QuestMint
 
-## Prerequisites
+> An immersive web3 gaming platform that combines D&D-style quests with blockchain collectibles
 
+---
+
+## 📌 Problem Statement
+
+**Problem Statement 12 – Revolutionize Web3 Gaming Engagement**
+
+---
+
+## 🎯 Objective
+
+QuestMint transforms traditional gaming experiences by integrating blockchain technology to create a meaningful ownership economy. Players can earn, trade, and collect NFT items through D&D-style quests, fostering an engaged community of gamers and creators. Our platform serves both casual gamers looking for engaging experiences and enthusiasts who value digital asset ownership.
+
+---
+
+## 🧠 Team & Approach
+
+### Team Name:  
+`ÇZARS`
+
+### Team Members:  
+- Hardik (Frontend Developer & designer)
+- Aditya Pawar (Block-chain Developer)
+- Prateek Sinha (AI Developer)
+- Hardik Agrawal (Frontend Developer)
+
+### Our Approach:  
+We chose this problem because we saw a gap between engaging gameplay and meaningful asset ownership in the Web3 gaming space. Many blockchain games focus heavily on the financial aspects while neglecting user experience.
+
+Our key breakthrough was developing a hybrid approach that uses AI to enhance storytelling and quest generation while leveraging blockchain for verifiable digital collectibles that have real utility within the game ecosystem.
+
+---
+
+## 🛠️ Tech Stack
+
+### Core Technologies Used:
+- **Frontend:** React, TypeScript, CSS3
+- **Backend:** Firebase, Python Flask
+- **Database:** Firebase Firestore
+- **Blockchain:** Solidity, Hardhat, Ethers.js
+- **AI:** Groq API, Python
+- **Hosting:** Vercel
+
+### Sponsor Technologies Used:
+- ✅ **Groq:** AI-powered quest generation and character interactions
+- ✅ **Monad:** Smart contracts for NFT items and game assets
+- ❌ **Fluvio:** Not implemented
+- ❌ **Base:** Not implemented
+- ✅ **Screenpipe:** Used terminator for screen capturing and gameplay recording
+- ❌ **Stellar:** Not implemented
+
+---
+
+## ✨ Key Features
+
+- ✅ **Interactive Quest Board:** Dynamic quests with AI-generated storylines and challenges
+- ✅ **NFT Collectibles:** Earn and trade unique game items backed by blockchain
+- ✅ **Community Tavern:** Social hub for players to connect and form parties
+- ✅ **Interactive Battle Maps:** Visualize quest locations and plan strategies
+- ✅ **Profile Customization:** Create and personalize your adventurer profile
+
+![gameplay-screenshot](src/assets/poke%20battle%2022.jpg)
+
+---
+
+## 📽️ Demo & Deliverables
+
+- **Demo Video Link:** [https://youtu.be/demo-link](https://youtu.be/demo-link)
+- **Pitch Deck Link:** [https://slides.com/hackhazards/questmint](https://slides.com/hackhazards/questmint)
+
+---
+
+## ✅ Tasks & Bonus Checklist
+
+- ✅ **All members of the team completed the mandatory task - Followed at least 2 of our social channels and filled the form**
+- ❌ **All members of the team completed Bonus Task 1 - Sharing of Badges and filled the form**
+- ❌ **All members of the team completed Bonus Task 2 - Signing up for Sprint.dev and filled the form**
+
+---
+
+## 🧪 How to Run the Project
+
+### Requirements:
 - Node.js (v16 or higher)
 - npm or yarn
 - MetaMask browser extension
+- Python 3.9+ (for AI features)
 - Git
 
-## Project Structure
-
-```
-.
-├── blockchain/     # Smart contract code
-├── src/           # React frontend code
-└── ai/            # AI integration code
-```
-
-## Setup Instructions
-
-### 1. Clone the Repository
+### Local Setup:
 
 ```bash
-git clone <repository-url>
-cd codedex-clone
-```
+# Clone the repository
+git clone https://github.com/your-repo/hackhazard
+cd hackhazard
 
-### 2. Frontend Setup
-
-Install the frontend dependencies:
-```bash
+# Frontend Setup
 npm install --legacy-peer-deps
-```
 
-> **Note:** The `--legacy-peer-deps` flag is required due to TypeScript version conflicts between the project (using TypeScript 4.9.x) and blockchain libraries (requiring TypeScript >=5.0.4). This flag allows npm to ignore peer dependency conflicts and install packages anyway.
-
-Create a `.env` file in the root directory:
-```env
+# Create .env file in root directory with Firebase config
 REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
 REACT_APP_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
 REACT_APP_FIREBASE_PROJECT_ID=your_firebase_project_id
@@ -45,93 +110,66 @@ REACT_APP_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
 REACT_APP_FIREBASE_APP_ID=your_firebase_app_id
 REACT_APP_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
-```
 
-### 3. Blockchain Setup
-
-Navigate to the blockchain directory and install dependencies:
-```bash
+# Blockchain Setup
 cd blockchain
 npm install --legacy-peer-deps
-```
 
-Create a `.env` file in the blockchain directory:
-```env
+# Create .env file in blockchain directory
 PRIVATE_KEY=your_wallet_private_key
 VERIFY=true
 NEXT_PUBLIC_GAME_ITEMS_ADDRESS=your_deployed_contract_address
-```
 
-### 4. AI Setup (Optional)
-
-If you want to use the AI features, navigate to the AI directory and install Python dependencies:
-```bash
-cd ai
+# AI Setup
+cd ../ai
 pip install -r requirements.txt
-```
 
-Create a `.env` file in the ai directory:
-```env
+# Create .env file in ai directory
 GROQ_API_KEY=your_groq_api_key
-```
 
-## Running the Application
-
-1. Start the frontend development server:
-```bash
-# From the root directory
+# Start the frontend development server (from root directory)
+cd ..
 npm start
-```
 
-2. Deploy the smart contracts (if needed):
-```bash
-# From the blockchain directory
-npx hardhat run scripts/deploy.ts --network monadTestnet
-```
-
-3. Run the AI service (if needed):
-```bash
-# From the ai directory
+# In a separate terminal, start the AI server
+cd ai
 python app.py
 ```
 
-The application will be available at [http://localhost:3000](http://localhost:3000).
-
-## Connecting to Monad Testnet
-
+### Connect to Monad Testnet:
 1. Add Monad Testnet to MetaMask:
    - Network Name: Monad Testnet
    - RPC URL: https://testnet-rpc.monad.xyz
    - Chain ID: 10143
    - Currency Symbol: MONAD
 
-2. Get some test MONAD tokens from the faucet (link to be provided)
+2. Get test MONAD tokens from the faucet (available on the Monad website)
 
-## Development
+---
 
-- Frontend code is in the `src` directory
-- Smart contracts are in the `blockchain/contracts` directory
-- AI integration code is in the `ai` directory
+## 🧬 Future Scope
 
-## Testing
+- 📈 **Multiplayer Quests:** Enable real-time collaborative gameplay between players
+- 🛡️ **Community-Created Content:** Allow players to create and monetize their own quests and items
+- 🌐 **Cross-Chain Integration:** Expand to multiple blockchain networks for wider accessibility
+- 🎮 **Mobile App:** Develop companion mobile application for on-the-go gameplay
+- 🤖 **Advanced AI NPCs:** Implement more sophisticated AI-driven non-player characters with memory
 
-```bash
-# Frontend tests
-npm test
+---
 
-# Smart contract tests
-cd blockchain
-npx hardhat test
-```
+## 📎 Resources / Credits
 
-## Contributing
+- [React Documentation](https://reactjs.org/docs/getting-started.html)
+- [Hardhat Documentation](https://hardhat.org/getting-started/)
+- [Groq API Documentation](https://console.groq.com/docs/quickstart)
+- [Monad Testnet Documentation](https://docs.monad.xyz/)
+- [Firebase Documentation](https://firebase.google.com/docs)
+- Special thanks to the Hackhazard organizers and mentors for their support!
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+---
 
-## License
+## 🏁 Final Words
 
-This project is licensed under the ISC License - see the LICENSE file for details
+Our team embraced the challenge of creating a gaming experience that feels familiar to traditional gamers while introducing blockchain benefits in a non-intrusive way. The biggest challenge was balancing complex technologies like AI and blockchain without overwhelming users with technical details. We're excited to continue developing QuestMint and hope it inspires more innovative approaches to gaming!
+
+---
