@@ -165,8 +165,95 @@ const ProfilePage = () => {
               <h2>My Treasure Vault</h2>
               <Link to="/nfts" className="see-all-link">View all treasures</Link>
             </div>
-            <div className="nft-preview">
-              <NFTGallery preview={true} maxDisplay={3} />
+            <p className="vault-description">
+              Collect unique digital items and showcase your gaming achievements in your personal treasure vault.
+            </p>
+            <div className="nft-grid">
+              {/* First Row of NFTs */}
+              <div className="nft-card">
+                <div className="nft-image-container">
+                  <img src="/assets/nft-placeholder-1.jpg" alt="Legendary Sword" className="nft-image" 
+                    onError={(e) => {
+                      e.currentTarget.src = "https://placehold.co/300x300/4dabf7/ffffff?text=Sword";
+                    }}
+                  />
+                </div>
+                <div className="nft-info">
+                  <h3>Legendary Sword</h3>
+                  <p>Rarity: Epic</p>
+                </div>
+              </div>
+              
+              <div className="nft-card">
+                <div className="nft-image-container">
+                  <img src="/assets/nft-placeholder-2.jpg" alt="Dragon Shield" className="nft-image"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://placehold.co/300x300/ffd43b/000000?text=Shield";
+                    }}
+                  />
+                </div>
+                <div className="nft-info">
+                  <h3>Dragon Shield</h3>
+                  <p>Rarity: Rare</p>
+                </div>
+              </div>
+              
+              <div className="nft-card">
+                <div className="nft-image-container">
+                  <img src="/assets/nft-placeholder-3.jpg" alt="Mystic Amulet" className="nft-image"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://placehold.co/300x300/a5d8ff/000000?text=Amulet";
+                    }}
+                  />
+                </div>
+                <div className="nft-info">
+                  <h3>Mystic Amulet</h3>
+                  <p>Rarity: Legendary</p>
+                </div>
+              </div>
+              
+              {/* Second Row of NFTs */}
+              <div className="nft-card">
+                <div className="nft-image-container">
+                  <img src="/assets/nft-placeholder-4.jpg" alt="Wizard Hat" className="nft-image" 
+                    onError={(e) => {
+                      e.currentTarget.src = "https://placehold.co/300x300/9775fa/ffffff?text=Hat";
+                    }}
+                  />
+                </div>
+                <div className="nft-info">
+                  <h3>Wizard Hat</h3>
+                  <p>Rarity: Uncommon</p>
+                </div>
+              </div>
+              
+              <div className="nft-card">
+                <div className="nft-image-container">
+                  <img src="/assets/nft-placeholder-5.jpg" alt="Ancient Scroll" className="nft-image"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://placehold.co/300x300/ff922b/ffffff?text=Scroll";
+                    }}
+                  />
+                </div>
+                <div className="nft-info">
+                  <h3>Ancient Scroll</h3>
+                  <p>Rarity: Epic</p>
+                </div>
+              </div>
+              
+              <div className="nft-card">
+                <div className="nft-image-container">
+                  <img src="/assets/nft-placeholder-6.jpg" alt="Golden Potion" className="nft-image" 
+                    onError={(e) => {
+                      e.currentTarget.src = "https://placehold.co/300x300/ffd700/000000?text=Potion";
+                    }}
+                  />
+                </div>
+                <div className="nft-info">
+                  <h3>Golden Potion</h3>
+                  <p>Rarity: Rare</p>
+                </div>
+              </div>
             </div>
           </div>
 
