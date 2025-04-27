@@ -66,12 +66,9 @@ Our key breakthrough was developing a hybrid approach that uses AI to enhance st
 - ✅ **Profile Customization:** Create and personalize your adventurer profile
 
 ## ✨ Screenshots
-![](C:\Users\Prateek\Downloads\hackhazard\hackHazard\src\assets\feature_ss\ss1.jpg)
-![](C:\Users\Prateek\Downloads\hackhazard\hackHazard\src\assets\feature_ss\ss2.jpg)
-![](C:\Users\Prateek\Downloads\hackhazard\hackHazard\src\assets\feature_ss\ss3.jpg)
-
-
----
+![Screenshot 1](./src/assets/feature_ss/ss1.jpg)
+![Screenshot 2](./src/assets/feature_ss/ss2.jpg)
+![Screenshot 3](./src/assets/feature_ss/ss3.jpg)
 
 ## 📽️ Demo & Deliverables
 
