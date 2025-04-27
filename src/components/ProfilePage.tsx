@@ -3,9 +3,18 @@ import { Link } from 'react-router-dom';
 import './ProfilePage.css';
 import Footer from './Footer';
 import { useProfile, ProfileData } from '../context/ProfileContext';
+import { useNFTs } from '../context/NFTContext';
 import headerBackground from '../assets/profile.gif';
 import defaultAvatar from '../assets/random component.gif';
 import { NFTGallery } from './NFTGallery';
+
+// Import NFT assets
+import growlingDinosaur from '../assets/growling-dinosaur.gif';
+import minecraftSword from '../assets/minecraft-sword.gif';
+import witchWizard from '../assets/witch-wizard.gif';
+import dragonAmulet from '../assets/lockgrin-8bits.gif';
+import ancientScroll from '../assets/alcohol-poison.gif';
+import goldenPotion from '../assets/potion.gif';
 
 // Interface for EditProfilePage props
 interface EditProfilePageProps {
@@ -18,6 +27,7 @@ interface EditProfilePageProps {
 
 const ProfilePage = () => {
   const { profileData, updateProfileData, loading, profilePic } = useProfile();
+  const { userNFTs, nfts } = useNFTs();
   const [isEditing, setIsEditing] = React.useState(false);
   const [editData, setEditData] = React.useState<ProfileData>(profileData);
   
@@ -61,6 +71,10 @@ const ProfilePage = () => {
     courseBadges: 0,
     dailyStreak: profileData.level || 1
   };
+  
+  // Determine total NFTs vs acquired NFTs
+  const totalNFTs = nfts.length;
+  const acquiredNFTs = userNFTs.length;
   
   if (loading) {
     return <div className="loading">Loading your realm profile...</div>;
@@ -162,98 +176,11 @@ const ProfilePage = () => {
 
           <div className="profile-section treasure-vault">
             <div className="section-header">
-              <h2>My Treasure Vault</h2>
-              <Link to="/nfts" className="see-all-link">View all treasures</Link>
+              <h2>Treasure Vault</h2>
+              <Link to="/nfts" className="see-all-link">See All</Link>
             </div>
-            <p className="vault-description">
-              Collect unique digital items and showcase your gaming achievements in your personal treasure vault.
-            </p>
-            <div className="nft-grid">
-              {/* First Row of NFTs */}
-              <div className="nft-card">
-                <div className="nft-image-container">
-                  <img src="/assets/nft-placeholder-1.jpg" alt="Legendary Sword" className="nft-image" 
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/300x300/4dabf7/ffffff?text=Sword";
-                    }}
-                  />
-                </div>
-                <div className="nft-info">
-                  <h3>Legendary Sword</h3>
-                  <p>Rarity: Epic</p>
-                </div>
-              </div>
-              
-              <div className="nft-card">
-                <div className="nft-image-container">
-                  <img src="/assets/nft-placeholder-2.jpg" alt="Dragon Shield" className="nft-image"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/300x300/ffd43b/000000?text=Shield";
-                    }}
-                  />
-                </div>
-                <div className="nft-info">
-                  <h3>Dragon Shield</h3>
-                  <p>Rarity: Rare</p>
-                </div>
-              </div>
-              
-              <div className="nft-card">
-                <div className="nft-image-container">
-                  <img src="/assets/nft-placeholder-3.jpg" alt="Mystic Amulet" className="nft-image"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/300x300/a5d8ff/000000?text=Amulet";
-                    }}
-                  />
-                </div>
-                <div className="nft-info">
-                  <h3>Mystic Amulet</h3>
-                  <p>Rarity: Legendary</p>
-                </div>
-              </div>
-              
-              {/* Second Row of NFTs */}
-              <div className="nft-card">
-                <div className="nft-image-container">
-                  <img src="/assets/nft-placeholder-4.jpg" alt="Wizard Hat" className="nft-image" 
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/300x300/9775fa/ffffff?text=Hat";
-                    }}
-                  />
-                </div>
-                <div className="nft-info">
-                  <h3>Wizard Hat</h3>
-                  <p>Rarity: Uncommon</p>
-                </div>
-              </div>
-              
-              <div className="nft-card">
-                <div className="nft-image-container">
-                  <img src="/assets/nft-placeholder-5.jpg" alt="Ancient Scroll" className="nft-image"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/300x300/ff922b/ffffff?text=Scroll";
-                    }}
-                  />
-                </div>
-                <div className="nft-info">
-                  <h3>Ancient Scroll</h3>
-                  <p>Rarity: Epic</p>
-                </div>
-              </div>
-              
-              <div className="nft-card">
-                <div className="nft-image-container">
-                  <img src="/assets/nft-placeholder-6.jpg" alt="Golden Potion" className="nft-image" 
-                    onError={(e) => {
-                      e.currentTarget.src = "https://placehold.co/300x300/ffd700/000000?text=Potion";
-                    }}
-                  />
-                </div>
-                <div className="nft-info">
-                  <h3>Golden Potion</h3>
-                  <p>Rarity: Rare</p>
-                </div>
-              </div>
+            <div className="nft-preview">
+              <NFTGallery isProfile={true} />
             </div>
           </div>
 
