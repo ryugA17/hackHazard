@@ -1,0 +1,589 @@
+{
+  "id": "map_1745523097",
+  "name": "Forest adventure Realm",
+  "description": "A forest adventure themed map for your adventure.",
+  "grid": [
+    [
+      {
+        "x": 0,
+        "y": 0,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 1,
+        "y": 0,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 2,
+        "y": 0,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 3,
+        "y": 0,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 4,
+        "y": 0,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 5,
+        "y": 0,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 6,
+        "y": 0,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 7,
+        "y": 0,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 8,
+        "y": 0,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 9,
+        "y": 0,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      }
+    ],
+    [
+      {
+        "x": 0,
+        "y": 1,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 1,
+        "y": 1,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 2,
+        "y": 1,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 3,
+        "y": 1,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 4,
+        "y": 1,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 5,
+        "y": 1,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 6,
+        "y": 1,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 7,
+        "y": 1,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 8,
+        "y": 1,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 9,
+        "y": 1,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      }
+    ],
+    [
+      {
+        "x": 0,
+        "y": 2,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 5,
+        "y": 2,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 6,
+        "y": 2,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 7,
+        "y": 2,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 8,
+        "y": 2,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 9,
+        "y": 2,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      }
+    ],
+    [
+      {
+        "x": 0,
+        "y": 3,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 1,
+        "y": 3,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 2,
+        "y": 3,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 3,
+        "y": 3,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 5,
+        "y": 3,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 6,
+        "y": 3,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 7,
+        "y": 3,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 8,
+        "y": 3,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 9,
+        "y": 3,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      }
+    ],
+    [
+      {
+        "x": 0,
+        "y": 4,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 1,
+        "y": 4,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 3,
+        "y": 4,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 5,
+        "y": 4,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 6,
+        "y": 4,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 7,
+        "y": 4,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 8,
+        "y": 4,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 9,
+        "y": 4,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      }
+    ],
+    [
+      {
+        "x": 0,
+        "y": 5,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 1,
+        "y": 5,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 2,
+        "y": 5,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 3,
+        "y": 5,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 4,
+        "y": 5,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 5,
+        "y": 5,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 6,
+        "y": 5,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 7,
+        "y": 5,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 8,
+        "y": 5,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 9,
+        "y": 5,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      }
+    ],
+    [
+      {
+        "x": 0,
+        "y": 6,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 1,
+        "y": 6,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 2,
+        "y": 6,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 3,
+        "y": 6,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 4,
+        "y": 6,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 5,
+        "y": 6,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 6,
+        "y": 6,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 7,
+        "y": 6,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 8,
+        "y": 6,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 9,
+        "y": 6,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      }
+    ],
+    [
+      {
+        "x": 0,
+        "y": 7,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 1,
+        "y": 7,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 2,
+        "y": 7,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 3,
+        "y": 7,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 4,
+        "y": 7,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 5,
+        "y": 7,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 6,
+        "y": 7,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 7,
+        "y": 7,
+        "terrain": "forest",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 8,
+        "y": 7,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      },
+      {
+        "x": 9,
+        "y": 7,
+        "terrain": "grass",
+        "is_obstacle": false,
+        "type": "revealed"
+      }
+    ]
+  ],
+  "width": 10,
+  "height": 8,
+  "terrain_distribution": {
+    "forest": 0.7,
+    "grass": 0.3
+  }
+}

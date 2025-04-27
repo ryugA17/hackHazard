@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import React from 'react';
 import { DungeonMasterContext } from '../context/DungeonMasterContext';
-import mapImage from '../assets/Map.png';
 import boyAvatar from '../assets/avatars/boy.gif';
 import girlAvatar from '../assets/avatars/girl.gif';
 import robotAvatar from '../assets/avatars/robot.gif';
 import foxboyAvatar from '../assets/avatars/foxboy.gif';
 import foxgirlAvatar from '../assets/avatars/foxgirl.gif';
 import backgroundMusic from '../assets/aizentheme.mp3';
+import DungeonChat from './DungeonChat';
 import './GameMap.css';
 import './ScrollAnimations.css';
 import { setupScrollAnimations } from '../utils/scrollAnimations';
@@ -42,83 +42,64 @@ interface MapOption {
     height: number;
   };
   cellSize: number;
+  terrainDistribution?: Record<string, number>;
 }
 
-// Temporary placeholder for missing images
-const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN8/x8AAuMB8DtXNJsAAAAASUVORK5CYII=';
-
-const MAP_OPTIONS: MapOption[] = [
-  {
-    id: 'default',
-    name: 'Default Map',
-    image: mapImage,
-    description: 'The original D&D campaign map',
-    gridSize: { width: 5, height: 5 },
-    cellSize: 100
-  },
-  {
-    id: 'sea',
-    name: 'Coastal Adventure',
-    image: placeholderImage, // Temporarily use placeholder
-    description: 'A seaside village with coastal areas',
-    gridSize: { width: 8, height: 6 },
-    cellSize: 80
-  },
-  {
-    id: 'gridless',
-    name: 'Open Plains',
-    image: placeholderImage, // Temporarily use placeholder
-    description: 'Wide open battle ground',
-    gridSize: { width: 10, height: 8 },
-    cellSize: 60
-  },
-  {
-    id: 'contrast-before',
-    name: 'Ancient Ruins',
-    image: placeholderImage, // Temporarily use placeholder
-    description: 'Mysterious ruins with ancient magic',
-    gridSize: { width: 7, height: 7 },
-    cellSize: 70
-  },
-  {
-    id: 'contrast-after',
-    name: 'Forest Encampment',
-    image: placeholderImage, // Temporarily use placeholder
-    description: 'Forest campsite with tactical positions',
-    gridSize: { width: 6, height: 5 },
-    cellSize: 90
-  }
-];
-
-// Define types
+// Define updated Piece interface
 interface Piece {
   id: string;
   x: number;
   y: number;
   avatar: string;
   label: string;
-  isDragging: boolean;
+  isSelected?: boolean;
+  isTrapped?: boolean;
+  isDragging?: boolean;
 }
 
-type TerrainType = "grass" | "water" | "mountain" | "forest";
+type TerrainType = "grass" | "water" | "mountain" | "forest" | "swamp" | "desert" | "cave" | "dungeon" | "snow" | "lava" | "path";
 
 interface Cell {
-  type: "fog" | "revealed";
+  type: "revealed" | "hidden" | "fog";
   terrain: TerrainType;
-  isObstacle?: boolean;
-  // Add coordinates for background image positioning
-  bgX: number;
-  bgY: number;
+  isObstacle: boolean;
+  x: number;
+  y: number;
+  // Layer 1: Special variations
+  specialVariation?: string;
+  // Layer 2: Decorative objects
+  decoration?: string;
+  // Layer 3: Lighting and shadows
+  lighting?: string | {
+    base: string;
+    variation?: string;
+    intensity?: number;
+    colorShift?: string;
+  };
+  // Additional map features
+  structure?: string;
+  item?: {
+    id: string;
+    type: string;
+    rarity: string;
+    discovered: boolean;
+  };
+  trap?: {
+    id: string;
+    type: string;
+    detected: boolean;
+    triggered: boolean;
+    difficulty: number;
+  };
+  // Additional properties from server
+  special_variation?: string;
 }
 
 // Constants
 const VISION_RANGE = 2;
 const MAX_PLAYERS = 5; // Set maximum number of players/tokens
 
-// Background map image
-const MAP_WIDTH = 640;
-const MAP_HEIGHT = 640;
-
+// Obstacle terrain types
 const OBSTACLE_TERRAINS: TerrainType[] = ["water", "mountain"];
 
 // Sample character pieces with different avatars
@@ -138,32 +119,58 @@ const CHARACTER_LABELS = [
   "Fox Girl"
 ];
 
-// Helper functions
-const getRandomTerrain = (): TerrainType => {
-  const terrains: TerrainType[] = ["grass", "water", "mountain", "forest"];
-  const weights = [0.7, 0.1, 0.1, 0.1]; // More grass for playable area
-  const random = Math.random();
-  let sum = 0;
-  for (let i = 0; i < weights.length; i++) {
-    sum += weights[i];
-    if (random < sum) return terrains[i];
-  }
-  return "grass";
+// Default map configuration while waiting for a generated map
+const DEFAULT_MAP: MapOption = {
+  id: 'loading',
+  name: 'Loading Adventure Map...',
+  image: '',
+  description: 'The Dungeon Master is creating your adventure map...',
+  gridSize: { width: 8, height: 6 },
+  cellSize: 80
 };
 
-const createEmptyMap = (gridWidth: number, gridHeight: number, cellSize: number): Cell[][] => {
+// Helper function to create a placeholder empty map
+const createEmptyMap = (gridWidth: number, gridHeight: number): Cell[][] => {
   return Array.from({ length: gridHeight }, (_, y) =>
     Array.from({ length: gridWidth }, (_, x) => {
-      const terrain = getRandomTerrain();
       return {
         type: "revealed",
-        terrain,
-        isObstacle: OBSTACLE_TERRAINS.includes(terrain),
-        // Calculate background position based on grid coordinates
-        bgX: -(x * cellSize) % MAP_WIDTH,
-        bgY: -(y * cellSize) % MAP_HEIGHT
+        terrain: "grass",
+        isObstacle: false,
+        x,
+        y
       };
     })
+  );
+};
+
+// Convert server-generated map data to our map format
+const convertMapDataToGrid = (mapData: any): Cell[][] => {
+  if (!mapData || !mapData.grid || !Array.isArray(mapData.grid)) {
+    console.error("Invalid map data received:", mapData);
+    return createEmptyMap(8, 6);
+  }
+
+  return mapData.grid.map((row: any[], y: number) =>
+    row.map((cell: any, x: number) => ({
+      type: cell.type || "revealed",
+      terrain: cell.terrain || "grass",
+      isObstacle: cell.is_obstacle || false,
+      x,
+      y,
+      // Include enhanced features from our multi-layer visual system
+      special_variation: cell.special_variation || null,
+      decoration: cell.decoration || null,
+      lighting: cell.lighting || {
+        base: "normal",
+        variation: "standard",
+        intensity: 1.0,
+        color_shift: null
+      },
+      structure: cell.structure || null,
+      item: cell.item || null,
+      trap: cell.trap || null
+    }))
   );
 };
 
@@ -178,11 +185,11 @@ const GameMap: React.FC = () => {
   const { issueReward } = React.useContext(DungeonMasterContext);
   const [showRewardModal, setShowRewardModal] = React.useState(false);
   const [currentReward, setCurrentReward] = React.useState<string>('');
-  const [selectedMap, setSelectedMap] = React.useState<MapOption>(MAP_OPTIONS[0]);
+  const [availableMaps, setAvailableMaps] = useState<MapOption[]>([]);
+  const [selectedMap, setSelectedMap] = React.useState<MapOption>(DEFAULT_MAP);
   const [map, setMap] = React.useState<Cell[][]>(() => createEmptyMap(
-    selectedMap.gridSize.width,
-    selectedMap.gridSize.height,
-    selectedMap.cellSize
+    DEFAULT_MAP.gridSize.width,
+    DEFAULT_MAP.gridSize.height
   ));
   const [pieces, setPieces] = React.useState<Piece[]>([]);
   const [selectedPieceId, setSelectedPieceId] = React.useState<string | null>(null);
@@ -190,83 +197,245 @@ const GameMap: React.FC = () => {
   const [nextPieceId, setNextPieceId] = React.useState(1);
   const [wsConnection, setWsConnection] = React.useState<WebSocket | null>(null);
   const [narration, setNarration] = React.useState<string>("");
+  const [loadingMap, setLoadingMap] = useState(true);
+
+  // State for narrations
+  const [narrations, setNarrations] = useState<Array<{id: string, content: string, timestamp: Date}>>([]);
+
+  // Interface for CellComponentProps
+  interface CellComponentProps {
+    cell: Cell;
+    x: number;
+    y: number;
+  }
+
+  // Define playSoundEffect function before using it in useEffect
+  // Play sound effect
+  const playSoundEffect = useCallback((soundUrl: string) => {
+    if (!soundEffectRef.current) return;
+
+    // Check if sound is enabled
+    const soundEnabled = document.getElementById('sound-enabled') as HTMLInputElement;
+    if (soundEnabled && !soundEnabled.checked) return;
+
+    console.log('Playing sound effect:', soundUrl);
+
+    // Set the source and play the sound
+    soundEffectRef.current.src = `http://localhost:8001${soundUrl}`;
+    soundEffectRef.current.play().catch((error: Error) => {
+      console.error('Error playing sound effect:', error);
+    });
+  }, []);
+
+  // Function to play sound effects
+  const playSound = useCallback((soundType: string) => {
+    if (!soundEffectRef.current) return;
+
+    // Check if sound is enabled
+    const soundEnabled = document.getElementById('sound-enabled') as HTMLInputElement;
+    if (soundEnabled && !soundEnabled.checked) return;
+
+    // Map sound types to file paths
+    const soundPaths: Record<string, string> = {
+      // Basic game sounds
+      'trapped': '/assets/sounds/mixkit-retro-game-emergency-alarm-1000.wav',
+      'movement': '/assets/sounds/mixkit-quick-jump-arcade-game-239.wav',
+      'dice': '/assets/sounds/mixkit-game-show-suspense-waiting-667.wav',
+      'success': '/assets/sounds/mixkit-melodical-flute-music-notification-2310.wav',
+      'failure': '/assets/sounds/mixkit-sad-game-over-trombone-471.wav',
+
+      // Character sounds
+      'character_select': '/assets/sounds/mixkit-retro-game-notification-212.wav',
+      'character_add': '/assets/sounds/mixkit-positive-interface-beep-221.wav',
+      'character_remove': '/assets/sounds/mixkit-negative-guitar-tone-2324.wav',
+
+      // Environment sounds
+      'edge_reached': '/assets/sounds/mixkit-fast-small-sweep-transition-166.wav',
+      'new_area': '/assets/sounds/mixkit-magic-sweep-game-trophy-257.wav',
+      'obstacle_hit': '/assets/sounds/mixkit-arcade-retro-changing-tab-206.wav',
+
+      // Combat sounds
+      'attack': '/assets/sounds/mixkit-sword-slash-swoosh-1476.wav',
+      'defend': '/assets/sounds/mixkit-metal-hit-woosh-1485.wav',
+      'spell': '/assets/sounds/mixkit-magical-spell-2102.wav',
+      'heal': '/assets/sounds/mixkit-fairy-magic-sparkle-871.wav',
+      'damage': '/assets/sounds/mixkit-boxer-getting-hit-2055.wav',
+      'death': '/assets/sounds/mixkit-player-losing-or-failing-2042.wav',
+
+      // UI sounds
+      'button_click': '/assets/sounds/mixkit-select-click-1109.wav',
+      'menu_open': '/assets/sounds/mixkit-game-click-1114.wav',
+      'menu_close': '/assets/sounds/mixkit-tech-click-1115.wav',
+      'notification': '/assets/sounds/mixkit-software-interface-start-2574.wav',
+      'error': '/assets/sounds/mixkit-wrong-answer-fail-notification-946.wav'
+    };
+
+    // If the sound type is a direct file name, use it directly
+    // Otherwise, look it up in the sound paths map
+    let soundPath;
+    if (soundType.includes('.wav') || soundType.includes('.mp3')) {
+      soundPath = `/assets/sounds/${soundType}`;
+    } else {
+      soundPath = soundPaths[soundType] || `/assets/sounds/mixkit-select-click-1109.wav`;
+    }
+
+    console.log('Playing sound effect:', soundPath);
+
+    // Set the source and play the sound
+    soundEffectRef.current.src = `http://localhost:8001${soundPath}`;
+    soundEffectRef.current.play().catch((error: Error) => {
+      console.error('Error playing sound effect:', error);
+    });
+  }, []);
 
   useEffect(() => {
     // Create a unique session ID for this game session
     const sessionId = `session-${Date.now()}`;
-    const ws = new WebSocket(`ws://localhost:8000/ws/dnd/${sessionId}`);
+    console.log('Connecting to WebSocket server with session ID:', sessionId);
+    const ws = new WebSocket(`ws://localhost:8001/ws/dnd/${sessionId}`);
 
     ws.onopen = () => {
       console.log('Connected to DND Dungeon Master server');
+      setWsConnection(ws);
+
+      // Enable AI control
+      ws.send(JSON.stringify({
+        type: 'ai_control',
+        data: {
+          enabled: true
+        }
+      }));
     };
 
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+      const message = JSON.parse(event.data);
+      console.log('WebSocket message received:', message);
 
-      if (data.type === 'narration') {
-        // Update the narration panel
-        setNarration(data.content);
+      if (message.type === 'narration') {
+        // Add narration to chat
+        setNarrations((prev: Array<{id: string, content: string, timestamp: Date}>) => [...prev, {
+          id: Date.now().toString(),
+          content: message.content,
+          timestamp: new Date()
+        }]);
 
-        // Also add to chat history if AI is controlling the game
-        // We'll check the current state inside the message handler
-        const isAiControlled = document.querySelector('.chat-panel') !== null;
-        if (isAiControlled) {
-          setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [...prev, { role: 'dm', content: data.content }]);
-        }
-      } else if (data.type === 'dm_response') {
-        // Add DM response to chat history
-        setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [...prev, { role: 'dm', content: data.content }]);
-
-        // Check if DM is requesting a dice roll
-        if (data.request_dice_roll) {
-          setWaitingForDiceRoll(true);
-          setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
-            ...prev,
-            {
-              role: 'dm',
-              content: `Please roll a ${data.dice_type || 'd20'} to determine the outcome.`
-            }
-          ]);
-        }
-
-        // Check if DM is moving a character
-        if (data.move_character) {
-          const { character_id, to_x, to_y } = data.move_character;
-
-          // Find the character and move it
-          setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) =>
-            piece.id === character_id
-              ? { ...piece, x: to_x, y: to_y }
-              : piece
-          ));
-        }
-
-        // Check if DM is adding a new character/monster
-        if (data.add_character) {
-          const { type, x, y, label } = data.add_character;
-
-          // Create a new piece with the specified properties
-          const newPiece: Piece = {
-            id: `piece-${Date.now()}`,
-            x,
-            y,
-            label: label || type,
-            avatar: type === 'monster' ? CHARACTER_AVATARS[0] : CHARACTER_AVATARS[Math.floor(Math.random() * CHARACTER_AVATARS.length)],
-            isDragging: false
-          };
-
-          // Add the new piece to the map
-          setPieces((prevPieces: Piece[]) => [...prevPieces, newPiece]);
-        }
-      } else if (data.type === 'error') {
-        console.error('Error from DM server:', data.content);
+        // Also add to chat history for DM chat
         setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
           ...prev,
-          {
-            role: 'dm',
-            content: `Error: ${data.content}`
-          }
+          { role: 'dm', content: message.content }
         ]);
+      } else if (message.type === 'dm_response') {
+        // Handle DM response
+        setNarrations((prev: Array<{id: string, content: string, timestamp: Date}>) => [...prev, {
+          id: Date.now().toString(),
+          content: message.content,
+          timestamp: new Date()
+        }]);
+
+        // Also add to chat history for DM chat
+        setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
+          ...prev,
+          { role: 'dm', content: message.content }
+        ]);
+
+        // Handle character movement from AI
+        if (message.move_character) {
+          const { character_id, to_x, to_y } = message.move_character;
+
+          setPieces((prevPieces: Piece[]) =>
+            prevPieces.map((piece: Piece) =>
+              piece.id === character_id
+                ? { ...piece, x: to_x, y: to_y }
+                : piece
+            )
+          );
+        }
+
+        // Handle multiple character movements
+        if (message.move_characters) {
+          setPieces((prevPieces: Piece[]) => {
+            const updatedPieces = [...prevPieces];
+
+            message.move_characters.forEach((move: any) => {
+              const index = updatedPieces.findIndex(p => p.id === move.character_id);
+              if (index !== -1) {
+                updatedPieces[index] = {
+                  ...updatedPieces[index],
+                  x: move.to_x,
+                  y: move.to_y
+                };
+              }
+            });
+
+            return updatedPieces;
+          });
+        }
+
+        // Handle trapped character notifications
+        if (message.trapped_characters) {
+          setPieces((prevPieces: Piece[]) => {
+            return prevPieces.map((piece: Piece) => {
+              const trappedChar = message.trapped_characters.find(
+                (tc: any) => tc.character_id === piece.id
+              );
+
+              return trappedChar
+                ? { ...piece, isTrapped: true }
+                : { ...piece, isTrapped: false };
+            });
+          });
+
+          // Play trapped sound effect if available
+          playSound('trapped');
+        }
+      } else if (message.type === 'map_data') {
+        console.log("Received map data:", message);
+
+        // The map data could be in data.map_data or directly in data
+        const mapData = message.map_data || message;
+
+        console.log("Extracted map data:", mapData);
+
+        if (!mapData || !mapData.grid) {
+          console.error("Invalid map data received:", mapData);
+          return;
+        }
+
+        // Create a new map option from the received data
+        const newMap: MapOption = {
+          id: mapData.id || `map-${Date.now()}`,
+          name: mapData.name || "Adventure Map",
+          description: mapData.description || "A mysterious realm awaits",
+          image: '',
+          gridSize: {
+            width: mapData.width || (mapData.grid && mapData.grid[0] ? mapData.grid[0].length : 8),
+            height: mapData.height || (mapData.grid ? mapData.grid.length : 6)
+          },
+          cellSize: 80,
+          terrainDistribution: mapData.terrain_distribution || {}
+        };
+
+        console.log("Created map option:", newMap);
+
+        // Convert the map grid data
+        const newGrid = convertMapDataToGrid(mapData);
+
+        console.log("Converted grid:", newGrid);
+
+        // Update state with new map
+        setSelectedMap(newMap);
+        setMap(newGrid);
+        setLoadingMap(false);
+
+        // Add to available maps
+        setAvailableMaps((prev: MapOption[]) => {
+          // Check if this map already exists (by ID)
+          const exists = prev.some((m: MapOption) => m.id === newMap.id);
+          if (!exists) {
+            return [...prev, newMap];
+          }
+          return prev;
+        });
       }
     };
 
@@ -286,7 +455,7 @@ const GameMap: React.FC = () => {
         ws.close();
       }
     };
-  }, []);
+  }, [playSound]);
 
   const sendGameState = useCallback(() => {
     if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
@@ -312,7 +481,8 @@ const GameMap: React.FC = () => {
             name: selectedMap.name,
             description: selectedMap.description,
             gridSize: selectedMap.gridSize,
-            cellSize: selectedMap.cellSize
+            cellSize: selectedMap.cellSize,
+            terrainDistribution: selectedMap.terrainDistribution
           },
 
           // Game state
@@ -337,6 +507,83 @@ const GameMap: React.FC = () => {
     }
   }, [map, pieces, wsConnection, selectedMap]);
 
+  // Request a dynamically generated map
+  const requestGeneratedMap = useCallback((theme?: string) => {
+    setLoadingMap(true);
+
+    // Try both WebSocket and direct API call
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+      const request = {
+        type: 'generate_map',
+        theme: theme || 'fantasy adventure',
+        content: 'Create a dynamic map for my adventure'
+      };
+
+      console.log("Sending map generation request via WebSocket:", request);
+      wsConnection.send(JSON.stringify(request));
+    }
+
+    // Also make a direct API call as a fallback
+    console.log("Sending map generation request via API:", theme || 'fantasy adventure');
+
+    fetch('http://localhost:8001/generate_map', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ theme: theme || 'fantasy adventure' }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(mapData => {
+      console.log("Received map data from API:", mapData);
+
+      // Create a new map option from the received data
+      const newMap: MapOption = {
+        id: mapData.id || `map-${Date.now()}`,
+        name: mapData.name || "Adventure Map",
+        description: mapData.description || "A mysterious realm awaits",
+        image: '',
+        gridSize: {
+          width: mapData.width || (mapData.grid && mapData.grid[0] ? mapData.grid[0].length : 8),
+          height: mapData.height || (mapData.grid ? mapData.grid.length : 6)
+        },
+        cellSize: 80,
+        terrainDistribution: mapData.terrain_distribution || {}
+      };
+
+      console.log("Created map option:", newMap);
+
+      // Convert the map grid data
+      const newGrid = convertMapDataToGrid(mapData);
+
+      console.log("Converted grid:", newGrid);
+
+      // Update state with new map
+      setSelectedMap(newMap);
+      setMap(newGrid);
+      setLoadingMap(false);
+
+      // Add to available maps
+      setAvailableMaps((prev: MapOption[]) => {
+        // Check if this map already exists (by ID)
+        const exists = prev.some((m: MapOption) => m.id === newMap.id);
+        if (!exists) {
+          return [...prev, newMap];
+        }
+        return prev;
+      });
+    })
+    .catch(error => {
+      console.error("Error fetching map data:", error);
+      // If API call fails, rely on WebSocket response
+    });
+  }, [wsConnection]);
+
   // State management
   const [isPlacingMode, setIsPlacingMode] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -349,16 +596,8 @@ const GameMap: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<Array<{role: 'user' | 'dm', content: string}>>([]);
   const gridRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const soundEffectRef = useRef<HTMLAudioElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-
-  // Memoize the creation of a new map when selecting a different map
-  const createMap = useCallback((mapOption: MapOption) => {
-    return createEmptyMap(
-      mapOption.gridSize.width,
-      mapOption.gridSize.height,
-      mapOption.cellSize
-    );
-  }, []);
 
   // Create a new piece
   const createNewPiece = useCallback((x: number, y: number): Piece => {
@@ -406,6 +645,43 @@ const GameMap: React.FC = () => {
     }
   }, [wsConnection, sendGameState]);
 
+  // Function to check if a character is trapped (surrounded by obstacles)
+  const checkIfTrapped = useCallback((x: number, y: number): boolean => {
+    // If out of bounds, consider it trapped
+    if (y < 0 || y >= map.length || x < 0 || x >= map[0].length) {
+      return true;
+    }
+
+    // Check all 8 surrounding cells
+    const directions = [
+      [-1, -1], [0, -1], [1, -1], // Top left, top, top right
+      [-1, 0],           [1, 0],  // Left, right
+      [-1, 1],  [0, 1],  [1, 1]   // Bottom left, bottom, bottom right
+    ];
+
+    // Count how many surrounding cells are obstacles
+    let obstacleCount = 0;
+
+    for (const [dx, dy] of directions) {
+      const newY = y + dy;
+      const newX = x + dx;
+
+      // Check if the cell is within bounds
+      if (newY >= 0 && newY < map.length && newX >= 0 && newX < map[0].length) {
+        // Check if the cell is an obstacle
+        if (map[newY][newX].isObstacle) {
+          obstacleCount++;
+        }
+      } else {
+        // Count out-of-bounds as obstacles
+        obstacleCount++;
+      }
+    }
+
+    // If 7 or more surrounding cells are obstacles, the character is trapped
+    return obstacleCount >= 7;
+  }, [map]);
+
   // Handle cell click to add new piece or move existing piece
   const handleCellClick = useCallback((x: number, y: number): void => {
     // If in placing mode, add a new piece
@@ -429,6 +705,9 @@ const GameMap: React.FC = () => {
           character_type: newPiece.label,
           position: { x, y }
         });
+
+        // Play sound effect for adding a character
+        playSound('movement');
       }
       return;
     }
@@ -443,6 +722,30 @@ const GameMap: React.FC = () => {
         // Find the selected piece
         const selectedPiece = pieces.find((p: Piece) => p.id === selectedPieceId);
 
+        if (!selectedPiece) return;
+
+        // Check if the character is at the edge of the map
+        const isAtEdge = (
+          x === 0 ||
+          y === 0 ||
+          x === selectedMap.gridSize.width - 1 ||
+          y === selectedMap.gridSize.height - 1
+        );
+
+        // If at edge, determine which edge
+        let edgeDirection = null;
+        if (isAtEdge) {
+          if (x === 0) edgeDirection = "west";
+          else if (x === selectedMap.gridSize.width - 1) edgeDirection = "east";
+          else if (y === 0) edgeDirection = "north";
+          else if (y === selectedMap.gridSize.height - 1) edgeDirection = "south";
+
+          console.log(`Character at ${edgeDirection} edge of map`);
+
+          // Play a special sound for reaching the edge
+          playSound('mixkit-fast-small-sweep-transition-166.wav');
+        }
+
         // Update the piece position
         setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) =>
           piece.id === selectedPieceId
@@ -450,15 +753,57 @@ const GameMap: React.FC = () => {
             : piece
         ));
 
-        // Notify the DM about the movement
-        if (selectedPiece) {
-          sendPlayerAction('move_character', {
-            character_id: selectedPieceId,
-            character_type: selectedPiece.label,
-            from: { x: selectedPiece.x, y: selectedPiece.y },
-            to: { x, y }
-          });
+        // Check if the character is trapped (surrounded by obstacles)
+        const isTrapped = checkIfTrapped(x, y);
+
+        if (isTrapped) {
+          // Update the piece to show it's trapped
+          setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) =>
+            piece.id === selectedPieceId
+              ? { ...piece, isTrapped: true }
+              : piece
+          ));
+
+          // Play trapped sound
+          playSound('mixkit-retro-game-emergency-alarm-1000.wav');
+
+          // Show a message to the user
+          setNarrations((prev: Array<{id: string, content: string, timestamp: Date}>) => [...prev, {
+            id: Date.now().toString(),
+            content: `${selectedPiece.label} is trapped! They are surrounded by obstacles and cannot move.`,
+            timestamp: new Date()
+          }]);
+        } else if (selectedPiece.isTrapped) {
+          // If the piece was trapped before but isn't now, update it
+          setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) =>
+            piece.id === selectedPieceId
+              ? { ...piece, isTrapped: false }
+              : piece
+          ));
         }
+
+        // Notify the DM about the movement with additional information
+        const moveAction: any = {
+          character_id: selectedPieceId,
+          character_type: selectedPiece.label,
+          from: { x: selectedPiece.x, y: selectedPiece.y },
+          to: { x, y }
+        };
+
+        // If at edge, include edge information
+        if (edgeDirection) {
+          moveAction.edge_direction = edgeDirection;
+        }
+
+        // If trapped, include that information
+        if (isTrapped) {
+          moveAction.is_trapped = true;
+        }
+
+        sendPlayerAction('move_character', moveAction);
+
+        // Play movement sound
+        playSound('movement');
 
         setSelectedPieceId(null);
       }
@@ -476,9 +821,12 @@ const GameMap: React.FC = () => {
           character_type: clickedPiece.label,
           position: { x, y }
         });
+
+        // Play selection sound
+        playSound('mixkit-retro-game-notification-212.wav');
       }
     }
-  }, [isPlacingMode, pieces, selectedPieceId, map, createNewPiece, sendPlayerAction]);
+  }, [isPlacingMode, pieces, selectedPieceId, map, createNewPiece, sendPlayerAction, selectedMap.gridSize, checkIfTrapped, playSound]);
 
   // Handle piece click
   const handlePieceClick = useCallback((e: React.MouseEvent, piece: Piece): void => {
@@ -623,6 +971,10 @@ const GameMap: React.FC = () => {
       classes += " dragging";
     }
 
+    if (piece.isTrapped) {
+      classes += " trapped";
+    }
+
     return classes;
   }, [selectedPieceId]);
 
@@ -650,6 +1002,41 @@ const GameMap: React.FC = () => {
     }
   }, [selectedMap.gridSize.height, selectedMap.gridSize.width, map, pieces, createNewPiece]);
 
+  // Test function to directly move a character
+  const testMoveCharacter = useCallback((): void => {
+    if (pieces.length === 0) {
+      alert("Please add a character first");
+      return;
+    }
+
+    // Get the first character
+    const firstPiece = pieces[0];
+
+    // Create a test movement command
+    const testMovement = {
+      type: "dm_response",
+      content: "The Dungeon Master moves your character.",
+      move_character: {
+        character_id: firstPiece.id,
+        to_x: Math.min(firstPiece.x + 1, selectedMap.gridSize.width - 1),
+        to_y: firstPiece.y
+      }
+    };
+
+    console.log("Testing character movement with:", testMovement);
+
+    // Directly update the pieces state
+    setPieces((prevPieces: Piece[]) => {
+      const updatedPieces = prevPieces.map((piece: Piece) =>
+        piece.id === firstPiece.id
+          ? { ...piece, x: testMovement.move_character.to_x, y: testMovement.move_character.to_y }
+          : piece
+      );
+      console.log("Updated pieces after test movement:", updatedPieces);
+      return updatedPieces;
+    });
+  }, [pieces, selectedMap.gridSize.width]);
+
   // Remove selected piece function
   const removeSelectedPiece = useCallback((): void => {
     if (selectedPieceId) {
@@ -675,20 +1062,30 @@ const GameMap: React.FC = () => {
 
   // Reset game function
   const resetGame = useCallback((): void => {
-    setMap(createMap(selectedMap));
     setPieces([]);
     setSelectedPieceId(null);
     setDraggingPiece(null);
     setNextPieceId(1);
     setIsPlacingMode(false);
-  }, [selectedMap, createMap]);
+
+    // Request a new map
+    requestGeneratedMap();
+  }, [requestGeneratedMap]);
 
   // Handle map selection
   const handleMapSelect = useCallback((mapOption: MapOption): void => {
     setSelectedMap(mapOption);
 
-    // Create a new map with the selected map's grid size
-    setMap(createMap(mapOption));
+    // If this is a saved map from the server, request its details
+    if (mapOption.id !== 'loading') {
+      // Send request to get the map details
+      if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send(JSON.stringify({
+          type: 'get_map',
+          map_id: mapOption.id
+        }));
+      }
+    }
 
     // Reset game state
     setPieces([]);
@@ -696,7 +1093,7 @@ const GameMap: React.FC = () => {
     setDraggingPiece(null);
     setNextPieceId(1);
     setIsPlacingMode(false);
-  }, [createMap]);
+  }, [wsConnection]);
 
   // Play background music function
   const playMusic = useCallback(() => {
@@ -763,9 +1160,12 @@ const GameMap: React.FC = () => {
     }
   }, []);
 
-  // Start game with selected map
+  // Start game with the AI-generated map
   const startGame = useCallback((): void => {
     setGameStarted(true);
+
+    // Request a generated map when starting the game
+    requestGeneratedMap();
 
     // Try to play background music when game starts
     setTimeout(() => {
@@ -782,7 +1182,7 @@ const GameMap: React.FC = () => {
         console.log("Sent initial game state to DM");
       }, 1000);
     }, 1000);
-  }, [playMusic, sendGameState]);
+  }, [playMusic, sendGameState, requestGeneratedMap]);
 
   // Toggle music play/pause
   const toggleMusic = useCallback((): void => {
@@ -858,59 +1258,281 @@ const GameMap: React.FC = () => {
     }
   }, [chatHistory]);
 
-  // Get cell style adjustments based on cell size
-  const getCellStyle = useCallback((cell: Cell): React.CSSProperties => {
-    return {
-      width: selectedMap.cellSize,
-      height: selectedMap.cellSize,
-      backgroundColor: cell.isObstacle ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)',
-    };
-  }, [selectedMap.cellSize]);
+  // Helper function to generate cell styles
+  const getCellStyle = (cell: Cell): React.CSSProperties => {
+    const style: React.CSSProperties = {};
 
-  // Get piece style adjustments based on cell size
-  const getPieceStyle = useCallback((piece: Piece): React.CSSProperties => {
-    return {
-      width: `${selectedMap.cellSize * 0.8}px`,
-      height: `${selectedMap.cellSize * 0.8}px`,
-      backgroundImage: `url(${piece.avatar})`,
+    // Basic style for terrain type
+    switch (cell.terrain) {
+      case "grass":
+        style.backgroundColor = "#7cba34";
+        break;
+      case "forest":
+        style.backgroundColor = "#2d6a1a";
+        break;
+      case "water":
+        style.backgroundColor = "#4a80d9";
+        break;
+      case "mountain":
+        style.backgroundColor = "#8b7355";
+        break;
+      case "desert":
+        style.backgroundColor = "#e6c588";
+        break;
+      case "swamp":
+        style.backgroundColor = "#5a714b";
+        break;
+      case "cave":
+        style.backgroundColor = "#5d4037";
+        break;
+      case "dungeon":
+        style.backgroundColor = "#4e342e";
+        break;
+      case "snow":
+        style.backgroundColor = "#e8f0f9";
+        break;
+      case "lava":
+        style.backgroundColor = "#cf3f10";
+        break;
+      case "path":
+        style.backgroundColor = "#c2a37c";
+        break;
+      default:
+        style.backgroundColor = "#7cba34"; // Default to grass
+    }
+
+    // Add border for cells
+    style.border = "1px solid rgba(0,0,0,0.1)";
+
+    return style;
+  };
+
+  // Cell Component with multi-layer visual system
+  const CellComponent: React.FC<CellComponentProps> = ({ cell, x, y }: { cell: Cell, x: number, y: number }) => {
+    // Determine base cell class based on terrain type
+    let cellClass = `cell terrain-${cell.terrain}`;
+
+    // Add obstacle class if needed
+    if (cell.isObstacle) {
+      cellClass += " obstacle";
+    }
+
+    // Add layer 1 - special variation classes (like bloody tiles)
+    if (cell.specialVariation) {
+      cellClass += ` special-${cell.specialVariation}`;
+    }
+
+    // Create style object for rendering all layers
+    const style: React.CSSProperties = {
+      ...getCellStyle(cell),
+      backgroundImage: 'none',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
-      borderRadius: '50%',
-      boxShadow: '0 3px 8px rgba(0, 0, 0, 0.6)',
+      position: 'relative'
     };
-  }, [selectedMap.cellSize]);
 
-  // Define a memoized Cell component to optimize rendering
-  const CellComponent = React.memo(({ cell, x, y }: { cell: Cell; x: number; y: number }) => {
-    const cellPieces = pieces.filter((piece: Piece) => piece.x === x && piece.y === y);
+    // Layer 1: Base Tile - Use tileset assets based on terrain type
+    const getTilesetImage = (terrain: TerrainType, isObstacle: boolean) => {
+      // Map terrain types to tileset images
+      const tilesetMap: Record<TerrainType, string[]> = {
+        grass: ['floor_vines_0_new.png', 'floor_vines_1_new.png', 'floor_vines_2_new.png'],
+        water: ['floor_nerves_0.png', 'floor_nerves_1_new.png', 'floor_nerves_2_new.png'],
+        mountain: ['marble_floor_1.png', 'marble_floor_2.png', 'marble_floor_3.png'],
+        forest: ['floor_vines_3_new.png', 'floor_vines_4_new.png', 'floor_vines_5_new.png'],
+        swamp: ['floor_sand_stone_0.png', 'floor_sand_stone_1.png', 'floor_sand_stone_2.png'],
+        desert: ['floor_sand_rock_0.png', 'floor_sand_rock_1.png', 'floor_sand_rock_2.png'],
+        cave: ['volcanic_floor_0.png', 'volcanic_floor_1.png', 'volcanic_floor_2.png'],
+        dungeon: ['crystal_floor_0.png', 'crystal_floor_1.png', 'crystal_floor_2.png'],
+        snow: ['marble_floor_4.png', 'marble_floor_5.png', 'marble_floor_6.png'],
+        lava: ['volcanic_floor_3.png', 'volcanic_floor_4.png', 'volcanic_floor_5.png'],
+        path: ['sandstone_floor_0.png', 'sandstone_floor_1.png', 'sandstone_floor_2.png']
+      };
+
+      // Map for obstacle tiles
+      const obstacleMap: Record<TerrainType, string[]> = {
+        grass: ['wall_vines_0.png', 'wall_vines_1.png', 'wall_vines_2.png'],
+        water: ['wall_flesh_0.png', 'wall_flesh_1.png', 'wall_flesh_2.png'],
+        mountain: ['marble_wall_1.png', 'marble_wall_2.png', 'marble_wall_3.png'],
+        forest: ['wall_vines_3.png', 'wall_vines_4.png', 'wall_vines_5.png'],
+        swamp: ['wall_old_blood_0.png', 'wall_old_blood_1.png', 'wall_old_blood_2.png'],
+        desert: ['sandstone_wall_0.png', 'sandstone_wall_1.png', 'sandstone_wall_2.png'],
+        cave: ['volcanic_wall_0.png', 'volcanic_wall_1.png', 'volcanic_wall_2.png'],
+        dungeon: ['crystal_wall_0.png', 'crystal_wall_1.png', 'crystal_wall_2.png'],
+        snow: ['marble_wall_4.png', 'marble_wall_5.png', 'marble_wall_6.png'],
+        lava: ['volcanic_wall_3.png', 'volcanic_wall_4.png', 'volcanic_wall_5.png'],
+        path: ['wall_yellow_rock_0.png', 'wall_yellow_rock_1.png', 'wall_yellow_rock_2.png']
+      };
+
+      // Get the array of possible tiles for this terrain
+      const tileOptions = isObstacle ?
+        (obstacleMap[terrain] || obstacleMap.mountain) :
+        (tilesetMap[terrain] || tilesetMap.grass);
+
+      // Use a deterministic selection based on coordinates to ensure the same tile is always used for the same position
+      const index = (x * 7 + y * 13) % tileOptions.length;
+
+      // Return the selected tile
+      return `http://localhost:8001/assets/Tilesets/${tileOptions[index]}`;
+    };
+
+    // Set the background image based on terrain and obstacle status
+    style.backgroundImage = `url(${getTilesetImage(cell.terrain, cell.isObstacle)})`;
+
+    // Layer 3 - Apply lighting effects
+    if (cell.lighting) {
+      // Add base lighting
+      const lighting = typeof cell.lighting === 'string'
+        ? { base: cell.lighting as string }
+        : cell.lighting as { base: string, variation?: string, intensity?: number, colorShift?: string };
+
+      switch (lighting.base) {
+        case "bright":
+          style.filter = "brightness(1.2)";
+          break;
+        case "dim":
+          style.filter = "brightness(0.8)";
+          break;
+        case "dark":
+          style.filter = "brightness(0.6)";
+          break;
+        case "dappled":
+          style.backgroundImage = `url(${getTilesetImage(cell.terrain, cell.isObstacle)}), radial-gradient(rgba(255,255,255,0.1) 10%, transparent 70%)`;
+          break;
+        case "foggy":
+          style.backgroundColor = "rgba(200, 200, 220, 0.3)";
+          break;
+        case "glowing":
+          style.boxShadow = "inset 0 0 10px rgba(255, 200, 150, 0.5)";
+          break;
+      }
+
+      // Intensity adjustment
+      if (typeof lighting !== 'string' && lighting.intensity !== 1.0 && style.filter) {
+        style.filter += ` brightness(${lighting.intensity})`;
+      }
+
+      // Color shift
+      if (typeof lighting !== 'string' && lighting.colorShift) {
+        switch (lighting.colorShift) {
+          case "warm":
+            style.filter = (style.filter || "") + " sepia(0.3)";
+            break;
+          case "cool":
+            style.filter = (style.filter || "") + " hue-rotate(30deg)";
+            break;
+          case "eerie":
+            style.filter = (style.filter || "") + " hue-rotate(90deg) saturate(0.7)";
+            break;
+        }
+      }
+    }
+
+    // Prepare decoration element
+    let decorationElement = null;
+
+    // Add layer 2 - decorative objects using assets
+    if (cell.decoration) {
+      // Map decoration types to object images
+      const decorationMap: Record<string, string> = {
+        chest: 'chest.png',
+        fountain: 'blue_fountain.png',
+        blood_fountain: 'blood_fountain.png',
+        boulder: 'boulder.png',
+        box: 'box.png',
+        large_box: 'large_box.png',
+        sarcophagus: 'sarcophagus_sealed.png',
+        mold: 'mold_large_1.png',
+        glowing_mold: 'mold_glowing_1.png'
+      };
+
+      const decorationImage = decorationMap[cell.decoration] || 'chest.png';
+
+      decorationElement = (
+        <div
+          className={`decoration decoration-${cell.decoration}`}
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            backgroundImage: `url(http://localhost:8001/assets/Objects/${decorationImage})`,
+            backgroundSize: '80%',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            pointerEvents: 'none',
+            zIndex: 2
+          }}
+        />
+      );
+    }
+
+    // Add special effects for certain cells
+    if ((x + y) % 7 === 0 && cell.terrain === 'lava') {
+      // Add a glow effect to lava cells
+      const glowElement = (
+        <div
+          className="glow-effect"
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            backgroundImage: `url(http://localhost:8001/assets/Effects/fire_white.png)`,
+            backgroundSize: '50%',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            pointerEvents: 'none',
+            opacity: '0.6',
+            zIndex: 1
+          }}
+        />
+      );
+
+      decorationElement = (
+        <>
+          {glowElement}
+          {decorationElement}
+        </>
+      );
+    }
 
     return (
       <div
-        className={getCellClassName(cell, x, y)}
-        style={getCellStyle(cell)}
+        className={cellClass}
+        style={style}
+        data-x={x}
+        data-y={y}
+        title={`${cell.terrain}${cell.structure ? ` (${cell.structure})` : ''}`}
+        onClick={() => gridClickHandler(x, y)}
       >
-        {cellPieces.length > 0 && cellPieces.map((piece: Piece) => (
-          <div
-            key={piece.id}
-            className={getPieceClassName(piece)}
-            style={getPieceStyle(piece)}
-            onMouseDown={(e) => handlePieceDragStart(e, piece)}
-            onClick={(e) => handlePieceClick(e, piece)}
-            onDoubleClick={(e) => handleDeletePiece(e, piece)}
-            title={piece.label}
-            data-player={piece.label}
-          >
-            {/* Avatar is displayed via background image */}
+        {/* Layer 2 - Decorations */}
+        {decorationElement}
+
+        {/* Display structure if present */}
+        {cell.structure && (
+          <div className={`structure structure-${cell.structure}`}>
+            <span className="structure-label">{cell.structure}</span>
           </div>
-        ))}
-        {cell.isObstacle && (
-          <div className="obstacle-indicator">
-            ⛔
+        )}
+
+        {/* Display item if discovered */}
+        {cell.item && cell.item.discovered && (
+          <div className={`item item-${cell.item.rarity} item-${cell.item.type}`}>
+            <span className="item-label">{cell.item.type}</span>
+          </div>
+        )}
+
+        {/* Display trap if detected */}
+        {cell.trap && cell.trap.detected && (
+          <div className={`trap trap-${cell.trap.type}${cell.trap.triggered ? ' triggered' : ''}`}>
+            <span className="trap-label">{cell.trap.type}</span>
           </div>
         )}
       </div>
     );
-  });
+  };
 
   // Use useMemo to optimize grid click handler calculation
   const gridClickHandler = useCallback((e: React.MouseEvent): void => {
@@ -934,6 +1556,7 @@ const GameMap: React.FC = () => {
   const renderGrid = useCallback(() => {
     const gridItems = [];
 
+    // First, render all cells
     for (let y = 0; y < selectedMap.gridSize.height && y < map.length; y++) {
       const row = map[y];
       for (let x = 0; x < selectedMap.gridSize.width && x < row.length; x++) {
@@ -948,8 +1571,55 @@ const GameMap: React.FC = () => {
       }
     }
 
+    // Then, render all pieces (avatars) on top of the cells
+    pieces.forEach((piece: Piece) => {
+      // Only render pieces that are within the grid bounds
+      if (piece.x >= 0 && piece.x < selectedMap.gridSize.width &&
+          piece.y >= 0 && piece.y < selectedMap.gridSize.height) {
+
+        // Calculate position for the piece
+        const pieceStyle: React.CSSProperties = {
+          left: `${piece.x * (selectedMap.cellSize + 4)}px`,
+          top: `${piece.y * (selectedMap.cellSize + 4)}px`,
+          width: `${selectedMap.cellSize}px`,
+          height: `${selectedMap.cellSize}px`,
+          backgroundImage: `url(${piece.avatar})`,
+          position: 'absolute',
+          backgroundSize: 'cover',
+          borderRadius: '50%',
+          cursor: 'pointer',
+          boxShadow: piece.isTrapped ? '0 0 10px red' : '0 0 5px rgba(0,0,0,0.5)',
+          border: selectedPieceId === piece.id ? '2px solid yellow' : '2px solid white',
+          zIndex: 10
+        };
+
+        gridItems.push(
+          <div
+            key={`piece-${piece.id}`}
+            className={`piece ${selectedPieceId === piece.id ? 'selected' : ''} ${piece.isDragging ? 'dragging' : ''} ${piece.isTrapped ? 'trapped' : ''}`}
+            style={pieceStyle}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (selectedPieceId === piece.id) {
+                // Deselect if already selected
+                setSelectedPieceId(null);
+              } else {
+                // Select this piece
+                setSelectedPieceId(piece.id);
+              }
+            }}
+            title={piece.label}
+          >
+            <div className="piece-label">{piece.label}</div>
+          </div>
+        );
+      }
+    });
+
     return gridItems;
-  }, [map, selectedMap.gridSize, pieces]);
+  }, [map, selectedMap.gridSize, selectedMap.cellSize, pieces, selectedPieceId]);
+
+
 
   // Memoize the grid items to prevent unnecessary re-renders
   const gridItems = useMemo(() => renderGrid(), [renderGrid]);
@@ -959,34 +1629,14 @@ const GameMap: React.FC = () => {
     return (
       <div className="map-selection-screen">
         <h1 className="game-title">D&D Game Map</h1>
-        <div className="game-title-underline"></div>
-        <p className="game-subtitle">Select a map to begin your adventure</p>
-
-        <div className="map-selection-grid">
-          {MAP_OPTIONS.map((mapOption, index) => (
-            <div
-              key={mapOption.id}
-              className={`map-selection-card ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
-              onClick={() => handleMapSelect(mapOption)}
-            >
-              <div className="map-selection-preview" style={{ backgroundImage: `url(${mapOption.image})` }} />
-              <div className="map-selection-info">
-                <h2>{mapOption.name}</h2>
-                <p>{mapOption.description}</p>
-                <div className="map-selection-grid-info">
-                  Grid: {mapOption.gridSize.width}×{mapOption.gridSize.height}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <p className="game-subtitle">Start your adventure with an AI-generated map</p>
 
         <div className="map-selection-actions">
           <button
             className="btn btn-start-game"
             onClick={startGame}
           >
-            Start Game with {selectedMap.name}
+            Generate Adventure Map
           </button>
 
           <div className="music-controls">
@@ -1015,6 +1665,17 @@ const GameMap: React.FC = () => {
           )}
         </div>
 
+        <div className="map-generation-themes">
+          <h3>Or generate a map with a specific theme:</h3>
+          <div className="theme-buttons">
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('medieval fantasy') }}>Medieval Fantasy</button>
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('dark dungeon') }}>Dark Dungeon</button>
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('forest adventure') }}>Forest Adventure</button>
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('mountain pass') }}>Mountain Pass</button>
+            <button onClick={() => { setGameStarted(true); requestGeneratedMap('coastal kingdom') }}>Coastal Kingdom</button>
+          </div>
+        </div>
+
         {/* Audio element for background music */}
         <audio
           ref={audioRef}
@@ -1026,12 +1687,12 @@ const GameMap: React.FC = () => {
         />
       </div>
     );
-  }, [handleMapSelect, selectedMap, startGame, toggleMusic, toggleMute, isMusicPlaying, isMusicMuted, showMusicError]);
+  }, [startGame, toggleMusic, toggleMute, isMusicPlaying, isMusicMuted, showMusicError, requestGeneratedMap]);
 
   // Render the Game Interface
   const renderGameInterface = useCallback(() => {
     return (
-      <>
+      <div className="game-interface">
         <header className="game-header">
           <h1 className="game-title">D&D Game Map</h1>
           <div className="game-title-underline"></div>
@@ -1077,7 +1738,14 @@ const GameMap: React.FC = () => {
               className="btn btn-reset"
               onClick={resetGame}
             >
-              🔄 Reset Map
+              🔄 Generate New Map
+            </button>
+
+            <button
+              className="btn btn-test"
+              onClick={testMoveCharacter}
+            >
+              🧪 Test Movement
             </button>
 
             <button
@@ -1102,22 +1770,25 @@ const GameMap: React.FC = () => {
             <div className="map-selector">
               <h3>Select a Map</h3>
               <div className="map-options">
-                {MAP_OPTIONS.map(mapOption => (
-                  <div
-                    key={mapOption.id}
-                    className={`map-option ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
-                    onClick={() => handleMapSelect(mapOption)}
-                  >
-                    <div className="map-preview" style={{ backgroundImage: `url(${mapOption.image})` }} />
-                    <div className="map-info">
-                      <h4>{mapOption.name}</h4>
-                      <p>{mapOption.description}</p>
-                      <div className="map-grid-info">
-                        Grid: {mapOption.gridSize.width}×{mapOption.gridSize.height}
+                {availableMaps.length > 0 ? (
+                  availableMaps.map((mapOption: MapOption) => (
+                    <div
+                      key={mapOption.id}
+                      className={`map-option ${selectedMap.id === mapOption.id ? 'selected' : ''}`}
+                      onClick={() => handleMapSelect(mapOption)}
+                    >
+                      <div className="map-info">
+                        <h4>{mapOption.name}</h4>
+                        <p>{mapOption.description}</p>
+                        <div className="map-grid-info">
+                          Grid: {mapOption.gridSize.width}×{mapOption.gridSize.height}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p>No maps available yet. Use "Generate New Map" to create one.</p>
+                )}
               </div>
               <button
                 className="btn btn-close-selector"
@@ -1129,7 +1800,9 @@ const GameMap: React.FC = () => {
           )}
 
           <div className="status-bar">
-            {isPlacingMode ? (
+            {loadingMap ? (
+              <span>Generating your adventure map...</span>
+            ) : isPlacingMode ? (
               <span className="status-placing">✓ Select any empty cell to place a new avatar</span>
             ) : selectedPieceId ? (
               <span className="status-selected">✓ Avatar selected - click on a cell to move it</span>
@@ -1146,12 +1819,15 @@ const GameMap: React.FC = () => {
 
           {showTooltip && (
             <div className="tooltip">
-              <h3>Color Guide:</h3>
+              <h3>Terrain Guide:</h3>
               <ul>
-                <li>Green tiles: Forests</li>
-                <li>Blue tiles: Water (obstacle)</li>
-                <li>Brown tiles: Mountains (obstacle)</li>
-                <li>Light green: Grass</li>
+                <li>Light Green: Grass</li>
+                <li>Blue: Water (obstacle)</li>
+                <li>Brown: Mountains (obstacle)</li>
+                <li>Dark Green: Forest</li>
+                <li>Purple: Swamp</li>
+                <li>Yellow: Desert</li>
+                <li>Gray: Cave</li>
               </ul>
               <button
                 className="tooltip-close"
@@ -1162,26 +1838,30 @@ const GameMap: React.FC = () => {
             </div>
           )}
 
-          <div
-            ref={gridRef}
-            className={`grid ${isPlacingMode ? 'cursor-crosshair' : draggingPiece ? 'cursor-grabbing' : ''}`}
-            style={{
-              gridTemplateColumns: `repeat(${selectedMap.gridSize.width}, ${selectedMap.cellSize}px)`,
-              gridTemplateRows: `repeat(${selectedMap.gridSize.height}, ${selectedMap.cellSize}px)`,
-              backgroundImage: `url(${selectedMap.image})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              width: `${selectedMap.gridSize.width * (selectedMap.cellSize + 4) - 4}px`,
-              height: `${selectedMap.gridSize.height * (selectedMap.cellSize + 4) - 4}px`,
-              gap: '4px',
-            }}
-            onClick={gridClickHandler}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            {gridItems}
-          </div>
+          {loadingMap ? (
+            <div className="loading-map">
+              <p>The Dungeon Master is creating your adventure map...</p>
+              <div className="spinner"></div>
+            </div>
+          ) : (
+            <div
+              ref={gridRef}
+              className={`grid ${isPlacingMode ? 'cursor-crosshair' : draggingPiece ? 'cursor-grabbing' : ''}`}
+              style={{
+                gridTemplateColumns: `repeat(${selectedMap.gridSize.width}, ${selectedMap.cellSize}px)`,
+                gridTemplateRows: `repeat(${selectedMap.gridSize.height}, ${selectedMap.cellSize}px)`,
+                width: `${selectedMap.gridSize.width * (selectedMap.cellSize + 4) - 4}px`,
+                height: `${selectedMap.gridSize.height * (selectedMap.cellSize + 4) - 4}px`,
+                gap: '4px',
+              }}
+              onClick={gridClickHandler}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              {gridItems}
+            </div>
+          )}
 
           <div className="legend">
             <div className="legend-item">
@@ -1200,6 +1880,24 @@ const GameMap: React.FC = () => {
               <div className="legend-color legend-forest"></div>
               <span>Forest</span>
             </div>
+            {selectedMap.terrainDistribution && selectedMap.terrainDistribution.swamp > 0 && (
+              <div className="legend-item">
+                <div className="legend-color legend-swamp"></div>
+                <span>Swamp</span>
+              </div>
+            )}
+            {selectedMap.terrainDistribution && selectedMap.terrainDistribution.desert > 0 && (
+              <div className="legend-item">
+                <div className="legend-color legend-desert"></div>
+                <span>Desert</span>
+              </div>
+            )}
+            {selectedMap.terrainDistribution && selectedMap.terrainDistribution.cave > 0 && (
+              <div className="legend-item">
+                <div className="legend-color legend-cave"></div>
+                <span>Cave</span>
+              </div>
+            )}
           </div>
 
           <div className="current-map-info">
@@ -1224,13 +1922,20 @@ const GameMap: React.FC = () => {
           crossOrigin="anonymous"
           playsInline
         />
-      </>
+
+        {/* Audio element for sound effects */}
+        <audio
+          ref={soundEffectRef}
+          preload="auto"
+          crossOrigin="anonymous"
+        />
+      </div>
     );
   }, [
     selectedMap, gridItems, isPlacingMode, selectedPieceId, draggingPiece,
-    showMapSelector, showTooltip, isMusicMuted,
+    showMapSelector, showTooltip, isMusicMuted, loadingMap, availableMaps,
     backToMapSelection, togglePlacingMode, addRandomPiece, removeSelectedPiece,
-    resetGame, handleMapSelect, gridClickHandler, handleMouseMove, handleMouseUp, toggleMusic, toggleMute
+    resetGame, handleMapSelect, gridClickHandler, handleMouseMove, handleMouseUp, toggleMusic, toggleMute, pieces.length
   ]);
 
   // Roll dice function
@@ -1279,40 +1984,64 @@ const GameMap: React.FC = () => {
 
   // Handle dice roll button click
   const handleDiceRoll = useCallback((diceType: string) => {
-    const result = rollDice(diceType);
-    if (result) {
-      setDiceResult({
-        type: diceType,
-        total: result.total,
-        rolls: result.rolls
-      });
+    // Play dice rolling sound
+    playSound('mixkit-game-show-suspense-waiting-667.wav');
 
-      // If we were waiting for a dice roll, add it to chat history
-      if (waitingForDiceRoll) {
-        setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
-          ...prev,
-          {
-            role: 'user',
-            content: `🎲 Rolled ${diceType}: ${result.total}${result.rolls.length > 1 ? ` (${result.rolls.join(', ')})` : ''}`
-          }
-        ]);
-        setWaitingForDiceRoll(false);
+    // Show rolling animation
+    setDiceResult({
+      type: diceType,
+      total: 0,
+      rolls: []
+    });
 
-        // Send the dice roll to the DM for interpretation
-        if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-          wsConnection.send(JSON.stringify({
-            type: 'user_input',
-            content: `I rolled a ${result.total} on ${diceType}.`,
-            dice_roll: {
-              type: diceType,
-              result: result.total,
-              rolls: result.rolls
+    // Simulate rolling delay for better user experience
+    setTimeout(() => {
+      const result = rollDice(diceType);
+      if (result) {
+        setDiceResult({
+          type: diceType,
+          total: result.total,
+          rolls: result.rolls
+        });
+
+        // Play success or failure sound based on the roll
+        // For d20, consider 15+ a success, otherwise for other dice use 70% of max value
+        const sides = parseInt(diceType.match(/d(\d+)/i)?.[1] || "20");
+        const successThreshold = diceType === 'd20' ? 15 : Math.floor(sides * 0.7);
+
+        if (result.total >= successThreshold) {
+          playSound('mixkit-melodical-flute-music-notification-2310.wav');
+        } else if (result.total === 1 || result.total < Math.floor(sides * 0.3)) {
+          playSound('mixkit-sad-game-over-trombone-471.wav');
+        }
+
+        // If we were waiting for a dice roll, add it to chat history
+        if (waitingForDiceRoll) {
+          setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
+            ...prev,
+            {
+              role: 'user',
+              content: `🎲 Rolled ${diceType}: ${result.total}${result.rolls.length > 1 ? ` (${result.rolls.join(', ')})` : ''}`
             }
-          }));
+          ]);
+          setWaitingForDiceRoll(false);
+
+          // Send the dice roll to the DM for interpretation
+          if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+            wsConnection.send(JSON.stringify({
+              type: 'user_input',
+              content: `I rolled a ${result.total} on ${diceType}.`,
+              dice_roll: {
+                type: diceType,
+                result: result.total,
+                rolls: result.rolls
+              }
+            }));
+          }
         }
       }
-    }
-  }, [rollDice, waitingForDiceRoll, wsConnection]);
+    }, 1000); // 1 second delay for rolling animation
+  }, [rollDice, waitingForDiceRoll, wsConnection, playSound]);
 
   // Handle user chat input
   const handleUserInput = useCallback(() => {
@@ -1332,6 +2061,8 @@ const GameMap: React.FC = () => {
     // Clear input field
     setUserInput('');
   }, [userInput, wsConnection]);
+
+
 
   // Handle AI taking control of the game
   const handleAIControl = useCallback(() => {
@@ -1359,8 +2090,11 @@ const GameMap: React.FC = () => {
           content: "The Dungeon Master has taken control of the game. Your fate now lies in the hands of the dice. Describe your actions, and I will guide you through this adventure."
         }
       ]);
+
+      // Also send the current game state to the DM
+      sendGameState();
     }
-  }, [pieces.length, wsConnection]);
+  }, [pieces.length, wsConnection, sendGameState]);
 
   // Main render
   return (
@@ -1381,30 +2115,200 @@ const GameMap: React.FC = () => {
         >
           🔄 Update
         </button>
+
+        <div className="sound-toggle">
+          <input type="checkbox" id="sound-enabled" defaultChecked={true} />
+          <label htmlFor="sound-enabled">🔊 Sound</label>
+        </div>
       </div>
 
       {showDicePanel && (
         <div className="dice-panel">
           <h3>Roll Dice</h3>
           <div className="dice-buttons">
-            <button onClick={() => handleDiceRoll('d4')}>d4</button>
-            <button onClick={() => handleDiceRoll('d6')}>d6</button>
-            <button onClick={() => handleDiceRoll('d8')}>d8</button>
-            <button onClick={() => handleDiceRoll('d10')}>d10</button>
-            <button onClick={() => handleDiceRoll('d12')}>d12</button>
-            <button onClick={() => handleDiceRoll('d20')}>d20</button>
-            <button onClick={() => handleDiceRoll('2d6')}>2d6</button>
+            <button
+              className="dice-btn d4-btn"
+              onClick={() => handleDiceRoll('d4')}
+              style={{
+                backgroundImage: 'url(http://localhost:8001/assets/Effects/d4.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                width: '60px',
+                height: '60px',
+                margin: '5px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textShadow: '1px 1px 2px #000'
+              }}
+            >
+              d4
+            </button>
+            <button
+              className="dice-btn d6-btn"
+              onClick={() => handleDiceRoll('d6')}
+              style={{
+                backgroundImage: 'url(http://localhost:8001/assets/Effects/d6.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                width: '60px',
+                height: '60px',
+                margin: '5px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textShadow: '1px 1px 2px #000'
+              }}
+            >
+              d6
+            </button>
+            <button
+              className="dice-btn d8-btn"
+              onClick={() => handleDiceRoll('d8')}
+              style={{
+                backgroundImage: 'url(http://localhost:8001/assets/Effects/d8.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                width: '60px',
+                height: '60px',
+                margin: '5px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textShadow: '1px 1px 2px #000'
+              }}
+            >
+              d8
+            </button>
+            <button
+              className="dice-btn d10-btn"
+              onClick={() => handleDiceRoll('d10')}
+              style={{
+                backgroundImage: 'url(http://localhost:8001/assets/Effects/d10.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                width: '60px',
+                height: '60px',
+                margin: '5px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textShadow: '1px 1px 2px #000'
+              }}
+            >
+              d10
+            </button>
+            <button
+              className="dice-btn d12-btn"
+              onClick={() => handleDiceRoll('d12')}
+              style={{
+                backgroundImage: 'url(http://localhost:8001/assets/Effects/d12.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                width: '60px',
+                height: '60px',
+                margin: '5px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textShadow: '1px 1px 2px #000'
+              }}
+            >
+              d12
+            </button>
+            <button
+              className="dice-btn d20-btn"
+              onClick={() => handleDiceRoll('d20')}
+              style={{
+                backgroundImage: 'url(http://localhost:8001/assets/Effects/d20.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                width: '60px',
+                height: '60px',
+                margin: '5px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textShadow: '1px 1px 2px #000'
+              }}
+            >
+              d20
+            </button>
+            <button
+              className="dice-btn d6-btn"
+              onClick={() => handleDiceRoll('2d6')}
+              style={{
+                backgroundImage: 'url(http://localhost:8001/assets/Effects/2d6.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                width: '60px',
+                height: '60px',
+                margin: '5px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textShadow: '1px 1px 2px #000'
+              }}
+            >
+              2d6
+            </button>
           </div>
 
           {diceResult && (
-            <div className="dice-result">
-              <p>
-                <strong>{diceResult.type} Roll:</strong> {diceResult.total}
-              </p>
-              {diceResult.rolls.length > 1 && (
-                <p className="individual-rolls">
-                  Individual rolls: {diceResult.rolls.join(', ')}
-                </p>
+            <div className="dice-result" style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              padding: '15px',
+              borderRadius: '10px',
+              margin: '10px 0',
+              boxShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+              animation: diceResult.total === 0 ? 'pulse 1s infinite' : 'none'
+            }}>
+              {diceResult.total === 0 ? (
+                <div className="rolling-animation" style={{
+                  textAlign: 'center',
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: '#fff'
+                }}>
+                  <p>Rolling {diceResult.type}...</p>
+                  <div className="spinner" style={{
+                    display: 'inline-block',
+                    width: '30px',
+                    height: '30px',
+                    border: '4px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '50%',
+                    borderTop: '4px solid #fff',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                </div>
+              ) : (
+                <>
+                  <p style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: '#fff',
+                    textAlign: 'center',
+                    margin: '5px 0'
+                  }}>
+                    <strong>{diceResult.type} Roll:</strong> {diceResult.total}
+                  </p>
+                  {diceResult.rolls.length > 1 && (
+                    <p className="individual-rolls" style={{
+                      fontSize: '16px',
+                      color: '#ddd',
+                      textAlign: 'center'
+                    }}>
+                      Individual rolls: {diceResult.rolls.join(', ')}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1412,6 +2316,15 @@ const GameMap: React.FC = () => {
           <button
             className="btn btn-close"
             onClick={() => setShowDicePanel(false)}
+            style={{
+              backgroundColor: '#6d071a',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginTop: '10px'
+            }}
           >
             Close
           </button>
@@ -1423,62 +2336,46 @@ const GameMap: React.FC = () => {
           <h3>Dungeon Master</h3>
           <p>{narration}</p>
 
-          {!aiControlled && pieces.length > 0 && (
+          {!aiControlled && (
             <button
               className="btn btn-ai-control"
               onClick={handleAIControl}
+              disabled={pieces.length === 0}
             >
-              Let AI Take Control
+              Let AI Take Control {pieces.length === 0 ? "(Add avatars first)" : ""}
+            </button>
+          )}
+
+          {/* Debug button to force enable DM chat */}
+          {!aiControlled && (
+            <button
+              className="btn btn-debug"
+              onClick={() => setAiControlled(true)}
+              style={{ marginTop: '10px', backgroundColor: '#555' }}
+            >
+              Debug: Force Enable DM Chat
             </button>
           )}
         </div>
 
         {aiControlled && (
-          <div className="chat-panel">
-            <h3>Adventure Chat</h3>
-            <div className="chat-messages">
-              {chatHistory.map((message: {role: 'user' | 'dm', content: string}, index: number) => (
-                <div key={index} className={`chat-message ${message.role}`}>
-                  <div className="message-header">
-                    {message.role === 'user' ? 'You' : 'Dungeon Master'}:
-                  </div>
-                  <div className="message-content">{message.content}</div>
-                </div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
+          <DungeonChat
+            chatHistory={chatHistory}
+            onSendMessage={(message: string) => {
+              // Add user message to chat history
+              setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [...prev, { role: 'user', content: message }]);
 
-            <div className="chat-input">
-              <input
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleUserInput()}
-                placeholder="Describe your action..."
-                disabled={waitingForDiceRoll}
-              />
-              <button
-                onClick={handleUserInput}
-                disabled={!userInput.trim() || waitingForDiceRoll}
-              >
-                Send
-              </button>
-            </div>
-
-            {waitingForDiceRoll && (
-              <div className="dice-prompt">
-                <p>Roll the dice to determine your fate!</p>
-                <div className="dice-buttons-small">
-                  <button onClick={() => handleDiceRoll('d4')}>d4</button>
-                  <button onClick={() => handleDiceRoll('d6')}>d6</button>
-                  <button onClick={() => handleDiceRoll('d8')}>d8</button>
-                  <button onClick={() => handleDiceRoll('d10')}>d10</button>
-                  <button onClick={() => handleDiceRoll('d12')}>d12</button>
-                  <button onClick={() => handleDiceRoll('d20')}>d20</button>
-                </div>
-              </div>
-            )}
-          </div>
+              // Send user input to the DM
+              if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                wsConnection.send(JSON.stringify({
+                  type: 'user_input',
+                  content: message
+                }));
+              }
+            }}
+            onRollDice={handleDiceRoll}
+            waitingForDiceRoll={waitingForDiceRoll}
+          />
         )}
       </div>
 
@@ -1493,6 +2390,23 @@ const GameMap: React.FC = () => {
           </Link>
         </div>
       )}
+
+      {/* Audio element for background music */}
+      <audio
+        ref={audioRef}
+        src={backgroundMusic}
+        loop
+        preload="auto"
+        crossOrigin="anonymous"
+        playsInline
+      />
+
+      {/* Audio element for sound effects */}
+      <audio
+        ref={soundEffectRef}
+        preload="auto"
+        crossOrigin="anonymous"
+      />
     </div>
   );
 };

@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV /home/aditya/Desktop/Repos/hackHazard/ai/venv
+set -gx VIRTUAL_ENV /home/aditya/Desktop/Repos/hackHazard-GenAI/ai/venv
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH
