@@ -16,6 +16,7 @@ import { NFTGallery } from './components/NFTGallery';
 import { WagmiConfig } from 'wagmi';
 import { config } from './config/wagmi';
 import { ProfileProvider } from './context/ProfileContext';
+import { NFTProvider } from './context/NFTContext';
 import { WalletConnect } from './components/WalletConnect';
 import { useAccount } from 'wagmi';
 import Onboarding from './components/Onboarding';
@@ -67,59 +68,61 @@ const App = () => {
   return (
     <WagmiConfig config={config}>
       <ProfileProvider>
-        <DungeonMasterProvider>
-          <div className="app">
-            <BrowserRouter>
-              <ScrollToTop />
-              <ScrollTopButton />
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/signup" element={
-                  isSignedIn ? (
-                    <Navigate to="/dashboard" replace />
-                  ) : (
+        <NFTProvider>
+          <DungeonMasterProvider>
+            <div className="app">
+              <BrowserRouter>
+                <ScrollToTop />
+                <ScrollTopButton />
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/signup" element={
+                    isSignedIn ? (
+                      <Navigate to="/dashboard" replace />
+                    ) : (
+                      <>
+                        <Navbar disableSignOut={true} />
+                        <SignupPage onSignUp={handleSignUp} />
+                      </>
+                    )
+                  } />
+                  <Route path="/dashboard" element={
                     <>
-                      <Navbar disableSignOut={true} />
-                      <SignupPage onSignUp={handleSignUp} />
+                      <Navbar hideDashboardSignOut={true} />
+                      <Dashboard />
                     </>
-                  )
-                } />
-                <Route path="/dashboard" element={
-                  <>
-                    <Navbar hideDashboardSignOut={true} />
-                    <Dashboard />
-                  </>
-                } />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/rules" element={
-                  <>
-                    <Navbar />
-                    <RulesPage />
-                  </>
-                } />
-                <Route path="/community" element={
-                  <>
-                    <Navbar />
-                    <CommunityPage />
-                  </>
-                } />
-                <Route path="/profile" element={
-                  <>
-                    <Navbar />
-                    <ProfilePage />
-                  </>
-                } />
-                <Route path="/map" element={
-                  <>
-                    <Navbar />
-                    <GameMap />
-                  </>
-                } />
-                <Route path="/nfts" element={<NFTPage />} />
-              </Routes>
-            </BrowserRouter>
-          </div>
-        </DungeonMasterProvider>
+                  } />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/rules" element={
+                    <>
+                      <Navbar />
+                      <RulesPage />
+                    </>
+                  } />
+                  <Route path="/community" element={
+                    <>
+                      <Navbar />
+                      <CommunityPage />
+                    </>
+                  } />
+                  <Route path="/profile" element={
+                    <>
+                      <Navbar />
+                      <ProfilePage />
+                    </>
+                  } />
+                  <Route path="/map" element={
+                    <>
+                      <Navbar />
+                      <GameMap />
+                    </>
+                  } />
+                  <Route path="/nfts" element={<NFTPage />} />
+                </Routes>
+              </BrowserRouter>
+            </div>
+          </DungeonMasterProvider>
+        </NFTProvider>
       </ProfileProvider>
     </WagmiConfig>
   );
