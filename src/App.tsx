@@ -24,10 +24,10 @@ import ScrollToTop from './components/ScrollToTop';
 import ScrollTopButton from './components/ScrollTopButton';
 
 // Home page component
-const HomePage = ({ disableSignOut = false }) => {
+const HomePage = () => {
   return (
     <>
-      <Navbar disableSignOut={disableSignOut} />
+      <Navbar />
       <main>
         <HeroSection />
         <MiddleSection />
@@ -39,12 +39,12 @@ const HomePage = ({ disableSignOut = false }) => {
 };
 
 // NFT Gallery page component with wallet connection check
-const NFTPage = ({ disableSignOut = false }) => {
+const NFTPage = () => {
   const { isConnected } = useAccount();
   
   return (
     <>
-      <Navbar disableSignOut={disableSignOut} />
+      <Navbar />
       <div className="nft-container">
         <div className="nft-header">
           <h1 className="nft-title">My NFT Collection</h1>
@@ -73,49 +73,49 @@ const App = () => {
               <ScrollToTop />
               <ScrollTopButton />
               <Routes>
-                <Route path="/" element={<HomePage disableSignOut={isSignedIn} />} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/signup" element={
                   isSignedIn ? (
                     <Navigate to="/dashboard" replace />
                   ) : (
                     <>
-                      <Navbar />
+                      <Navbar disableSignOut={true} />
                       <SignupPage onSignUp={handleSignUp} />
                     </>
                   )
                 } />
                 <Route path="/dashboard" element={
                   <>
-                    <Navbar hideDashboardSignOut={true} disableSignOut={isSignedIn} />
+                    <Navbar hideDashboardSignOut={true} />
                     <Dashboard />
                   </>
                 } />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/rules" element={
                   <>
-                    <Navbar disableSignOut={isSignedIn} />
+                    <Navbar />
                     <RulesPage />
                   </>
                 } />
                 <Route path="/community" element={
                   <>
-                    <Navbar disableSignOut={isSignedIn} />
+                    <Navbar />
                     <CommunityPage />
                   </>
                 } />
                 <Route path="/profile" element={
                   <>
-                    <Navbar disableSignOut={isSignedIn} />
+                    <Navbar />
                     <ProfilePage />
                   </>
                 } />
                 <Route path="/map" element={
                   <>
-                    <Navbar disableSignOut={isSignedIn} />
+                    <Navbar />
                     <GameMap />
                   </>
                 } />
-                <Route path="/nfts" element={<NFTPage disableSignOut={isSignedIn} />} />
+                <Route path="/nfts" element={<NFTPage />} />
               </Routes>
             </BrowserRouter>
           </div>
