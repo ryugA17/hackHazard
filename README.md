@@ -65,7 +65,9 @@ Our key breakthrough was developing a hybrid approach that uses AI to enhance st
 - ✅ **Interactive Battle Maps:** Visualize quest locations and plan strategies
 - ✅ **Profile Customization:** Create and personalize your adventurer profile
 
-![gameplay-screenshot](src/assets/poke%20battle%2022.jpg)
+![gameplay-screenshot](src\assets\feature ss\ss1.jpg)
+(src\assets\feature ss\ss2.jpg)
+(src\assets\feature ss\ss3.jpg)
 
 ---
 
