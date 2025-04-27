@@ -3,26 +3,35 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import HeroSection from './components/HeroSection';
-import SignupPage from './components/SignupPage';
-import StatsSection from './components/StatsSection';
-import Dashboard from './components/Dashboard';
-import RulesPage from './components/RulesPage';
-import CommunityPage from './components/CommunityPage';
-import ProfilePage from './components/ProfilePage';
-import MiddleSection from './components/MiddleSection';
-import GameMap from './components/GameMap';
-import { NFTGallery } from './components/NFTGallery';
 import { WagmiConfig } from 'wagmi';
 import { config } from './config/wagmi';
 import { ProfileProvider } from './context/ProfileContext';
 import { NFTProvider } from './context/NFTContext';
-import { WalletConnect } from './components/WalletConnect';
-import { useAccount } from 'wagmi';
-import Onboarding from './components/Onboarding';
 import { DungeonMasterProvider } from './context/DungeonMasterContext';
 import ScrollToTop from './components/ScrollToTop';
 import ScrollTopButton from './components/ScrollTopButton';
+import { useAccount } from 'wagmi';
+
+// Lazy load components for better performance
+const HeroSection = React.lazy(() => import('./components/HeroSection'));
+const MiddleSection = React.lazy(() => import('./components/MiddleSection'));
+const StatsSection = React.lazy(() => import('./components/StatsSection'));
+const SignupPage = React.lazy(() => import('./components/SignupPage'));
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const RulesPage = React.lazy(() => import('./components/RulesPage'));
+const CommunityPage = React.lazy(() => import('./components/CommunityPage'));
+const ProfilePage = React.lazy(() => import('./components/ProfilePage'));
+const GameMap = React.lazy(() => import('./components/GameMap'));
+const NFTGallery = React.lazy(() => import('./components/NFTGallery').then(module => ({ default: module.NFTGallery })));
+const WalletConnect = React.lazy(() => import('./components/WalletConnect').then(module => ({ default: module.WalletConnect })));
+const Onboarding = React.lazy(() => import('./components/Onboarding'));
+
+// Loading component for suspense fallback
+const Loading = () => (
+  <div className="loading-container">
+    <div className="loading-spinner"></div>
+  </div>
+);
 
 // Home page component
 const HomePage = () => {
@@ -30,9 +39,11 @@ const HomePage = () => {
     <>
       <Navbar />
       <main>
-        <HeroSection />
-        <MiddleSection />
-        <StatsSection />
+        <React.Suspense fallback={<Loading />}>
+          <HeroSection />
+          <MiddleSection />
+          <StatsSection />
+        </React.Suspense>
       </main>
       <Footer />
     </>
@@ -49,9 +60,13 @@ const NFTPage = () => {
       <div className="nft-container">
         <div className="nft-header">
           <h1 className="nft-title">My NFT Collection</h1>
-          {!isConnected && <WalletConnect />}
+          <React.Suspense fallback={<Loading />}>
+            {!isConnected && <WalletConnect />}
+          </React.Suspense>
         </div>
-        <NFTGallery />
+        <React.Suspense fallback={<Loading />}>
+          <NFTGallery />
+        </React.Suspense>
       </div>
       <Footer />
     </>
@@ -82,39 +97,55 @@ const App = () => {
                     ) : (
                       <>
                         <Navbar disableSignOut={true} />
-                        <SignupPage onSignUp={handleSignUp} />
+                        <React.Suspense fallback={<Loading />}>
+                          <SignupPage onSignUp={handleSignUp} />
+                        </React.Suspense>
                       </>
                     )
                   } />
                   <Route path="/dashboard" element={
                     <>
                       <Navbar hideDashboardSignOut={true} />
-                      <Dashboard />
+                      <React.Suspense fallback={<Loading />}>
+                        <Dashboard />
+                      </React.Suspense>
                     </>
                   } />
-                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/onboarding" element={
+                    <React.Suspense fallback={<Loading />}>
+                      <Onboarding />
+                    </React.Suspense>
+                  } />
                   <Route path="/rules" element={
                     <>
                       <Navbar />
-                      <RulesPage />
+                      <React.Suspense fallback={<Loading />}>
+                        <RulesPage />
+                      </React.Suspense>
                     </>
                   } />
                   <Route path="/community" element={
                     <>
                       <Navbar />
-                      <CommunityPage />
+                      <React.Suspense fallback={<Loading />}>
+                        <CommunityPage />
+                      </React.Suspense>
                     </>
                   } />
                   <Route path="/profile" element={
                     <>
                       <Navbar />
-                      <ProfilePage />
+                      <React.Suspense fallback={<Loading />}>
+                        <ProfilePage />
+                      </React.Suspense>
                     </>
                   } />
                   <Route path="/map" element={
                     <>
                       <Navbar />
-                      <GameMap />
+                      <React.Suspense fallback={<Loading />}>
+                        <GameMap />
+                      </React.Suspense>
                     </>
                   } />
                   <Route path="/nfts" element={<NFTPage />} />

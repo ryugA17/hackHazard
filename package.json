@@ -27,9 +27,13 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "build:optimized": "cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
+    "build:production": "node production-build.js",
+    "optimize-images": "node optimize-images.js",
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -49,5 +53,15 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.25.9",
+    "compression-webpack-plugin": "^10.0.0",
+    "cross-env": "^7.0.3",
+    "customize-cra": "^1.0.0",
+    "react-app-rewired": "^2.2.1",
+    "sharp": "^0.33.5",
+    "source-map-explorer": "^2.5.3",
+    "terser-webpack-plugin": "^5.3.9"
   }
 }

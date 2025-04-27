@@ -8,39 +8,66 @@ import {
   signInWithEmailAndPassword
 } from 'firebase/auth';
 
-// Your web app's Firebase configuration
-// Replace these with your actual Firebase config values
+// Get Firebase configuration from environment variables or use fallback
 const firebaseConfig = {
-  apiKey: "AIzaSyC5du5Ib1lINdK-gy_poupvMfLYyF-JGz0",
-  authDomain: "pikadex-d6235.firebaseapp.com",
-  projectId: "pikadex-d6235",
-  storageBucket: "pikadex-d6235.firebasestorage.app",
-  messagingSenderId: "415825446566",
-  appId: "1:415825446566:web:a9504860480da993569667",
-  measurementId: "G-HP52NNDP29"
+  apiKey: process.env.REACT_APP_FIREBASE_CONFIG_API_KEY || "AIzaSyC5du5Ib1lINdK-gy_poupvMfLYyF-JGz0",
+  authDomain: process.env.REACT_APP_FIREBASE_CONFIG_AUTH_DOMAIN || "pikadex-d6235.firebaseapp.com",
+  projectId: process.env.REACT_APP_FIREBASE_CONFIG_PROJECT_ID || "pikadex-d6235",
+  storageBucket: process.env.REACT_APP_FIREBASE_CONFIG_STORAGE_BUCKET || "pikadex-d6235.firebasestorage.app",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_CONFIG_MESSAGING_SENDER_ID || "415825446566",
+  appId: process.env.REACT_APP_FIREBASE_CONFIG_APP_ID || "1:415825446566:web:a9504860480da993569667",
+  measurementId: process.env.REACT_APP_FIREBASE_CONFIG_MEASUREMENT_ID || "G-HP52NNDP29"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
+// Initialize Firebase lazily
+let app: ReturnType<typeof initializeApp> | undefined;
+let auth: ReturnType<typeof getAuth> | undefined;
+let googleProvider: GoogleAuthProvider | undefined;
 
-// Add scopes to request profile information
-googleProvider.addScope('profile');
-googleProvider.addScope('email');
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
+// Helper to initialize Firebase when needed
+const initFirebase = () => {
+  if (!app) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+    
+    // Add scopes to request profile information
+    googleProvider.addScope('profile');
+    googleProvider.addScope('email');
+    googleProvider.setCustomParameters({
+      prompt: 'select_account'
+    });
+  }
+  
+  return { app, auth: auth!, googleProvider: googleProvider! };
+};
+
+// Safe logging that doesn't log in production
+const safeLog = (message: string, data?: any) => {
+  if (process.env.NODE_ENV !== 'production') {
+    if (data) {
+      console.log(message, data);
+    } else {
+      console.log(message);
+    }
+  }
+};
+
+const safeError = (message: string, error: any) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(message, error);
+  }
+};
 
 // Function to sign in with Google
 export const signInWithGoogle = async (): Promise<User | null> => {
   try {
+    const { auth, googleProvider } = initFirebase();
     const result = await signInWithPopup(auth, googleProvider);
-    // Log to debug profile info
-    console.log("Google sign-in successful:", result.user);
+    safeLog("Google sign-in successful:", result.user);
     return result.user;
   } catch (error) {
-    console.error("Error signing in with Google:", error);
+    safeError("Error signing in with Google:", error);
     return null;
   }
 };
@@ -51,11 +78,12 @@ export const signUpWithEmailAndPassword = async (
   password: string
 ): Promise<User | null> => {
   try {
+    const { auth } = initFirebase();
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    console.log("Email signup successful:", userCredential.user);
+    safeLog("Email signup successful:", userCredential.user);
     return userCredential.user;
   } catch (error) {
-    console.error("Error signing up with email:", error);
+    safeError("Error signing up with email:", error);
     throw error;
   }
 };
@@ -66,11 +94,12 @@ export const loginWithEmailAndPassword = async (
   password: string
 ): Promise<User | null> => {
   try {
+    const { auth } = initFirebase();
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log("Email login successful:", userCredential.user);
+    safeLog("Email login successful:", userCredential.user);
     return userCredential.user;
   } catch (error) {
-    console.error("Error logging in with email:", error);
+    safeError("Error logging in with email:", error);
     throw error;
   }
 };
@@ -78,10 +107,16 @@ export const loginWithEmailAndPassword = async (
 // Function to sign out
 export const signOut = async (): Promise<void> => {
   try {
+    const { auth } = initFirebase();
     await auth.signOut();
   } catch (error) {
-    console.error("Error signing out:", error);
+    safeError("Error signing out:", error);
   }
 };
 
-export { auth };
+export { getAuth };
+// Expose auth only when needed
+export const getFirebaseAuth = () => {
+  const { auth } = initFirebase();
+  return auth;
+};

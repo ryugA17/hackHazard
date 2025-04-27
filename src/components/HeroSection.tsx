@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HeroSection.css';
-import { auth } from '../firebase';
+import { getFirebaseAuth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import Dragon from '../assets/animated-dragon-image-0129.gif';
 import boyAvatar from '../assets/avatars/boy.gif';
@@ -13,7 +13,7 @@ const HeroSection = () => {
   const [isSignedIn, setIsSignedIn] = React.useState(false);
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (user) => {
       setIsSignedIn(!!user);
     });
     return () => unsubscribe();

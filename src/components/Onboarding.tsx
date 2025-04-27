@@ -7,7 +7,7 @@ import robotAvatar from '../assets/avatars/robot.gif';
 import boyAvatar from '../assets/avatars/boy.gif';
 import girlAvatar from '../assets/avatars/girl.gif';
 import foxboyAvatar from '../assets/avatars/foxboy.gif';
-import { auth } from '../firebase';
+import { getFirebaseAuth } from '../firebase';
 import { updateProfile } from 'firebase/auth';
 import { useProfile } from '../context/ProfileContext';
 
@@ -167,7 +167,7 @@ const Onboarding: React.FC<OnboardingProps> = () => {
 
     try {
       setIsSubmitting(true);
-      const currentUser = auth.currentUser;
+      const currentUser = getFirebaseAuth().currentUser;
       
       if (currentUser) {
         // Update Firebase profile

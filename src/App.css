@@ -3,6 +3,9 @@
 /* Apply Castellar font globally */
 * {
   font-family: 'Castellar', serif;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Apply IM Fell English SC font to headings */
@@ -14,6 +17,7 @@ h1, h2, h3, h4, h5, h6, .nft-title, .nft-card-title {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  text-rendering: optimizeSpeed;
 }
 
 main {
@@ -27,6 +31,7 @@ main {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
+  will-change: transform, opacity;
 }
 
 .nft-header {
@@ -77,19 +82,25 @@ main {
 
 .loading-container {
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 2rem;
+  align-items: center;
   min-height: 200px;
+  width: 100%;
 }
 
 .loading-spinner {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  border: 3px solid rgba(0, 0, 0, 0.1);
-  border-top-color: #3f51b5;
-  animation: spin 1s linear infinite;
+  border-top-color: var(--accent-color, #3498db);
+  animation: spinner 0.8s linear infinite;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container {
@@ -255,4 +266,45 @@ main {
 .view-nft-button:hover {
   background: #228be6;
   transform: translateY(-2px);
+}
+
+/* Performance optimizations */
+img, svg {
+  content-visibility: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Add will-change hints for animations */
+.hero-section,
+.stats-section {
+  will-change: transform, opacity;
+}
+
+/* Optimize transitions */
+button, 
+a, 
+.navbar, 
+.footer {
+  transition: all 0.2s ease;
+}
+
+/* Use hardware acceleration for certain components */
+.navbar, 
+.footer, 
+.scrollToTop {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimize for first contentful paint */
+body {
+  contain: content;
 }

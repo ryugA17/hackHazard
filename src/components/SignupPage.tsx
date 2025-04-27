@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SignupPage.css';
 import signupBackground from '../assets/dnd.avif';
-import { auth, signInWithGoogle, signUpWithEmailAndPassword, loginWithEmailAndPassword } from '../firebase';
+import { getFirebaseAuth, signInWithGoogle, signUpWithEmailAndPassword, loginWithEmailAndPassword } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import boyAvatar from '../assets/avatars/boy.gif';
@@ -35,7 +35,7 @@ const SignupPage = ({ onSignUp }: SignupPageProps) => {
   const [authError, setAuthError] = React.useState('');
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (user) => {
       if (user) {
         // User is signed in, redirect to home page
         if (onSignUp) {

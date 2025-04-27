@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import Footer from './Footer';
-import { auth } from '../firebase';
+import { getFirebaseAuth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import userAvatar from '../assets/random component.gif';
 import computerIcon from '../assets/bot.gif';
@@ -26,7 +26,7 @@ const Dashboard = () => {
   const defaultUsername = "hardikiltop80299";
   
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
