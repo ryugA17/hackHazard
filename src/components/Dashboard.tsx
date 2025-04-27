@@ -10,6 +10,9 @@ import rocketIcon from '../assets/random component.gif';
 import eggIcon from '../assets/egg-icon.png';
 import codeIcon from '../assets/code-icon.png';
 import loadingicon from '../assets/ass.gif';
+import monadLogo from '../assets/monad logo.webp';
+import groqLogo from '../assets/groq logo.png';
+import screenpipeLogo from '../assets/screenpipe logo.png';
 import { useProfile } from '../context/ProfileContext';
 import ScrollToTopLink from './ScrollToTopLink';
 
@@ -200,11 +203,12 @@ const Dashboard = () => {
 
           {/* Sponsors section */}
           <h2 className="sponsors-title">Our Technology Partners</h2>
+          <p className="sponsors-subtitle">Powered by cutting-edge technology for the best gaming experience</p>
           
           <div className="sponsors-grid">
             <div className="sponsor-card">
               <div className="sponsor-icon">
-                <img src="https://placehold.co/60x60/4dabf7/ffffff?text=M" alt="Monad" />
+                <img src={monadLogo} alt="Monad" className="sponsor-logo" />
               </div>
               <div className="sponsor-content">
                 <h3>Monad</h3>
@@ -214,7 +218,7 @@ const Dashboard = () => {
             
             <div className="sponsor-card">
               <div className="sponsor-icon">
-                <img src="https://placehold.co/60x60/a05ebf/ffffff?text=G" alt="Groq" />
+                <img src={groqLogo} alt="Groq" className="sponsor-logo" />
               </div>
               <div className="sponsor-content">
                 <h3>Groq</h3>
@@ -224,10 +228,10 @@ const Dashboard = () => {
             
             <div className="sponsor-card">
               <div className="sponsor-icon">
-                <img src="https://placehold.co/60x60/ff6b6b/ffffff?text=T" alt="Terminator" />
+                <img src={screenpipeLogo} alt="Screenpipe" className="sponsor-logo" />
               </div>
               <div className="sponsor-content">
-                <h3>Terminator</h3>
+                <h3>Screenpipe</h3>
                 <p>Revolutionary screen reading technology for enhanced gaming accessibility.</p>
               </div>
             </div>
