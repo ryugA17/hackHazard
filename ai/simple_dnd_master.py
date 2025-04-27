@@ -10,12 +10,15 @@ from groq import Groq
 from dotenv import load_dotenv
 load_dotenv()
 
-# Initialize Groq client
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+# Initialize Groq client with the new API key
+PRIMARY_API_KEY = "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"
+BACKUP_API_KEY = "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"  # Same as primary for now, will be replaced if needed
+client = Groq(api_key=PRIMARY_API_KEY)
 
 # Configuration
 CONFIG = {
     "model": "llama-3.3-70b-versatile",
+    "fallback_model": "llama-3.1-8b-instant",  # Fallback to a smaller model if the main one is rate-limited
 }
 
 # Game state tracking
@@ -29,6 +32,31 @@ class MapGenerator:
             "castle", "village", "temple", "tower", "ruins",
             "bridge", "camp", "portal", "shrine", "tavern"
         ]
+        # Visual layers for map rendering
+        self.decoration_objects = {
+            "grass": ["flower", "rock", "stump", "bush"],
+            "forest": ["tree", "fallen_log", "mushroom", "berry_bush"],
+            "mountain": ["boulder", "cave_entrance", "cliff", "nest"],
+            "water": ["lily_pad", "fish", "dock", "boat"],
+            "desert": ["cactus", "bones", "sand_dune", "oasis"],
+            "swamp": ["roots", "murky_pool", "hanging_moss", "dead_tree"],
+            "snow": ["pine_tree", "ice_patch", "snowdrift", "frozen_pond"],
+            "lava": ["smoke_vent", "obsidian", "fire_pit", "stone_arch"],
+            "cave": ["stalagmite", "crystal", "underground_pool", "torch"],
+            "dungeon": ["torch", "chains", "altar", "treasure_chest"]
+        }
+        self.lighting_effects = {
+            "grass": "bright",
+            "forest": "dappled",
+            "mountain": "clear",
+            "water": "reflective",
+            "desert": "harsh",
+            "swamp": "foggy",
+            "snow": "glittering",
+            "lava": "glowing",
+            "cave": "dark",
+            "dungeon": "shadowy"
+        }
 
     def generate_map(self, width: int = 20, height: int = 20, theme: str = None) -> Dict:
         """Generate a random fantasy map"""
@@ -69,12 +97,27 @@ class MapGenerator:
                 if random.random() < 0.1:
                     terrain = random.choice(self.terrain_types)
 
+                # Generate visual layers
+                # Layer 1: Base terrain (tile)
+                # Layer 2: Decorative objects
+                # Layer 3: Lighting and effects
+                decoration = None
+                if random.random() < 0.3:  # 30% chance to have decoration
+                    decoration_options = self.decoration_objects.get(terrain, [])
+                    if decoration_options:
+                        decoration = random.choice(decoration_options)
+                
+                lighting = self.lighting_effects.get(terrain, "normal")
+
                 cell = {
                     "x": x,
                     "y": y,
                     "terrain": terrain,
                     "passable": terrain not in ["water", "lava", "mountain"],
-                    "structure": None
+                    "structure": None,
+                    "decoration": decoration,
+                    "lighting": lighting,
+                    "is_obstacle": terrain in ["water", "lava", "mountain"]
                 }
                 row.append(cell)
             grid.append(row)
@@ -106,6 +149,9 @@ class MapGenerator:
             if grid[y][x]["passable"] and grid[y][x]["structure"] is None:
                 grid[y][x]["structure"] = random.choice(preferred_structures)
                 structures_added += 1
+                # Make structure cells always passable
+                grid[y][x]["passable"] = True
+                grid[y][x]["is_obstacle"] = False
 
         # Add paths connecting structures
         structures = []
@@ -135,6 +181,10 @@ class MapGenerator:
                 if not grid[y][x]["structure"]:
                     grid[y][x]["terrain"] = "path"
                     grid[y][x]["passable"] = True
+                    grid[y][x]["is_obstacle"] = False
+                    # Add appropriate decoration for paths
+                    if random.random() < 0.1:  # 10% chance for path decoration
+                        grid[y][x]["decoration"] = random.choice(["signpost", "bench", "lantern", "small_shrine"])
 
         # Create map metadata
         map_data = {
@@ -144,7 +194,12 @@ class MapGenerator:
             "theme": theme,
             "width": width,
             "height": height,
-            "grid": grid
+            "grid": grid,
+            "primary_lighting": self.lighting_effects.get(primary_terrain, "normal"),
+            "terrain_distribution": {
+                primary_terrain: 0.7,
+                secondary_terrain: 0.3
+            }
         }
 
         return map_data
@@ -160,6 +215,10 @@ class GameState:
         self.narrative_history = []
         self.last_action = None
         self.dice_rolls = []
+        self.inventory = {}  # Player inventory
+        self.active_quests = []  # Active quests
+        self.completed_quests = []  # Completed quests
+        self.sound_effects = {}  # Sound effects to play
 
         # Generate initial map
         map_generator = MapGenerator()
@@ -177,7 +236,10 @@ class GameState:
             "current_turn": self.current_turn,
             "narrative_history": self.narrative_history[-5:] if self.narrative_history else [],
             "last_action": self.last_action,
-            "dice_rolls": self.dice_rolls[-5:] if self.dice_rolls else []
+            "dice_rolls": self.dice_rolls[-5:] if self.dice_rolls else [],
+            "inventory": self.inventory,
+            "active_quests": self.active_quests,
+            "completed_quests": self.completed_quests
         }
 
     def add_narrative(self, text: str) -> None:
@@ -187,13 +249,205 @@ class GameState:
             "timestamp": time.time()
         })
 
-    def add_dice_roll(self, roll_type: str, result: int) -> None:
+    def add_dice_roll(self, roll_type: str, result: int, context: str = "") -> None:
         """Add a dice roll to the history"""
         self.dice_rolls.append({
             "type": roll_type,
             "result": result,
+            "context": context,
             "timestamp": time.time()
         })
+        
+    def add_item_to_inventory(self, character_id: str, item: Dict) -> None:
+        """Add an item to a character's inventory"""
+        if character_id not in self.inventory:
+            self.inventory[character_id] = []
+        
+        self.inventory[character_id].append(item)
+        
+    def remove_item_from_inventory(self, character_id: str, item_id: str) -> Dict:
+        """Remove an item from a character's inventory"""
+        if character_id not in self.inventory:
+            return None
+        
+        for i, item in enumerate(self.inventory[character_id]):
+            if item.get("id") == item_id:
+                return self.inventory[character_id].pop(i)
+        
+        return None
+        
+    def add_quest(self, title: str, description: str, objectives: List[str], reward: Dict = None) -> Dict:
+        """Add a new quest to the active quests"""
+        quest_id = f"quest_{int(time.time())}"
+        quest = {
+            "id": quest_id,
+            "title": title,
+            "description": description,
+            "objectives": objectives,
+            "completed_objectives": [],
+            "reward": reward,
+            "completed": False,
+            "timestamp": time.time()
+        }
+        
+        self.active_quests.append(quest)
+        return quest
+        
+    def complete_quest(self, quest_id: str) -> Dict:
+        """Mark a quest as complete and move it to completed quests"""
+        for i, quest in enumerate(self.active_quests):
+            if quest.get("id") == quest_id:
+                quest["completed"] = True
+                quest["completion_time"] = time.time()
+                completed_quest = self.active_quests.pop(i)
+                self.completed_quests.append(completed_quest)
+                return completed_quest
+        
+        return None
+        
+    def add_sound_effect(self, event_type: str, sound_file: str) -> None:
+        """Associate a sound effect with an event type"""
+        self.sound_effects[event_type] = sound_file
+
+class DiceMechanics:
+    """Handles dice rolling and outcome determination"""
+    
+    def __init__(self):
+        self.dice_types = ["d4", "d6", "d8", "d10", "d12", "d20", "d100"]
+        self.success_thresholds = {
+            "easy": 5,
+            "medium": 10,
+            "hard": 15,
+            "very_hard": 20
+        }
+        self.last_rolls = []
+        self.available_sound_effects = {
+            "roll": "dice_roll.mp3",
+            "success": "success.mp3",
+            "failure": "failure.mp3",
+            "critical_success": "critical_success.mp3",
+            "critical_failure": "critical_failure.mp3"
+        }
+    
+    def roll_dice(self, dice_type: str, count: int = 1) -> Dict:
+        """Roll dice and return the result"""
+        if dice_type not in self.dice_types:
+            if dice_type.startswith("d") and dice_type[1:].isdigit():
+                sides = int(dice_type[1:])
+            else:
+                sides = 20  # Default to d20
+        else:
+            sides = int(dice_type[1:])
+        
+        # Roll the dice
+        rolls = []
+        for _ in range(count):
+            rolls.append(random.randint(1, sides))
+        
+        total = sum(rolls)
+        
+        # Create result object
+        result = {
+            "type": dice_type,
+            "count": count,
+            "sides": sides,
+            "rolls": rolls,
+            "total": total,
+            "timestamp": time.time()
+        }
+        
+        # Save for history
+        self.last_rolls.append(result)
+        if len(self.last_rolls) > 10:
+            self.last_rolls.pop(0)  # Keep only the last 10 rolls
+        
+        return result
+    
+    def interpret_roll(self, roll: Dict, difficulty: str = "medium") -> Dict:
+        """Interpret the roll result based on difficulty"""
+        # Get the success threshold based on difficulty
+        threshold = self.success_thresholds.get(difficulty, 10)
+        
+        # Default description
+        description = f"You rolled {roll['total']} on {roll['count']}{roll['type']}."
+        success_level = "neutral"
+        sound_effect = "roll"
+        
+        # For d20 rolls, interpret as pass/fail
+        if roll["type"] == "d20":
+            # Critical success/failure handling
+            if roll["total"] == 20:
+                success_level = "critical_success"
+                description = "Critical success! Your action succeeds spectacularly."
+                sound_effect = "critical_success"
+            elif roll["total"] == 1:
+                success_level = "critical_failure"
+                description = "Critical failure! Your action fails miserably."
+                sound_effect = "critical_failure"
+            else:
+                # Normal success/failure
+                if roll["total"] >= threshold:
+                    success_level = "success"
+                    if roll["total"] >= threshold + 5:
+                        description = "Great success! Your action succeeds with impressive results."
+                    else:
+                        description = "Success! Your action succeeds as intended."
+                    sound_effect = "success"
+                else:
+                    success_level = "failure"
+                    if roll["total"] <= threshold - 5:
+                        description = "Significant failure. Your action fails badly."
+                    else:
+                        description = "Failure. Your action doesn't succeed."
+                    sound_effect = "failure"
+        # Other dice types (damage dice, etc.)
+        else:
+            # For non-d20 dice, we just report the outcome without judgment
+            success_level = "neutral"
+            description = f"You rolled {roll['total']} on {roll['count']}{roll['type']}."
+            
+            # Add context for damage rolls
+            sides = roll["sides"]
+            max_possible = sides * roll["count"]
+            
+            if roll["total"] >= max_possible * 0.8:
+                description += " That's a very high roll!"
+                sound_effect = "success"
+            elif roll["total"] <= max_possible * 0.2:
+                description += " That's a very low roll."
+                sound_effect = "failure"
+        
+        return {
+            "original_roll": roll,
+            "success_level": success_level,
+            "description": description,
+            "sound_effect": sound_effect,
+            "difficulty": difficulty
+        }
+    
+    def get_recommended_difficulty(self, action_description: str) -> str:
+        """Determine the recommended difficulty based on the action description"""
+        # Simple keyword-based difficulty estimation
+        easy_keywords = ["simple", "easy", "trivial", "basic"]
+        hard_keywords = ["difficult", "hard", "challenging", "complex"]
+        very_hard_keywords = ["very hard", "extremely", "nearly impossible", "legendary"]
+        
+        action_lower = action_description.lower()
+        
+        for keyword in very_hard_keywords:
+            if keyword in action_lower:
+                return "very_hard"
+        
+        for keyword in hard_keywords:
+            if keyword in action_lower:
+                return "hard"
+        
+        for keyword in easy_keywords:
+            if keyword in action_lower:
+                return "easy"
+        
+        # Default to medium difficulty
+        return "medium"
 
 class DungeonMaster:
     def __init__(self):
@@ -430,19 +684,66 @@ class DungeonMaster:
             prompt = self._create_dm_prompt(text, self.game_state.to_dict())
 
             try:
-                # Call Groq API
-                response = client.chat.completions.create(
-                    model=CONFIG["model"],
-                    messages=[
-                        {"role": "system", "content": self._get_system_prompt()},
-                        {"role": "user", "content": prompt}
-                    ],
-                    max_tokens=500,
-                    temperature=0.7
-                )
+                # Call Groq API with multiple fallback options
+                try:
+                    # Try with primary key and main model first
+                    print("Trying with primary API key and main model for game state analysis...")
+                    response = client.chat.completions.create(
+                        model=CONFIG["model"],
+                        messages=[
+                            {"role": "system", "content": self._get_system_prompt()},
+                            {"role": "user", "content": prompt}
+                        ],
+                        max_tokens=500,
+                        temperature=0.7
+                    )
 
-                # Extract the narration
-                narration = response.choices[0].message.content
+                    # Extract the narration
+                    narration = response.choices[0].message.content
+                    print(f"Received narration with primary key (first 100 chars): {narration[:100]}...")
+                except Exception as primary_key_error:
+                    print(f"Primary API key with main model failed: {primary_key_error}. Trying backup key...")
+
+                    try:
+                        # Try with backup key and main model
+                        backup_client = Groq(api_key=BACKUP_API_KEY)
+                        response = backup_client.chat.completions.create(
+                            model=CONFIG["model"],
+                            messages=[
+                                {"role": "system", "content": self._get_system_prompt()},
+                                {"role": "user", "content": prompt}
+                            ],
+                            max_tokens=500,
+                            temperature=0.7
+                        )
+
+                        # Extract the narration
+                        narration = response.choices[0].message.content
+                        print(f"Received narration with backup key (first 100 chars): {narration[:100]}...")
+                    except Exception as backup_key_error:
+                        print(f"Backup API key with main model failed: {backup_key_error}. Trying fallback model...")
+
+                        try:
+                            # Try with primary key and fallback model
+                            response = client.chat.completions.create(
+                                model=CONFIG["fallback_model"],
+                                messages=[
+                                    {"role": "system", "content": self._get_system_prompt()},
+                                    {"role": "user", "content": prompt}
+                                ],
+                                max_tokens=500,
+                                temperature=0.7
+                            )
+
+                            # Extract the narration
+                            narration = response.choices[0].message.content
+                            print(f"Received narration with fallback model (first 100 chars): {narration[:100]}...")
+                        except Exception as fallback_model_error:
+                            print(f"Fallback model failed: {fallback_model_error}. Using local fallback...")
+
+                            # Use a local fallback response
+                            narration = f"The Dungeon Master examines the map of {self.game_state.map_data.get('name', 'the realm')}. 'Welcome, brave adventurers,' they say with a gleam in their eye. 'What would you like to do first?'"
+                            print("Using local fallback response due to API limitations.")
             except Exception as api_error:
                 print(f"Error calling Groq API: {api_error}")
                 # Provide a fallback narration
@@ -461,8 +762,14 @@ class DungeonMaster:
     async def process_user_input(self, content: str, dice_roll: Optional[Dict] = None) -> Dict:
         """Process user input and generate a response"""
         try:
+            print(f"Processing user input: '{content}'")
+
             # Get the current game state
             game_state_dict = self.game_state.to_dict()
+
+            # Print current characters and positions for debugging
+            print(f"Current characters: {game_state_dict.get('characters', [])}")
+            print(f"Current positions: {game_state_dict.get('player_positions', {})}")
 
             # Format dice roll information if available
             dice_roll_text = ""
@@ -470,6 +777,7 @@ class DungeonMaster:
                 dice_type = dice_roll.get("type", "d20")
                 result = dice_roll.get("result", 0)
                 dice_roll_text = f"The player just rolled a {result} on a {dice_type}."
+                print(f"Dice roll: {dice_type} = {result}")
 
             # Build the prompt
             prompt = f"""
@@ -502,23 +810,74 @@ class DungeonMaster:
             If the player's action would result in character movement, you can specify where the character should move.
             If the player's action would trigger a combat encounter, you can add monsters to the map.
 
+            IMPORTANT: If the player asks a character to move, explicitly state that the character moves to a specific direction (e.g., "The warrior moves to the north" or "The wizard walks to the east").
+
             Keep your response in-character as a Dungeon Master.
             """
 
-            try:
-                # Call Groq API
-                response = client.chat.completions.create(
-                    model=CONFIG["model"],
-                    messages=[
-                        {"role": "system", "content": self._get_system_prompt()},
-                        {"role": "user", "content": prompt}
-                    ],
-                    max_tokens=800,
-                    temperature=0.7
-                )
+            print(f"Sending prompt to LLM (first 100 chars): {prompt[:100]}...")
 
-                # Extract the response
-                dm_response = response.choices[0].message.content
+            try:
+                # Call Groq API with multiple fallback options
+                try:
+                    # Try with primary key and main model first
+                    print("Trying with primary API key and main model...")
+                    response = client.chat.completions.create(
+                        model=CONFIG["model"],
+                        messages=[
+                            {"role": "system", "content": self._get_system_prompt()},
+                            {"role": "user", "content": prompt}
+                        ],
+                        max_tokens=800,
+                        temperature=0.7
+                    )
+
+                    # Extract the response
+                    dm_response = response.choices[0].message.content
+                    print(f"Received DM response with primary key (first 100 chars): {dm_response[:100]}...")
+                except Exception as primary_key_error:
+                    print(f"Primary API key with main model failed: {primary_key_error}. Trying backup key...")
+
+                    try:
+                        # Try with backup key and main model
+                        backup_client = Groq(api_key=BACKUP_API_KEY)
+                        response = backup_client.chat.completions.create(
+                            model=CONFIG["model"],
+                            messages=[
+                                {"role": "system", "content": self._get_system_prompt()},
+                                {"role": "user", "content": prompt}
+                            ],
+                            max_tokens=800,
+                            temperature=0.7
+                        )
+
+                        # Extract the response
+                        dm_response = response.choices[0].message.content
+                        print(f"Received DM response with backup key (first 100 chars): {dm_response[:100]}...")
+                    except Exception as backup_key_error:
+                        print(f"Backup API key with main model failed: {backup_key_error}. Trying fallback model...")
+
+                        try:
+                            # Try with primary key and fallback model
+                            response = client.chat.completions.create(
+                                model=CONFIG["fallback_model"],
+                                messages=[
+                                    {"role": "system", "content": self._get_system_prompt()},
+                                    {"role": "user", "content": prompt}
+                                ],
+                                max_tokens=800,
+                                temperature=0.7
+                            )
+
+                            # Extract the response
+                            dm_response = response.choices[0].message.content
+                            print(f"Received DM response with fallback model (first 100 chars): {dm_response[:100]}...")
+                        except Exception as fallback_model_error:
+                            print(f"Fallback model failed: {fallback_model_error}. Using local fallback...")
+
+                            # Use a local fallback response
+                            dm_response = f"The Dungeon Master considers your words carefully. 'Interesting choice, adventurer. The path ahead may hold many secrets. What would you like to do next?'"
+                            print("Using local fallback response due to API limitations.")
             except Exception as api_error:
                 print(f"Error calling Groq API: {api_error}")
                 # Provide a fallback response
@@ -526,6 +885,7 @@ class DungeonMaster:
 
             # Parse the response for special commands
             parsed_response = self._parse_dm_response(dm_response)
+            print(f"Parsed response: {parsed_response}")
 
             return parsed_response
 
@@ -555,22 +915,175 @@ class DungeonMaster:
                 result["dice_type"] = "d20"  # Default to d20 if no specific dice mentioned
 
         # Check for character movement
-        if "moves to" in response.lower() or "moving to" in response.lower():
-            # This is a simplified implementation
-            # In a real implementation, we would parse the text to extract character and position
+        movement_detected = "moves to" in response.lower() or "moving to" in response.lower() or "go to" in response.lower() or "walks to" in response.lower()
+
+        # Check for trapped players
+        self._check_trapped_players(result)
+
+        # Process character movement
+        if movement_detected or True:  # Always try to move characters if there are any
+            # Improved implementation to detect character movement
             characters = self.game_state.characters
             if characters:
-                char_id = characters[0].get("id", "")
-                # Just move the character to a random adjacent position for demonstration
-                current_pos = self.game_state.player_positions.get(char_id, {"x": 0, "y": 0})
-                new_x = current_pos.get("x", 0) + (1 if random.random() > 0.5 else -1)
-                new_y = current_pos.get("y", 0) + (1 if random.random() > 0.5 else -1)
+                # Check if we need to move multiple characters
+                move_multiple = "and" in response.lower() or "," in response.lower()
 
-                result["move_character"] = {
-                    "character_id": char_id,
-                    "to_x": max(0, new_x),
-                    "to_y": max(0, new_y)
-                }
+                # Store character movements
+                character_movements = []
+
+                # If moving multiple characters, try to identify all characters mentioned
+                if move_multiple:
+                    # Try to find all characters mentioned in the response
+                    for character in characters:
+                        char_type = character.get("type", "").lower()
+                        char_label = character.get("label", "").lower()
+                        char_id = character.get("id", "")
+
+                        # Check if character name is mentioned in the response
+                        if char_type in response.lower() or char_label in response.lower():
+                            # Get current position
+                            current_pos = self.game_state.player_positions.get(char_id, {"x": 0, "y": 0})
+
+                            # Try to determine direction for this character
+                            # Look for phrases like "X to the left" or "Y to the right"
+                            target_x, target_y = None, None
+
+                            # Define a context window around the character name
+                            char_index = -1
+                            if char_type in response.lower():
+                                char_index = response.lower().find(char_type)
+                            elif char_label in response.lower():
+                                char_index = response.lower().find(char_label)
+
+                            if char_index >= 0:
+                                # Get a context window of 30 characters after the character name
+                                context = response.lower()[char_index:char_index+50]
+
+                                # Check for directions in this context
+                                directions = {
+                                    "north": (0, -1),
+                                    "south": (0, 1),
+                                    "east": (1, 0),
+                                    "west": (-1, 0),
+                                    "up": (0, -1),
+                                    "down": (0, 1),
+                                    "right": (1, 0),
+                                    "left": (-1, 0),
+                                    "northeast": (1, -1),
+                                    "northwest": (-1, -1),
+                                    "southeast": (1, 1),
+                                    "southwest": (-1, 1)
+                                }
+
+                                for direction, (dx, dy) in directions.items():
+                                    if direction in context:
+                                        target_x = current_pos.get("x", 0) + dx
+                                        target_y = current_pos.get("y", 0) + dy
+                                        break
+
+                            # If no direction found, move to a random adjacent position
+                            if target_x is None or target_y is None:
+                                # Move 1-2 spaces in a random direction
+                                dx = random.randint(-2, 2)
+                                dy = random.randint(-2, 2)
+                                # Ensure we move at least one space
+                                if dx == 0 and dy == 0:
+                                    dx = 1
+
+                                target_x = current_pos.get("x", 0) + dx
+                                target_y = current_pos.get("y", 0) + dy
+
+                            # Ensure coordinates are valid (non-negative)
+                            target_x = max(0, target_x)
+                            target_y = max(0, target_y)
+
+                            print(f"Moving character {char_id} from ({current_pos.get('x', 0)}, {current_pos.get('y', 0)}) to ({target_x}, {target_y})")
+
+                            # Add this movement to our list
+                            character_movements.append({
+                                "character_id": char_id,
+                                "to_x": target_x,
+                                "to_y": target_y
+                            })
+
+                # If no direction was found in the response, move to a random adjacent position
+                if not move_multiple or not character_movements:
+                    # Try to identify which character is being moved
+                    char_id = None
+                    target_x, target_y = None
+
+                    # First, try to find character by name in the response
+                    for character in characters:
+                        char_type = character.get("type", "").lower()
+                        char_label = character.get("label", "").lower()
+
+                        # Check if character name is mentioned in the response
+                        if char_type in response.lower() or char_label in response.lower():
+                            char_id = character.get("id", "")
+                            break
+
+                    # If no specific character found, use the first one
+                    if not char_id and characters:
+                        char_id = characters[0].get("id", "")
+
+                    # Get current position
+                    current_pos = self.game_state.player_positions.get(char_id, {"x": 0, "y": 0})
+
+                    # Try to determine direction from the response
+                    directions = {
+                        "north": (0, -1),
+                        "south": (0, 1),
+                        "east": (1, 0),
+                        "west": (-1, 0),
+                        "up": (0, -1),
+                        "down": (0, 1),
+                        "right": (1, 0),
+                        "left": (-1, 0),
+                        "northeast": (1, -1),
+                        "northwest": (-1, -1),
+                        "southeast": (1, 1),
+                        "southwest": (-1, 1)
+                    }
+
+                    # Check for direction words in the response
+                    for direction, (dx, dy) in directions.items():
+                        if direction in response.lower():
+                            target_x = current_pos.get("x", 0) + dx
+                            target_y = current_pos.get("y", 0) + dy
+                            break
+
+                    # If no direction found, move to a random adjacent position
+                    if target_x is None or target_y is None:
+                        # Move 1-2 spaces in a random direction
+                        dx = random.randint(-2, 2)
+                        dy = random.randint(-2, 2)
+                        # Ensure we move at least one space
+                        if dx == 0 and dy == 0:
+                            dx = 1
+
+                        target_x = current_pos.get("x", 0) + dx
+                        target_y = current_pos.get("y", 0) + dy
+
+                    # Ensure coordinates are valid (non-negative)
+                    target_x = max(0, target_x)
+                    target_y = max(0, target_y)
+
+                    print(f"Moving character {char_id} from ({current_pos.get('x', 0)}, {current_pos.get('y', 0)}) to ({target_x}, {target_y})")
+
+                    # Add this movement to our list
+                    character_movements.append({
+                        "character_id": char_id,
+                        "to_x": target_x,
+                        "to_y": target_y
+                    })
+
+                # Add all character movements to the result
+                if len(character_movements) == 1:
+                    # If only one character is moving, use the old format for backward compatibility
+                    result["move_character"] = character_movements[0]
+                else:
+                    # If multiple characters are moving, use a new format
+                    result["move_characters"] = character_movements
 
         # Check for adding a monster
         if "appears" in response.lower() or "monster" in response.lower() or "enemy" in response.lower():
@@ -731,19 +1244,66 @@ class DungeonMaster:
             Make this opening exciting and immersive, drawing the player into the world.
             """
 
-            # Call Groq API
-            response = client.chat.completions.create(
-                model=CONFIG["model"],
-                messages=[
-                    {"role": "system", "content": self._get_system_prompt()},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=800,
-                temperature=0.8
-            )
+            # Call Groq API with multiple fallback options
+            try:
+                # Try with primary key and main model first
+                print("Trying with primary API key and main model for adventure start...")
+                response = client.chat.completions.create(
+                    model=CONFIG["model"],
+                    messages=[
+                        {"role": "system", "content": self._get_system_prompt()},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=800,
+                    temperature=0.8
+                )
 
-            # Extract the narration
-            adventure_start = response.choices[0].message.content
+                # Extract the narration
+                adventure_start = response.choices[0].message.content
+                print(f"Received adventure start with primary key (first 100 chars): {adventure_start[:100]}...")
+            except Exception as primary_key_error:
+                print(f"Primary API key with main model failed: {primary_key_error}. Trying backup key...")
+
+                try:
+                    # Try with backup key and main model
+                    backup_client = Groq(api_key=BACKUP_API_KEY)
+                    response = backup_client.chat.completions.create(
+                        model=CONFIG["model"],
+                        messages=[
+                            {"role": "system", "content": self._get_system_prompt()},
+                            {"role": "user", "content": prompt}
+                        ],
+                        max_tokens=800,
+                        temperature=0.8
+                    )
+
+                    # Extract the narration
+                    adventure_start = response.choices[0].message.content
+                    print(f"Received adventure start with backup key (first 100 chars): {adventure_start[:100]}...")
+                except Exception as backup_key_error:
+                    print(f"Backup API key with main model failed: {backup_key_error}. Trying fallback model...")
+
+                    try:
+                        # Try with primary key and fallback model
+                        response = client.chat.completions.create(
+                            model=CONFIG["fallback_model"],
+                            messages=[
+                                {"role": "system", "content": self._get_system_prompt()},
+                                {"role": "user", "content": prompt}
+                            ],
+                            max_tokens=800,
+                            temperature=0.8
+                        )
+
+                        # Extract the narration
+                        adventure_start = response.choices[0].message.content
+                        print(f"Received adventure start with fallback model (first 100 chars): {adventure_start[:100]}...")
+                    except Exception as fallback_model_error:
+                        print(f"Fallback model failed: {fallback_model_error}. Using local fallback...")
+
+                        # Use a local fallback response
+                        adventure_start = "As you gather your party and prepare for adventure, the Dungeon Master unfolds a map before you. 'Welcome, brave adventurers,' they say with a gleam in their eye. 'What would you like to do first?'"
+                        print("Using local fallback response due to API limitations.")
 
             # Update game state with new narration
             self.game_state.add_narrative(adventure_start)
@@ -753,6 +1313,83 @@ class DungeonMaster:
         except Exception as e:
             print(f"Error generating adventure start: {e}")
             return "As you gather your party and prepare for adventure, the Dungeon Master unfolds a map before you. 'Welcome, brave adventurers,' they say with a gleam in their eye. 'What would you like to do first?'"
+
+    def _check_trapped_players(self, result: Dict) -> None:
+        """Check if any players are trapped (surrounded by obstacles) and update the result accordingly"""
+        try:
+            # Get the current map data
+            if not self.game_state.map_data or not self.game_state.map_data.get("grid"):
+                return
+
+            grid = self.game_state.map_data.get("grid", [])
+            if not grid:
+                return
+
+            # Check each character to see if they're trapped
+            trapped_characters = []
+
+            for character in self.game_state.characters:
+                character_id = character.get("id")
+                if not character_id:
+                    continue
+
+                # Get character position
+                position = self.game_state.player_positions.get(character_id)
+                if not position:
+                    continue
+
+                x, y = position.get("x", 0), position.get("y", 0)
+
+                # Check if the character is trapped (surrounded by obstacles)
+                is_trapped = True
+
+                # Check all adjacent cells (up, down, left, right)
+                adjacent_positions = [
+                    (x, y-1),  # up
+                    (x, y+1),  # down
+                    (x-1, y),  # left
+                    (x+1, y)   # right
+                ]
+
+                for adj_x, adj_y in adjacent_positions:
+                    # Check if position is valid
+                    if 0 <= adj_y < len(grid) and 0 <= adj_x < len(grid[0]):
+                        # Check if this cell is not an obstacle
+                        if not grid[adj_y][adj_x].get("is_obstacle", False):
+                            # Check if this cell is not occupied by another character
+                            occupied = False
+                            for other_id, other_pos in self.game_state.player_positions.items():
+                                if other_id != character_id and other_pos.get("x") == adj_x and other_pos.get("y") == adj_y:
+                                    occupied = True
+                                    break
+
+                            if not occupied:
+                                is_trapped = False
+                                break
+
+                if is_trapped:
+                    trapped_characters.append({
+                        "character_id": character_id,
+                        "character_type": character.get("type", "character"),
+                        "position": {"x": x, "y": y}
+                    })
+
+            # If any characters are trapped, add them to the result
+            if trapped_characters:
+                result["trapped_characters"] = trapped_characters
+
+                # Add a sound effect for trapped characters
+                result["play_sound"] = "trapped"
+
+                # Add a message about trapped characters
+                trapped_names = [char.get("character_type", "character") for char in trapped_characters]
+                if len(trapped_names) == 1:
+                    result["content"] += f"\n\n⚠️ The {trapped_names[0]} is trapped! They are surrounded by obstacles and cannot move."
+                else:
+                    result["content"] += f"\n\n⚠️ The following characters are trapped: {', '.join(trapped_names)}. They are surrounded by obstacles and cannot move."
+
+        except Exception as e:
+            print(f"Error checking for trapped players: {e}")
 
     def _get_system_prompt(self) -> str:
         """Get the system prompt for the AI DM"""

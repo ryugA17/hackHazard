@@ -51,6 +51,7 @@ interface Piece {
   avatar: string;
   label: string;
   isDragging: boolean;
+  isTrapped?: boolean;
 }
 
 type TerrainType = "grass" | "water" | "mountain" | "forest" | "swamp" | "desert" | "cave";
@@ -263,26 +264,133 @@ const GameMap: React.FC = () => {
           ]);
         }
       } else if (data.type === 'chat_message') {
-        // Add chat message to chat history
+        // Add chat message to chat history, but only if it's from the DM or if it's a new user message
         console.log('Received chat message:', data);
-        setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
-          ...prev,
-          {
-            role: data.sender === 'Player' ? 'user' : 'dm',
-            content: data.content
+
+        // Only add user messages if they're not already in the chat history
+        // This prevents duplicate messages when the server echoes back the user's input
+        if (data.sender === 'Player') {
+          // Check if this is a duplicate of the last user message
+          const lastUserMessage = [...chatHistory].reverse().find(msg => msg.role === 'user');
+          if (!lastUserMessage || lastUserMessage.content !== data.content) {
+            setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
+              ...prev,
+              {
+                role: 'user',
+                content: data.content
+              }
+            ]);
           }
-        ]);
+        } else {
+          // Always add DM messages
+          setChatHistory((prev: Array<{role: 'user' | 'dm', content: string}>) => [
+            ...prev,
+            {
+              role: 'dm',
+              content: data.content
+            }
+          ]);
+        }
+
+        // Log all pieces before movement
+        console.log("Current pieces before movement:", pieces);
 
         // Check if DM is moving a character
         if (data.move_character) {
           const { character_id, to_x, to_y } = data.move_character;
+          console.log(`MOVEMENT DETECTED: Moving character ${character_id} to (${to_x}, ${to_y})`);
 
-          // Find the character and move it
-          setPieces((prevPieces: Piece[]) => prevPieces.map((piece: Piece) =>
-            piece.id === character_id
-              ? { ...piece, x: to_x, y: to_y }
-              : piece
-          ));
+          // Check if the character exists
+          const characterExists = pieces.some((p: Piece) => p.id === character_id);
+          console.log(`Character ${character_id} exists: ${characterExists}`);
+
+          if (characterExists) {
+            // Find the character and move it
+            setPieces((prevPieces: Piece[]) => {
+              const updatedPieces = prevPieces.map((piece: Piece) =>
+                piece.id === character_id
+                  ? { ...piece, x: to_x, y: to_y }
+                  : piece
+              );
+              console.log("Updated pieces after movement:", updatedPieces);
+              return updatedPieces;
+            });
+          } else {
+            console.error(`Cannot move character ${character_id} - not found in pieces array`);
+
+            // If character doesn't exist, create a new one at the target position
+            console.log("Creating new character at target position");
+            const avatarIndex = nextPieceId % CHARACTER_AVATARS.length;
+            const newPiece: Piece = {
+              id: character_id,
+              x: to_x,
+              y: to_y,
+              avatar: CHARACTER_AVATARS[avatarIndex],
+              label: CHARACTER_LABELS[avatarIndex],
+              isDragging: false
+            };
+
+            setPieces((prevPieces: Piece[]) => [...prevPieces, newPiece]);
+            setNextPieceId((prev: number) => prev + 1);
+          }
+        }
+
+        // Check if DM is moving multiple characters
+        if (data.move_characters && Array.isArray(data.move_characters)) {
+          console.log(`MULTIPLE MOVEMENTS DETECTED: Moving ${data.move_characters.length} characters`);
+          console.log("Movement data:", data.move_characters);
+
+          // Process each character movement
+          setPieces((prevPieces: Piece[]) => {
+            // Create a copy of the pieces array
+            const updatedPieces = [...prevPieces];
+            let movementsMade = 0;
+
+            // Apply each movement
+            data.move_characters.forEach((movement: any) => {
+              const { character_id, to_x, to_y } = movement;
+              console.log(`Attempting to move character ${character_id} to (${to_x}, ${to_y})`);
+
+              // Find the character in our copy
+              const pieceIndex = updatedPieces.findIndex((p: Piece) => p.id === character_id);
+
+              // If found, update its position
+              if (pieceIndex >= 0) {
+                const oldX = updatedPieces[pieceIndex].x;
+                const oldY = updatedPieces[pieceIndex].y;
+
+                updatedPieces[pieceIndex] = {
+                  ...updatedPieces[pieceIndex],
+                  x: to_x,
+                  y: to_y
+                };
+
+                console.log(`Successfully moved character ${character_id} from (${oldX}, ${oldY}) to (${to_x}, ${to_y})`);
+                movementsMade++;
+              } else {
+                console.error(`Cannot move character ${character_id} - not found in pieces array`);
+
+                // If character doesn't exist, create a new one at the target position
+                console.log("Creating new character at target position");
+                const avatarIndex = nextPieceId % CHARACTER_AVATARS.length;
+                const newPiece: Piece = {
+                  id: character_id,
+                  x: to_x,
+                  y: to_y,
+                  avatar: CHARACTER_AVATARS[avatarIndex],
+                  label: CHARACTER_LABELS[avatarIndex],
+                  isDragging: false
+                };
+
+                updatedPieces.push(newPiece);
+                movementsMade++;
+              }
+            });
+
+            console.log(`Made ${movementsMade} movements out of ${data.move_characters.length} requested`);
+            console.log("Updated pieces after all movements:", updatedPieces);
+            return updatedPieces;
+          });
         }
 
         // Check if DM is adding a new character/monster
@@ -390,21 +498,79 @@ const GameMap: React.FC = () => {
 
   // Request a dynamically generated map
   const requestGeneratedMap = useCallback((theme?: string) => {
-    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-      setLoadingMap(true);
+    setLoadingMap(true);
 
+    // Try both WebSocket and direct API call
+    if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
       const request = {
         type: 'generate_map',
         theme: theme || 'fantasy adventure',
         content: 'Create a dynamic map for my adventure'
       };
 
-      console.log("Sending map generation request:", request);
+      console.log("Sending map generation request via WebSocket:", request);
       wsConnection.send(JSON.stringify(request));
-      console.log("Requested a generated map with theme:", theme || 'fantasy adventure');
-    } else {
-      console.error("WebSocket not connected. Connection state:", wsConnection ? wsConnection.readyState : "null");
     }
+
+    // Also make a direct API call as a fallback
+    console.log("Sending map generation request via API:", theme || 'fantasy adventure');
+
+    fetch('http://localhost:8001/generate_map', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ theme: theme || 'fantasy adventure' }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(mapData => {
+      console.log("Received map data from API:", mapData);
+
+      // Create a new map option from the received data
+      const newMap: MapOption = {
+        id: mapData.id || `map-${Date.now()}`,
+        name: mapData.name || "Adventure Map",
+        description: mapData.description || "A mysterious realm awaits",
+        image: '',
+        gridSize: {
+          width: mapData.width || (mapData.grid && mapData.grid[0] ? mapData.grid[0].length : 8),
+          height: mapData.height || (mapData.grid ? mapData.grid.length : 6)
+        },
+        cellSize: 80,
+        terrainDistribution: mapData.terrain_distribution || {}
+      };
+
+      console.log("Created map option:", newMap);
+
+      // Convert the map grid data
+      const newGrid = convertMapDataToGrid(mapData);
+
+      console.log("Converted grid:", newGrid);
+
+      // Update state with new map
+      setSelectedMap(newMap);
+      setMap(newGrid);
+      setLoadingMap(false);
+
+      // Add to available maps
+      setAvailableMaps((prev: MapOption[]) => {
+        // Check if this map already exists (by ID)
+        const exists = prev.some((m: MapOption) => m.id === newMap.id);
+        if (!exists) {
+          return [...prev, newMap];
+        }
+        return prev;
+      });
+    })
+    .catch(error => {
+      console.error("Error fetching map data:", error);
+      // If API call fails, rely on WebSocket response
+    });
   }, [wsConnection]);
 
   // State management
@@ -685,6 +851,10 @@ const GameMap: React.FC = () => {
       classes += " dragging";
     }
 
+    if (piece.isTrapped) {
+      classes += " trapped";
+    }
+
     return classes;
   }, [selectedPieceId]);
 
@@ -711,6 +881,41 @@ const GameMap: React.FC = () => {
       createNewPiece(randomCell.x, randomCell.y);
     }
   }, [selectedMap.gridSize.height, selectedMap.gridSize.width, map, pieces, createNewPiece]);
+
+  // Test function to directly move a character
+  const testMoveCharacter = useCallback((): void => {
+    if (pieces.length === 0) {
+      alert("Please add a character first");
+      return;
+    }
+
+    // Get the first character
+    const firstPiece = pieces[0];
+
+    // Create a test movement command
+    const testMovement = {
+      type: "dm_response",
+      content: "The Dungeon Master moves your character.",
+      move_character: {
+        character_id: firstPiece.id,
+        to_x: Math.min(firstPiece.x + 1, selectedMap.gridSize.width - 1),
+        to_y: firstPiece.y
+      }
+    };
+
+    console.log("Testing character movement with:", testMovement);
+
+    // Directly update the pieces state
+    setPieces((prevPieces: Piece[]) => {
+      const updatedPieces = prevPieces.map((piece: Piece) =>
+        piece.id === firstPiece.id
+          ? { ...piece, x: testMovement.move_character.to_x, y: testMovement.move_character.to_y }
+          : piece
+      );
+      console.log("Updated pieces after test movement:", updatedPieces);
+      return updatedPieces;
+    });
+  }, [pieces, selectedMap.gridSize.width]);
 
   // Remove selected piece function
   const removeSelectedPiece = useCallback((): void => {
@@ -1163,6 +1368,13 @@ const GameMap: React.FC = () => {
               onClick={resetGame}
             >
               🔄 Generate New Map
+            </button>
+
+            <button
+              className="btn btn-test"
+              onClick={testMoveCharacter}
+            >
+              🧪 Test Movement
             </button>
 
             <button

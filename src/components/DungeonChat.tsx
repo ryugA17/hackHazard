@@ -32,7 +32,13 @@ const DungeonChat: React.FC<DungeonChatProps> = ({
 
   const handleSendMessage = () => {
     if (!userInput.trim()) return;
-    onSendMessage(userInput);
+
+    // Check if this is a duplicate of the last message
+    const lastUserMessage = [...chatHistory].reverse().find(msg => msg.role === 'user');
+    if (!lastUserMessage || lastUserMessage.content !== userInput.trim()) {
+      onSendMessage(userInput);
+    }
+
     setUserInput('');
     setShowSuggestions(false);
   };
@@ -44,7 +50,11 @@ const DungeonChat: React.FC<DungeonChatProps> = ({
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    onSendMessage(suggestion);
+    // Check if this is a duplicate of the last message
+    const lastUserMessage = [...chatHistory].reverse().find(msg => msg.role === 'user');
+    if (!lastUserMessage || lastUserMessage.content !== suggestion) {
+      onSendMessage(suggestion);
+    }
     setShowSuggestions(false);
   };
 
