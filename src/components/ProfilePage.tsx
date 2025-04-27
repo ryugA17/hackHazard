@@ -195,35 +195,6 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <h2 className="skills-title">Hero Abilities</h2>
-          
-          <div className="skills-grid">
-            <div className="skill-card">
-              <h3>HTML</h3>
-              <div className="skill-level">
-                <div className="level-bar" style={{width: '70%'}}></div>
-              </div>
-            </div>
-            <div className="skill-card">
-              <h3>CSS</h3>
-              <div className="skill-level">
-                <div className="level-bar" style={{width: '65%'}}></div>
-              </div>
-            </div>
-            <div className="skill-card">
-              <h3>JavaScript</h3>
-              <div className="skill-level">
-                <div className="level-bar" style={{width: '50%'}}></div>
-              </div>
-            </div>
-            <div className="skill-card">
-              <h3>React</h3>
-              <div className="skill-level">
-                <div className="level-bar" style={{width: '40%'}}></div>
-              </div>
-            </div>
-          </div>
-
           <div className="projects-header">
             <h2 className="projects-title">Epic Quests</h2>
             <Link to="/projects" className="see-all-link">View all quests</Link>
