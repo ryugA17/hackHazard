@@ -203,6 +203,7 @@ const Dashboard = () => {
 
           {/* Sponsors section */}
           <h2 className="sponsors-title">Our Technology Partners</h2>
+          <p className="sponsors-subtitle">Powered by cutting-edge technology for the best gaming experience</p>
           
           <div className="sponsors-grid">
             <div className="sponsor-card">
