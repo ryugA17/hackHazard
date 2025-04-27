@@ -160,31 +160,6 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="stats-panel">
-            <h2>Adventure Stats</h2>
-            <div className="profile-stats">
-              <div className="stat-item">
-                <span className="stat-icon xp-icon">{stats.totalXp}</span>
-                <span className="stat-details"><p>TOTAL XP</p></span>
-              </div>
-              
-              <div className="stat-item">
-                <span className="stat-icon rank-icon">BRONZE</span>
-                <span className="stat-details"><p>RANK</p></span>
-              </div>
-              
-              <div className="stat-item">
-                <span className="stat-icon badges-icon">{stats.courseBadges}</span>
-                <span className="stat-details"><p>BADGES</p></span>
-              </div>
-              
-              <div className="stat-item">
-                <span className="stat-icon streak-icon">{stats.dailyStreak}</span>
-                <span className="stat-details"><p>STREAK</p></span>
-              </div>
-            </div>
-          </div>
-
           <div className="profile-section">
             <div className="section-header">
               <h2>My Treasure Vault</h2>

@@ -117,25 +117,55 @@ const Dashboard = () => {
               </div>
             </div>
             
+            <h2 className="stats-title">Stats</h2>
             <div className="profile-stats">
               <div className="stat-item">
-                <span className="stat-icon xp-icon">8</span>
-                <span className="stat-details"><p>XP</p></span>
+                <div className="stat-icon-container">
+                  <span className="stat-label">Member for</span>
+                  <div className="stat-value-container">
+                    <span className="stat-value">0 days</span>
+                  </div>
+                </div>
+                <div className="stat-icon calendar-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                    <text x="12" y="19" textAnchor="middle" dominantBaseline="middle" fill="currentColor" fontSize="9">1</text>
+                  </svg>
+                </div>
               </div>
               
               <div className="stat-item">
-                <span className="stat-icon badges-icon">8</span>
-                <span className="stat-details"><p>BADGES</p></span>
+                <div className="stat-icon-container">
+                  <span className="stat-label">Games liked</span>
+                  <div className="stat-value-container">
+                    <span className="stat-value">0</span>
+                  </div>
+                </div>
+                <div className="stat-icon like-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
+                    <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                  </svg>
+                </div>
               </div>
               
               <div className="stat-item">
-                <span className="stat-icon rank-icon">BRONZE</span>
-                <span className="stat-details"><p>RANK</p></span>
-              </div>
-              
-              <div className="stat-item">
-                <span className="stat-icon streak-icon">{profileData.level || 2}</span>
-                <span className="stat-details"><p>STREAK</p></span>
+                <div className="stat-icon-container">
+                  <span className="stat-label">Playstreak</span>
+                  <div className="stat-value-container">
+                    <span className="stat-value">1 day</span>
+                    <span className="stat-question">?</span>
+                  </div>
+                  <span className="stat-subvalue">Highest: 1 day</span>
+                </div>
+                <div className="stat-icon streak-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path d="M12 2c0 4.4-3.6 8-8 8 4.4 0 8 3.6 8 8 0-4.4 3.6-8 8-8-4.4 0-8-3.6-8-8z" />
+                  </svg>
+                </div>
               </div>
             </div>
             
