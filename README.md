@@ -8,7 +8,8 @@
 
 ## 📌 Problem Statement
 
-**Problem Statement 12 – Revolutionize Web3 Gaming Engagement**
+**Problem Statement -Build an Al dungeon crawler where Groq powers the narrative generation and Monad
+handles item minting and progress tracking.**
 
 ---
 
