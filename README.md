@@ -65,9 +65,10 @@ Our key breakthrough was developing a hybrid approach that uses AI to enhance st
 - ✅ **Interactive Battle Maps:** Visualize quest locations and plan strategies
 - ✅ **Profile Customization:** Create and personalize your adventurer profile
 
-![gameplay-screenshot]
-![](src\assets\feature_ss\ss1.jpg)
-
+## ✨ Screenshots
+![](C:\Users\Prateek\Downloads\hackhazard\hackHazard\src\assets\feature_ss\ss1.jpg)
+![](C:\Users\Prateek\Downloads\hackhazard\hackHazard\src\assets\feature_ss\ss2.jpg)
+![](C:\Users\Prateek\Downloads\hackhazard\hackHazard\src\assets\feature_ss\ss3.jpg)
 
 
 ---
