@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import './Navbar.css';
-import logo from '../assets/logonav.png';
+import logo from '../assets/webpage logo.png';
 import Dragon from '../assets/animated-dragon-image-0129.gif';
 import { auth, signOut } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
