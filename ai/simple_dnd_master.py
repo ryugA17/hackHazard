@@ -57,9 +57,27 @@ class MapGenerator:
             "cave": "dark",
             "dungeon": "shadowy"
         }
+        # Blood/special tile variations for each terrain
+        self.special_tile_variations = {
+            "grass": ["bloody_grass", "scorched_grass", "enchanted_grass"],
+            "forest": ["bloody_leaves", "burnt_trees", "mystical_grove"],
+            "mountain": ["bloody_rocks", "cracked_mountain", "crystal_formation"],
+            "water": ["bloody_water", "poisoned_water", "magical_pool"],
+            "desert": ["bloody_sand", "quicksand", "mirage_spot"],
+            "swamp": ["bloody_swamp", "bubbling_mud", "fetid_pool"],
+            "snow": ["bloody_snow", "blue_ice", "frostbite_patch"],
+            "cave": ["bloody_floor", "glowing_fungus", "crystal_cluster"],
+            "dungeon": ["bloody_tiles", "cracked_floor", "arcane_circle"]
+        }
+        # Items that can be discovered on the map
+        self.discoverable_items = {
+            "common": ["health_potion", "torch", "rope", "water_flask", "rations"],
+            "uncommon": ["magic_scroll", "antidote", "jewel", "enchanted_arrow", "disguise_kit"],
+            "rare": ["healing_crystal", "teleportation_stone", "enchanted_weapon", "invisibility_cloak"]
+        }
 
     def generate_map(self, width: int = 20, height: int = 20, theme: str = None) -> Dict:
-        """Generate a random fantasy map"""
+        """Generate a random fantasy map with enhanced visual layers and obstacle detection"""
         import random
 
         # Set default theme if none provided
@@ -82,11 +100,12 @@ class MapGenerator:
 
         primary_terrain, secondary_terrain = terrain_mapping.get(theme, ("grass", "forest"))
 
-        # Generate the base grid
+        # Generate the base grid with multiple visual layers
         grid = []
         for y in range(height):
             row = []
             for x in range(width):
+                # LAYER 1: Base terrain (terrain type)
                 # Determine terrain type with primary terrain being more common
                 if random.random() < 0.7:
                     terrain = primary_terrain
@@ -96,28 +115,56 @@ class MapGenerator:
                 # Add some random variation
                 if random.random() < 0.1:
                     terrain = random.choice(self.terrain_types)
-
-                # Generate visual layers
-                # Layer 1: Base terrain (tile)
-                # Layer 2: Decorative objects
-                # Layer 3: Lighting and effects
+                
+                # Decide if this should be a special tile variation (bloody, etc)
+                special_variation = None
+                if random.random() < 0.05:  # 5% chance for special tiles
+                    variations = self.special_tile_variations.get(terrain, [])
+                    if variations:
+                        special_variation = random.choice(variations)
+                
+                # LAYER 2: Decorative objects
+                # Add decoration objects with a certain probability
                 decoration = None
                 if random.random() < 0.3:  # 30% chance to have decoration
                     decoration_options = self.decoration_objects.get(terrain, [])
                     if decoration_options:
                         decoration = random.choice(decoration_options)
                 
-                lighting = self.lighting_effects.get(terrain, "normal")
-
+                # LAYER 3: Lighting and shadow effects
+                # Determine lighting effect based on terrain and random variation
+                base_lighting = self.lighting_effects.get(terrain, "normal")
+                # Add random lighting variations
+                lighting_variation = random.choice(["standard", "dim", "bright", "flicker"]) if random.random() < 0.2 else "standard"
+                lighting = {
+                    "base": base_lighting,
+                    "variation": lighting_variation,
+                    "intensity": random.uniform(0.7, 1.3),  # Random intensity multiplier
+                    "color_shift": random.choice([None, "warm", "cool", "eerie"]) if random.random() < 0.1 else None
+                }
+                
+                # Determine if this cell is an obstacle and passable
+                is_obstacle = terrain in ["water", "lava", "mountain"]
+                # Some terrain types can be randomly obstacles
+                if terrain == "forest" and random.random() < 0.4:
+                    is_obstacle = True
+                elif terrain == "swamp" and random.random() < 0.3:
+                    is_obstacle = True
+                
+                # Create a full cell with all visual layers and attributes
                 cell = {
                     "x": x,
                     "y": y,
                     "terrain": terrain,
-                    "passable": terrain not in ["water", "lava", "mountain"],
+                    "special_variation": special_variation,  # Layer 1 variation
+                    "decoration": decoration,  # Layer 2
+                    "lighting": lighting,      # Layer 3
+                    "passable": not is_obstacle,
+                    "is_obstacle": is_obstacle,
                     "structure": None,
-                    "decoration": decoration,
-                    "lighting": lighting,
-                    "is_obstacle": terrain in ["water", "lava", "mountain"]
+                    "item": None,              # Discoverable items
+                    "trap": None,              # Hidden traps
+                    "discovered": True         # Whether this cell has been revealed to the player
                 }
                 row.append(cell)
             grid.append(row)
@@ -141,6 +188,7 @@ class MapGenerator:
 
         preferred_structures = structure_mapping.get(theme, self.structure_types)
 
+        # Place structures
         while structures_added < num_structures:
             x = random.randint(0, width - 1)
             y = random.randint(0, height - 1)
@@ -186,11 +234,62 @@ class MapGenerator:
                     if random.random() < 0.1:  # 10% chance for path decoration
                         grid[y][x]["decoration"] = random.choice(["signpost", "bench", "lantern", "small_shrine"])
 
+        # Add some items and traps throughout the map
+        num_items = random.randint(5, 10)
+        num_traps = random.randint(3, 7)
+        
+        # Place items
+        items_added = 0
+        while items_added < num_items:
+            x = random.randint(0, width - 1)
+            y = random.randint(0, height - 1)
+            
+            # Only place items on passable terrain
+            if grid[y][x]["passable"] and grid[y][x]["item"] is None and grid[y][x]["structure"] is None:
+                # Determine rarity
+                rarity = random.choices(
+                    ["common", "uncommon", "rare"], 
+                    weights=[0.7, 0.25, 0.05],
+                    k=1
+                )[0]
+                
+                # Select an item based on rarity
+                item_options = self.discoverable_items.get(rarity, [])
+                if item_options:
+                    item_type = random.choice(item_options)
+                    grid[y][x]["item"] = {
+                        "id": f"item_{items_added}_{int(time.time())}",
+                        "type": item_type,
+                        "rarity": rarity,
+                        "discovered": False
+                    }
+                    items_added += 1
+        
+        # Place traps
+        traps_added = 0
+        trap_types = ["spike_trap", "poison_dart", "collapse", "magic_rune", "alarm"]
+        
+        while traps_added < num_traps:
+            x = random.randint(0, width - 1)
+            y = random.randint(0, height - 1)
+            
+            # Only place traps on passable terrain
+            if grid[y][x]["passable"] and grid[y][x]["trap"] is None and grid[y][x]["structure"] is None:
+                trap_type = random.choice(trap_types)
+                grid[y][x]["trap"] = {
+                    "id": f"trap_{traps_added}_{int(time.time())}",
+                    "type": trap_type,
+                    "detected": False,
+                    "triggered": False,
+                    "difficulty": random.randint(10, 20)  # DC to detect the trap
+                }
+                traps_added += 1
+
         # Create map metadata
         map_data = {
             "id": f"map_{int(time.time())}",
             "name": f"{theme.capitalize()} {random.choice(['Realm', 'Land', 'Territory', 'Domain'])}",
-            "description": f"A {theme} themed map with {num_structures} structures.",
+            "description": f"A {theme} themed map with {num_structures} structures, {items_added} hidden items, and dangerous secrets.",
             "theme": theme,
             "width": width,
             "height": height,
@@ -199,6 +298,12 @@ class MapGenerator:
             "terrain_distribution": {
                 primary_terrain: 0.7,
                 secondary_terrain: 0.3
+            },
+            "has_visual_layers": True,  # Flag to indicate enhanced visual features
+            "layers": {
+                "layer1": "Base terrain and special variations",
+                "layer2": "Decorative objects",
+                "layer3": "Lighting and shadows"
             }
         }
 
@@ -455,6 +560,48 @@ class DungeonMaster:
         self.last_narration_time = 0
         self.narration_cooldown = 3  # seconds between narrations
         self.map_generator = MapGenerator()
+        self.dice_mechanics = DiceMechanics()
+        
+        # DM Personality configuration
+        self.personality = {
+            "type": "wise",  # Options: wise, sarcastic, mysterious, friendly, stern
+            "traits": ["knowledgeable", "patient", "slightly enigmatic"],
+            "speech_style": "eloquent",
+            "humor_level": 0.4,  # 0.0 to 1.0
+            "strictness": 0.5,   # 0.0 to 1.0
+            "storytelling": 0.8  # 0.0 to 1.0 (higher = more descriptive)
+        }
+        
+        # Voice response configuration
+        self.voice_enabled = False
+        self.voice_settings = {
+            "engine": "default",
+            "voice_id": "en-US-Neural2-D",  # Deep, authoritative voice
+            "speed": 1.0,
+            "pitch": 0.9,  # Slightly lower pitch for DM authority
+            "volume": 1.0
+        }
+        
+        # Sound effects for different game events
+        self.sound_effects = {
+            "dice_roll": "dice_roll.mp3",
+            "combat_start": "combat.mp3",
+            "discovery": "discovery.mp3",
+            "item_pickup": "item_pickup.mp3",
+            "trap_triggered": "trap.mp3",
+            "level_up": "level_up.mp3",
+            "critical_hit": "critical_hit.mp3",
+            "critical_miss": "critical_miss.mp3",
+            "monster_death": "monster_death.mp3",
+            "player_damage": "player_damage.mp3",
+            "magic_cast": "magic_cast.mp3",
+            "door_open": "door_open.mp3",
+            "locked": "locked.mp3",
+            "chest_open": "chest_open.mp3",
+            "trapped": "trap_alert.mp3",
+            "success": "success.mp3",
+            "failure": "failure.mp3"
+        }
 
     def _format_characters(self, characters: List, positions: Dict) -> str:
         """Format character information for the prompt"""
@@ -1345,51 +1492,55 @@ class DungeonMaster:
 
                 # Check all adjacent cells (up, down, left, right)
                 adjacent_positions = [
-                    (x, y-1),  # up
-                    (x, y+1),  # down
-                    (x-1, y),  # left
-                    (x+1, y)   # right
+                    (x, y - 1),  # up
+                    (x, y + 1),  # down
+                    (x - 1, y),  # left
+                    (x + 1, y),  # right
+                    # Also check diagonals for more thorough detection
+                    (x - 1, y - 1),  # up-left
+                    (x + 1, y - 1),  # up-right
+                    (x - 1, y + 1),  # down-left
+                    (x + 1, y + 1),  # down-right
                 ]
 
+                # If any adjacent position is valid and not an obstacle, the character is not trapped
                 for adj_x, adj_y in adjacent_positions:
-                    # Check if position is valid
+                    # Check if adjacent position is within grid bounds
                     if 0 <= adj_y < len(grid) and 0 <= adj_x < len(grid[0]):
-                        # Check if this cell is not an obstacle
-                        if not grid[adj_y][adj_x].get("is_obstacle", False):
-                            # Check if this cell is not occupied by another character
-                            occupied = False
-                            for other_id, other_pos in self.game_state.player_positions.items():
-                                if other_id != character_id and other_pos.get("x") == adj_x and other_pos.get("y") == adj_y:
-                                    occupied = True
-                                    break
-
-                            if not occupied:
-                                is_trapped = False
-                                break
+                        # Check if the adjacent cell is passable
+                        is_obstacle = grid[adj_y][adj_x].get("is_obstacle", False)
+                        if not is_obstacle:
+                            is_trapped = False
+                            break
 
                 if is_trapped:
                     trapped_characters.append({
                         "character_id": character_id,
-                        "character_type": character.get("type", "character"),
-                        "position": {"x": x, "y": y}
+                        "position": position,
+                        "trapped": True
                     })
+                    print(f"Character {character_id} is trapped at position ({x}, {y})!")
 
-            # If any characters are trapped, add them to the result
+            # Add trapped characters to the result
             if trapped_characters:
                 result["trapped_characters"] = trapped_characters
-
-                # Add a sound effect for trapped characters
-                result["play_sound"] = "trapped"
-
-                # Add a message about trapped characters
-                trapped_names = [char.get("character_type", "character") for char in trapped_characters]
-                if len(trapped_names) == 1:
-                    result["content"] += f"\n\n⚠️ The {trapped_names[0]} is trapped! They are surrounded by obstacles and cannot move."
+                # Add narration about trapped characters
+                character_names = [
+                    next((c.get("label", f"Character {i+1}") for c in self.game_state.characters 
+                         if c.get("id") == tc["character_id"]), f"Character {i+1}")
+                    for i, tc in enumerate(trapped_characters)
+                ]
+                
+                if len(character_names) == 1:
+                    result["narration"] = result.get("narration", "") + f"\n\n{character_names[0]} appears to be trapped! They cannot move in any direction."
                 else:
-                    result["content"] += f"\n\n⚠️ The following characters are trapped: {', '.join(trapped_names)}. They are surrounded by obstacles and cannot move."
+                    names_str = ", ".join(character_names[:-1]) + " and " + character_names[-1]
+                    result["narration"] = result.get("narration", "") + f"\n\n{names_str} appear to be trapped! They cannot move in any direction."
 
         except Exception as e:
             print(f"Error checking for trapped players: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _get_system_prompt(self) -> str:
         """Get the system prompt for the AI DM"""
@@ -1411,3 +1562,105 @@ class DungeonMaster:
 
         Always stay in character as the Dungeon Master. Avoid meta-level explanations unless specifically asked out-of-character. Your goal is to create an engaging, responsive, fair, and thrilling world for the players to explore.
         """
+
+    async def check_for_item_discovery(self, character_id: str, x: int, y: int) -> Dict:
+        """Check if there's an item to discover at the given location"""
+        try:
+            # Get the current map data
+            if not self.game_state.map_data or not self.game_state.map_data.get("grid"):
+                return {"discovered": False}
+
+            grid = self.game_state.map_data.get("grid", [])
+            if not grid or y >= len(grid) or x >= len(grid[0]):
+                return {"discovered": False}
+
+            # Check if there's an item at this location
+            cell = grid[y][x]
+            item = cell.get("item")
+            
+            if item and not item.get("discovered", False):
+                # Mark the item as discovered
+                item["discovered"] = True
+                
+                # Add the item to the character's inventory
+                self.game_state.add_item_to_inventory(character_id, item)
+                
+                # Return discovery information
+                return {
+                    "discovered": True,
+                    "item": item,
+                    "sound_effect": "item_pickup",
+                    "message": f"You found a {item.get('type', 'mysterious item')}!"
+                }
+            
+            return {"discovered": False}
+        
+        except Exception as e:
+            print(f"Error checking for item discovery: {e}")
+            return {"discovered": False}
+    
+    async def check_for_trap_trigger(self, character_id: str, x: int, y: int) -> Dict:
+        """Check if there's a trap at the given location that might be triggered"""
+        try:
+            # Get the current map data
+            if not self.game_state.map_data or not self.game_state.map_data.get("grid"):
+                return {"triggered": False}
+
+            grid = self.game_state.map_data.get("grid", [])
+            if not grid or y >= len(grid) or x >= len(grid[0]):
+                return {"triggered": False}
+
+            # Check if there's a trap at this location
+            cell = grid[y][x]
+            trap = cell.get("trap")
+            
+            if trap and not trap.get("triggered", False):
+                # Mark the trap as detected
+                trap["detected"] = True
+                
+                # Check if the trap is triggered
+                # This could be based on a dice roll against the trap difficulty
+                difficulty = trap.get("difficulty", 15)
+                
+                # Roll for trap detection/avoidance
+                roll_result = self.dice_mechanics.roll_dice("d20")
+                total_roll = roll_result["total"]
+                
+                if total_roll < difficulty:
+                    # The trap is triggered!
+                    trap["triggered"] = True
+                    
+                    # Determine trap effect based on type
+                    trap_effects = {
+                        "spike_trap": "takes 1d6 damage from sharp spikes",
+                        "poison_dart": "is hit by a poison dart and must roll CON save",
+                        "collapse": "is caught in a collapse and takes 2d6 damage",
+                        "magic_rune": "triggers a magical rune that flashes with arcane energy",
+                        "alarm": "triggers a loud alarm that echoes through the area"
+                    }
+                    
+                    effect = trap_effects.get(trap.get("type"), "triggers a trap")
+                    
+                    return {
+                        "triggered": True,
+                        "trap": trap,
+                        "sound_effect": "trap_triggered",
+                        "message": f"A trap activates! The character {effect}!",
+                        "roll": roll_result
+                    }
+                else:
+                    # The trap was noticed and avoided
+                    return {
+                        "triggered": False,
+                        "detected": True,
+                        "trap": trap,
+                        "sound_effect": "trap_alert",
+                        "message": f"You notice a {trap.get('type', 'trap')} and carefully avoid it!",
+                        "roll": roll_result
+                    }
+            
+            return {"triggered": False}
+        
+        except Exception as e:
+            print(f"Error checking for trap trigger: {e}")
+            return {"triggered": False}

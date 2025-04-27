@@ -669,426 +669,229 @@
   animation: pulse 1.5s infinite;
 }
 
-.terrain-grass {
-  background-color: rgba(76, 175, 80, 0.15);
-}
+/* Multi-layer visual system styles */
 
-.terrain-water {
-  background-color: rgba(33, 150, 243, 0.2);
-}
+/* Layer 1: Special variations (bloody tiles, etc.) */
+.special-bloody-grass { background-color: rgba(139, 0, 0, 0.3) !important; }
+.special-bloody-leaves { background-color: rgba(139, 0, 0, 0.3) !important; }
+.special-bloody-rocks { background-color: rgba(139, 0, 0, 0.3) !important; }
+.special-bloody-water { background-color: rgba(139, 0, 0, 0.3) !important; }
+.special-bloody-sand { background-color: rgba(139, 0, 0, 0.3) !important; }
+.special-bloody-swamp { background-color: rgba(139, 0, 0, 0.3) !important; }
+.special-bloody-tiles { background-color: rgba(139, 0, 0, 0.3) !important; }
+.special-bloody-snow { background-color: rgba(139, 0, 0, 0.3) !important; }
+.special-bloody-floor { background-color: rgba(139, 0, 0, 0.3) !important; }
 
-.terrain-mountain {
-  background-color: rgba(121, 85, 72, 0.2);
-}
+.special-enchanted-grass { background-color: rgba(75, 0, 130, 0.2) !important; }
+.special-mystical-grove { background-color: rgba(0, 100, 0, 0.2) !important; }
+.special-crystal-formation { background-color: rgba(72, 209, 204, 0.2) !important; }
+.special-magical-pool { background-color: rgba(0, 191, 255, 0.2) !important; }
+.special-mirage-spot { background-color: rgba(255, 215, 0, 0.2) !important; }
+.special-fetid-pool { background-color: rgba(128, 128, 0, 0.2) !important; }
+.special-glowing-fungus { background-color: rgba(50, 205, 50, 0.2) !important; }
+.special-arcane-circle { background-color: rgba(138, 43, 226, 0.2) !important; }
 
-.terrain-forest {
-  background-color: rgba(139, 195, 74, 0.15);
-}
-
-/* Add new terrain types */
-.terrain-swamp {
-  background-color: rgba(121, 134, 203, 0.2);
-}
-
-.terrain-desert {
-  background-color: rgba(255, 235, 59, 0.15);
-}
-
-.terrain-cave {
-  background-color: rgba(66, 66, 66, 0.2);
-}
-
-/* Update legend colors to match new terrain types */
-.legend-swamp {
-  background-color: rgba(121, 134, 203, 0.2);
-}
-
-.legend-desert {
-  background-color: rgba(255, 235, 59, 0.15);
-}
-
-.legend-cave {
-  background-color: rgba(66, 66, 66, 0.2);
-}
-
-/* Update water and mountain legend colors to match terrain */
-.legend-water {
-  background-color: rgba(33, 150, 243, 0.2);
-}
-
-.legend-mountain {
-  background-color: rgba(121, 85, 72, 0.2);
-}
-
-.legend {
-  display: flex;
-  gap: 15px;
-  margin-top: 20px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-}
-
-.legend-color {
-  width: 20px;
-  height: 20px;
-  margin-right: 5px;
-  border-radius: 3px;
-}
-
-.game-footer {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 14px;
-  opacity: 0.7;
-}
-
-/* Responsive grid adjustments */
-@media (max-width: 768px) {
-  .grid {
-    max-width: 100%;
-    overflow: auto;
-  }
-
-  .map-selection-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-
-  .map-selection-preview {
-    height: 150px;
-  }
-
-  .btn-start-game {
-    font-size: 16px;
-    padding: 10px 20px;
-  }
-}
-
-/* Add this to style disabled buttons */
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background-color: #757575;
-}
-
-/* Game Panels Container */
-.game-panels {
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-  margin-top: 20px;
-  width: 100%;
-  max-width: 1200px;
-}
-
-@media (max-width: 992px) {
-  .game-panels {
-    flex-direction: column;
-  }
-}
-
-/* Narration Panel */
-.narration-panel {
-  background-color: rgba(0, 0, 0, 0.8);
-  border-radius: 10px;
-  padding: 20px;
-  width: 100%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.narration-panel h3 {
-  margin: 0 0 10px 0;
-  font-size: 20px;
-  color: #ffc107;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 8px;
-}
-
-.narration-panel p {
-  margin: 0 0 15px 0;
-  font-size: 16px;
-  line-height: 1.6;
-  color: #fff;
-  font-style: italic;
-}
-
-/* AI Control Button */
-.btn-ai-control {
-  background-color: #9c27b0;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 15px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 10px;
-}
-
-.btn-ai-control:hover {
-  background-color: #7b1fa2;
-  transform: translateY(-2px);
-}
-
-/* Chat Panel */
-.chat-panel {
-  background-color: rgba(0, 0, 0, 0.8);
-  border-radius: 10px;
-  padding: 20px;
-  width: 100%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-  height: 400px;
-}
-
-.chat-panel h3 {
-  margin: 0 0 10px 0;
-  font-size: 20px;
-  color: #ffc107;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 8px;
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  margin-bottom: 15px;
-  padding-right: 5px;
-}
-
-.chat-message {
-  margin-bottom: 15px;
-  padding: 10px;
-  border-radius: 8px;
-  max-width: 90%;
-}
-
-.chat-message.user {
-  background-color: rgba(77, 148, 255, 0.2);
-  align-self: flex-end;
-  margin-left: auto;
-}
-
-.chat-message.dm {
-  background-color: rgba(255, 193, 7, 0.2);
-  align-self: flex-start;
-}
-
-.message-header {
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: #fff;
-}
-
-.chat-message.user .message-header {
-  color: #4d94ff;
-}
-
-.chat-message.dm .message-header {
-  color: #ffc107;
-}
-
-.message-content {
-  color: #fff;
-  line-height: 1.4;
-}
-
-.chat-input {
-  display: flex;
-  gap: 10px;
-}
-
-.chat-input input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.chat-input input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.chat-input button {
-  padding: 10px 15px;
-  border-radius: 5px;
-  border: none;
-  background-color: #4caf50;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.chat-input button:disabled {
-  background-color: #757575;
-  cursor: not-allowed;
-}
-
-/* Dice Prompt */
-.dice-prompt {
-  margin-top: 15px;
-  padding: 15px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  text-align: center;
-}
-
-.dice-prompt p {
-  margin: 0 0 10px 0;
-  color: #ffc107;
-  font-weight: bold;
-}
-
-.dice-buttons-small {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-.dice-buttons-small button {
-  background-color: #3f51b5;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 8px 12px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.dice-buttons-small button:hover {
-  background-color: #303f9f;
-  transform: translateY(-2px);
-}
-
-/* Game Controls Panel */
-.game-controls-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-  align-items: center;
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 100;
-}
-
-.sound-toggle {
-  display: flex;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 8px 12px;
-  border-radius: 5px;
-  color: white;
-  margin-top: 10px;
-  cursor: pointer;
-}
-
-.sound-toggle input {
-  margin-right: 8px;
-}
-
-.btn-dice {
-  background-color: #9c27b0;
-}
-
-.btn-update {
-  background-color: #00bcd4;
-}
-
-/* Dice Panel */
-.dice-panel {
-  position: fixed;
+/* Layer 2: Decorations and objects */
+.decoration-flower::after {
+  content: "❀";
+  position: absolute;
+  font-size: 12px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.9);
-  border-radius: 10px;
-  padding: 20px;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  text-align: center;
 }
 
-.dice-panel h3 {
-  margin: 0 0 15px 0;
-  font-size: 20px;
-  color: #ffc107;
-}
-
-.dice-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.dice-buttons button {
-  background-color: #3f51b5;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.dice-buttons button:hover {
-  background-color: #303f9f;
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.dice-buttons button:active {
-  transform: translateY(0);
-}
-
-.dice-result {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 15px;
-  margin-bottom: 15px;
-  text-align: center;
-}
-
-.dice-result p {
-  margin: 0;
-  font-size: 18px;
-  color: #fff;
-}
-
-.dice-result .individual-rolls {
+.decoration-rock::after {
+  content: "◙";
+  position: absolute;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 5px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.btn-close {
-  background-color: #f44336;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.decoration-tree::after {
+  content: "🌲";
+  position: absolute;
+  font-size: 18px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.btn-close:hover {
-  background-color: #d32f2f;
+.decoration-mushroom::after {
+  content: "🍄";
+  position: absolute;
+  font-size: 14px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.decoration-bones::after {
+  content: "☠";
+  position: absolute;
+  font-size: 14px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.decoration-torch::after {
+  content: "🔥";
+  position: absolute;
+  font-size: 14px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.decoration-altar::after {
+  content: "⛭";
+  position: absolute;
+  font-size: 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.decoration-treasure-chest::after {
+  content: "📦";
+  position: absolute;
+  font-size: 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Layer 3: Lighting effects */
+.lighting-bright {
+  filter: brightness(1.3);
+}
+
+.lighting-dim {
+  filter: brightness(0.8);
+}
+
+.lighting-dappled {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.1) 10%, rgba(0, 0, 0, 0.1) 10%);
+  background-size: 20px 20px;
+}
+
+.lighting-dark {
+  filter: brightness(0.6);
+}
+
+.lighting-foggy {
+  filter: blur(1px);
+}
+
+.lighting-glowing {
+  box-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+}
+
+.lighting-reflective {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%);
+  background-size: 10px 10px;
+}
+
+/* Structure indicators */
+.structure-castle::before {
+  content: "🏰";
+  position: absolute;
+  font-size: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+}
+
+.structure-village::before {
+  content: "🏠";
+  position: absolute;
+  font-size: 18px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+}
+
+.structure-temple::before {
+  content: "⛩️";
+  position: absolute;
+  font-size: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+}
+
+.structure-tower::before {
+  content: "🗼";
+  position: absolute;
+  font-size: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+}
+
+.structure-ruins::before {
+  content: "🏛️";
+  position: absolute;
+  font-size: 18px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+}
+
+/* Item indicators */
+.item-health-potion::after {
+  content: "🧪";
+  position: absolute;
+  font-size: 14px;
+  top: 25%;
+  right: 25%;
+  z-index: 25;
+}
+
+.item-scroll::after {
+  content: "📜";
+  position: absolute;
+  font-size: 14px;
+  top: 25%;
+  right: 25%;
+  z-index: 25;
+}
+
+.item-weapon::after {
+  content: "⚔️";
+  position: absolute;
+  font-size: 14px;
+  top: 25%;
+  right: 25%;
+  z-index: 25;
+}
+
+.item-key::after {
+  content: "🔑";
+  position: absolute;
+  font-size: 14px;
+  top: 25%;
+  right: 25%;
+  z-index: 25;
+}
+
+/* Trapped player indicator - pulsing red border */
+.game-piece.trapped {
+  animation: pulse-border 1.5s infinite;
+  border: 3px solid red !important;
+  filter: brightness(0.8);
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.8); }
+  70% { box-shadow: 0 0 0 6px rgba(255, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
 }

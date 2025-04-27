@@ -1,190 +1,287 @@
-/**
- * Sound Handler for D&D Game
- * This script handles playing sound effects and background music
- * for the D&D game based on WebSocket messages.
- */
-
-// Cache for audio elements to avoid creating duplicates
-const audioCache = {};
-
-// Volume settings
-const settings = {
-  masterVolume: 0.5,
-  musicVolume: 0.3,
-  effectsVolume: 0.7,
-  isMuted: false
-};
-
-/**
- * Play a sound effect or music
- * @param {string} soundUrl - URL of the sound file to play
- * @param {boolean} isMusic - Whether this is background music (looped)
- * @param {number} volume - Volume level (0.0 to 1.0)
- */
-function playSound(soundUrl, isMusic = false, volume = 1.0) {
-  // If muted, don't play anything
-  if (settings.isMuted) {
-    return;
-  }
-  
-  // Calculate actual volume based on settings
-  const actualVolume = isMusic 
-    ? settings.masterVolume * settings.musicVolume * volume
-    : settings.masterVolume * settings.effectsVolume * volume;
-  
-  // Check if we already have this audio in cache
-  if (!audioCache[soundUrl]) {
-    // Create new audio element
-    const audio = new Audio(soundUrl);
-    audio.volume = actualVolume;
+// Sound handler for D&D game
+class SoundHandler {
+  constructor() {
+    this.audioContext = null;
+    this.sounds = {};
+    this.musicTrack = null;
+    this.effectsEnabled = true;
+    this.musicEnabled = true;
+    this.musicVolume = 0.5;
+    this.effectsVolume = 0.7;
     
-    // Set looping for music
-    if (isMusic) {
-      audio.loop = true;
+    // Sound mapping
+    this.soundMap = {
+      // Background music
+      "music": {
+        "main_theme": "/assets/sounds/main_theme.mp3",
+        "combat_theme": "/assets/sounds/combat_theme.mp3",
+        "dungeon_theme": "/assets/sounds/dungeon_theme.mp3",
+        "cave_theme": "/assets/sounds/cave_theme.mp3",
+        "forest_theme": "/assets/sounds/forest_theme.mp3"
+      },
+      
+      // Environmental sounds
+      "environment": {
+        "rain": "/assets/sounds/rain.mp3",
+        "wind": "/assets/sounds/wind.mp3",
+        "water": "/assets/sounds/water.mp3",
+        "fire": "/assets/sounds/fire.mp3",
+        "forest": "/assets/sounds/forest.mp3"
+      },
+      
+      // Sound effects
+      "effects": {
+        // Movement sounds
+        "footstep_grass": "/assets/sounds/footstep_grass.mp3",
+        "footstep_stone": "/assets/sounds/footstep_stone.mp3",
+        "footstep_water": "/assets/sounds/footstep_water.mp3",
+        
+        // Combat sounds
+        "sword_swing": "/assets/sounds/sword_swing.mp3",
+        "arrow_shoot": "/assets/sounds/arrow_shoot.mp3",
+        "spell_cast": "/assets/sounds/spell_cast.mp3",
+        "monster_growl": "/assets/sounds/monster_growl.mp3",
+        
+        // Item interaction sounds
+        "item_pickup": "/assets/sounds/item_pickup.mp3",
+        "potion_drink": "/assets/sounds/potion_drink.mp3",
+        "chest_open": "/assets/sounds/chest_open.mp3",
+        "door_open": "/assets/sounds/door_open.mp3",
+        
+        // Dice rolling sounds
+        "dice_roll": "/assets/sounds/dice_roll.mp3",
+        "dice_d20": "/assets/sounds/dice_d20.mp3",
+        
+        // Trap sounds
+        "trap_triggered": "/assets/sounds/trap_triggered.mp3",
+        "trap_alert": "/assets/sounds/trap_alert.mp3",
+        
+        // UI sounds
+        "button_click": "/assets/sounds/button_click.mp3",
+        "menu_open": "/assets/sounds/menu_open.mp3",
+        "notification": "/assets/sounds/notification.mp3"
+      }
+    };
+  }
+
+  // Initialize audio context
+  initialize() {
+    try {
+      // Create AudioContext
+      window.AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.audioContext = new AudioContext();
+      console.log("Audio context initialized successfully");
+      return true;
+    } catch (e) {
+      console.error("Failed to initialize audio context:", e);
+      return false;
     }
-    
-    // Store in cache
-    audioCache[soundUrl] = audio;
-  } else {
-    // Update volume of cached audio
-    audioCache[soundUrl].volume = actualVolume;
-    
-    // If it's already playing, don't restart it (especially for music)
-    if (isMusic && !audioCache[soundUrl].paused) {
-      return;
+  }
+
+  // Load a sound file
+  async loadSound(key, url) {
+    if (!this.audioContext) {
+      if (!this.initialize()) {
+        return false;
+      }
     }
-    
-    // For sound effects, reset to beginning
-    if (!isMusic) {
-      audioCache[soundUrl].currentTime = 0;
+
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      
+      this.sounds[key] = audioBuffer;
+      console.log(`Sound loaded: ${key}`);
+      return true;
+    } catch (e) {
+      console.error(`Failed to load sound ${key} from ${url}:`, e);
+      return false;
     }
   }
-  
-  // Play the sound
-  try {
-    const playPromise = audioCache[soundUrl].play();
+
+  // Play a sound effect
+  playSound(key, options = {}) {
+    if (!this.effectsEnabled) return null;
     
-    // Handle play promise (modern browsers return a promise from play())
-    if (playPromise !== undefined) {
-      playPromise.catch(error => {
-        console.error("Error playing sound:", error);
-      });
+    const sound = this.sounds[key];
+    if (!sound) {
+      console.warn(`Sound ${key} not loaded`);
+      return null;
     }
-  } catch (error) {
-    console.error("Error playing sound:", error);
+
+    try {
+      // Create source
+      const source = this.audioContext.createBufferSource();
+      source.buffer = sound;
+      
+      // Create gain node for volume control
+      const gainNode = this.audioContext.createGain();
+      gainNode.gain.value = options.volume !== undefined ? options.volume : this.effectsVolume;
+      
+      // Connect nodes
+      source.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      // Set playback options
+      if (options.loop) {
+        source.loop = true;
+      }
+      
+      if (options.playbackRate) {
+        source.playbackRate.value = options.playbackRate;
+      }
+      
+      // Start playback
+      const startTime = options.delay ? this.audioContext.currentTime + options.delay : this.audioContext.currentTime;
+      source.start(startTime);
+      
+      // Return the source for later control
+      return source;
+    } catch (e) {
+      console.error(`Error playing sound ${key}:`, e);
+      return null;
+    }
   }
-}
 
-/**
- * Stop a specific sound
- * @param {string} soundUrl - URL of the sound to stop
- */
-function stopSound(soundUrl) {
-  if (audioCache[soundUrl]) {
-    audioCache[soundUrl].pause();
-    audioCache[soundUrl].currentTime = 0;
-  }
-}
-
-/**
- * Stop all sounds
- */
-function stopAllSounds() {
-  Object.values(audioCache).forEach(audio => {
-    audio.pause();
-    audio.currentTime = 0;
-  });
-}
-
-/**
- * Set master volume
- * @param {number} volume - Volume level (0.0 to 1.0)
- */
-function setMasterVolume(volume) {
-  settings.masterVolume = Math.max(0, Math.min(1, volume));
-  updateAllVolumes();
-}
-
-/**
- * Set music volume
- * @param {number} volume - Volume level (0.0 to 1.0)
- */
-function setMusicVolume(volume) {
-  settings.musicVolume = Math.max(0, Math.min(1, volume));
-  updateAllVolumes();
-}
-
-/**
- * Set sound effects volume
- * @param {number} volume - Volume level (0.0 to 1.0)
- */
-function setEffectsVolume(volume) {
-  settings.effectsVolume = Math.max(0, Math.min(1, volume));
-  updateAllVolumes();
-}
-
-/**
- * Toggle mute state
- * @returns {boolean} - New mute state
- */
-function toggleMute() {
-  settings.isMuted = !settings.isMuted;
-  
-  if (settings.isMuted) {
-    // Mute all sounds without stopping them
-    Object.values(audioCache).forEach(audio => {
-      audio.muted = true;
-    });
-  } else {
-    // Unmute all sounds
-    Object.values(audioCache).forEach(audio => {
-      audio.muted = false;
-    });
-  }
-  
-  return settings.isMuted;
-}
-
-/**
- * Update volumes for all cached audio elements
- */
-function updateAllVolumes() {
-  Object.entries(audioCache).forEach(([url, audio]) => {
-    // Determine if this is music (simple check based on URL)
-    const isMusic = url.includes('background') || url.includes('music');
+  // Play background music
+  playMusic(key, options = {}) {
+    if (!this.musicEnabled) return null;
     
-    // Set appropriate volume
-    audio.volume = isMusic
-      ? settings.masterVolume * settings.musicVolume
-      : settings.masterVolume * settings.effectsVolume;
-  });
-}
-
-/**
- * Handle WebSocket message for sound playback
- * @param {Object} message - WebSocket message object
- */
-function handleSoundMessage(message) {
-  if (message.type === 'play_sound' && message.sound_url) {
-    // Determine if this is background music
-    const isMusic = message.sound_url.includes('background') || 
-                   message.sound_url.includes('music');
+    // Stop current music if playing
+    this.stopMusic();
     
-    // Play the sound
-    playSound(message.sound_url, isMusic);
+    const music = this.sounds[key];
+    if (!music) {
+      console.warn(`Music ${key} not loaded`);
+      return null;
+    }
+
+    try {
+      // Create source
+      const source = this.audioContext.createBufferSource();
+      source.buffer = music;
+      
+      // Create gain node for volume control
+      const gainNode = this.audioContext.createGain();
+      gainNode.gain.value = options.volume !== undefined ? options.volume : this.musicVolume;
+      
+      // Connect nodes
+      source.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      // Set up looping
+      source.loop = options.loop !== undefined ? options.loop : true;
+      
+      // Start playback
+      source.start();
+      
+      // Save reference to current music track
+      this.musicTrack = {
+        source,
+        gainNode
+      };
+      
+      return this.musicTrack;
+    } catch (e) {
+      console.error(`Error playing music ${key}:`, e);
+      return null;
+    }
+  }
+
+  // Stop background music
+  stopMusic() {
+    if (this.musicTrack) {
+      try {
+        this.musicTrack.source.stop();
+      } catch (e) {
+        console.warn("Error stopping music:", e);
+      }
+      this.musicTrack = null;
+    }
+  }
+
+  // Set music volume
+  setMusicVolume(volume) {
+    this.musicVolume = Math.max(0, Math.min(1, volume));
+    
+    if (this.musicTrack) {
+      this.musicTrack.gainNode.gain.value = this.musicVolume;
+    }
+  }
+
+  // Set effects volume
+  setEffectsVolume(volume) {
+    this.effectsVolume = Math.max(0, Math.min(1, volume));
+  }
+
+  // Enable/disable music
+  enableMusic(enabled) {
+    this.musicEnabled = enabled;
+    
+    if (!enabled && this.musicTrack) {
+      this.stopMusic();
+    }
+  }
+
+  // Enable/disable sound effects
+  enableSoundEffects(enabled) {
+    this.effectsEnabled = enabled;
+  }
+
+  // Play sound based on terrain type
+  playTerrainSound(terrain) {
+    switch (terrain) {
+      case 'grass':
+        return this.playSound('footstep_grass');
+      case 'mountain':
+      case 'cave':
+        return this.playSound('footstep_stone');
+      case 'water':
+        return this.playSound('footstep_water');
+      default:
+        return this.playSound('footstep_grass');
+    }
+  }
+
+  // Play dice roll sound
+  playDiceSound(diceType) {
+    // Different dice can have different sounds
+    if (diceType === 'd20') {
+      return this.playSound('dice_d20');
+    } else {
+      return this.playSound('dice_roll');
+    }
+  }
+
+  // Play trap sound
+  playTrapSound(detected = false) {
+    if (detected) {
+      return this.playSound('trap_alert');
+    } else {
+      return this.playSound('trap_triggered');
+    }
+  }
+
+  // Preload common sounds
+  async preloadCommonSounds() {
+    // Load essential gameplay sounds
+    const promises = [
+      this.loadSound('main_theme', this.soundMap.music.main_theme),
+      this.loadSound('footstep_grass', this.soundMap.effects.footstep_grass),
+      this.loadSound('footstep_stone', this.soundMap.effects.footstep_stone),
+      this.loadSound('footstep_water', this.soundMap.effects.footstep_water),
+      this.loadSound('dice_roll', this.soundMap.effects.dice_roll),
+      this.loadSound('dice_d20', this.soundMap.effects.dice_d20),
+      this.loadSound('item_pickup', this.soundMap.effects.item_pickup),
+      this.loadSound('trap_triggered', this.soundMap.effects.trap_triggered),
+      this.loadSound('trap_alert', this.soundMap.effects.trap_alert)
+    ];
+    
+    return Promise.all(promises);
   }
 }
 
-// Export functions for use in main game code
-window.GameSounds = {
-  playSound,
-  stopSound,
-  stopAllSounds,
-  setMasterVolume,
-  setMusicVolume,
-  setEffectsVolume,
-  toggleMute,
-  handleSoundMessage
-};
-
-console.log("Sound handler initialized");
+// Export as both a class and a singleton instance
+export const soundHandler = new SoundHandler();
+export default SoundHandler;
