@@ -89,16 +89,16 @@ Our key breakthrough was developing a hybrid approach that uses AI to enhance st
 
 ## 📽️ Demo & Deliverables
 
-- **Demo Video Link:** [https://youtu.be/demo-link](https://youtu.be/demo-link)
-- **Pitch Deck Link:** [https://slides.com/hackhazards/questmint](https://slides.com/hackhazards/questmint)
+- **Demo Video Link:** [https://youtu.be/demo-link](https://youtu.be/TtTz3utN5RY)
+- **Pitch Deck Link:** [https://slides.com/hackhazards/questmint]([https://slides.com/hackhazards/questmint](https://drive.google.com/file/d/1f8npBDThbVpwlJ_ZJfcidgCzEUFZMabs/view?usp=sharing))
 
 ---
 
 ## ✅ Tasks & Bonus Checklist
 
 - ✅ **All members of the team completed the mandatory task - Followed at least 2 of our social channels and filled the form**
-- ❌ **All members of the team completed Bonus Task 1 - Sharing of Badges and filled the form**
-- ❌ **All members of the team completed Bonus Task 2 - Signing up for Sprint.dev and filled the form**
+- ✅ **All members of the team completed Bonus Task 1 - Sharing of Badges and filled the form**
+- ✅ **All members of the team completed Bonus Task 2 - Signing up for Sprint.dev and filled the form**
 
 ---
 
