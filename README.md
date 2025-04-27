@@ -65,10 +65,15 @@ Our key breakthrough was developing a hybrid approach that uses AI to enhance st
 - ✅ **Interactive Battle Maps:** Visualize quest locations and plan strategies
 - ✅ **Profile Customization:** Create and personalize your adventurer profile
 
-## ✨ Screenshots
-![Screenshot 1](./src/assets/feature_ss/ss1.jpg)
-![Screenshot 2](./src/assets/feature_ss/ss2.jpg)
-![Screenshot 3](./src/assets/feature_ss/ss3.jpg)
+## 📸 Screenshots
+**Home Screen**
+![Screenshot 1](./src/assets/feature_ss/ss4.png)
+**Interactive Quest Board:**
+![Screenshot 2](./src/assets/feature_ss/ss1.jpg)
+**Community Page:**
+![Screenshot 3](./src/assets/feature_ss/ss2.jpg)
+**Profile Customization:**
+![Screenshot 4](./src/assets/feature_ss/ss3.jpg)
 
 ## 📽️ Demo & Deliverables
 
