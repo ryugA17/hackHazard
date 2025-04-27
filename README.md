@@ -82,6 +82,11 @@ Our key breakthrough was developing a hybrid approach that uses AI to enhance st
 
 ![Screenshot 4](./src/assets/feature_ss/ss3.jpg)
 
+### NFT Collectibles:
+
+![Screenshot 4](./src/assets/feature_ss/ss5.jpg)
+
+
 ## 📽️ Demo & Deliverables
 
 - **Demo Video Link:** [https://youtu.be/demo-link](https://youtu.be/demo-link)
