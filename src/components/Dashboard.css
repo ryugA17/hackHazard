@@ -17,7 +17,7 @@
     "main profile"
     "main events"
     "explore explore"
-    "features features"
+    "sponsors sponsors"
     "tutorials tutorials";
   gap: 25px;
 }
@@ -347,54 +347,64 @@
 }
 
 /* Explore more section */
-.explore-title {
+.sponsors-title {
   grid-area: explore;
   font-size: 24px;
   margin: 40px 0 20px 0;
   font-family: 'Press Start 2P', monospace;
 }
 
-/* Feature cards */
-.feature-grid {
-  grid-area: features;
+/* Sponsors cards */
+.sponsors-grid {
+  grid-area: sponsors;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 40px;
 }
 
-.feature-card {
+.sponsor-card {
   background-color: rgba(25, 30, 45, 0.7);
   border-radius: 8px;
   padding: 20px;
   display: flex;
   align-items: flex-start;
   transition: transform 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.feature-card:hover {
+.sponsor-card:hover {
   transform: translateY(-5px);
+  border-color: rgba(77, 171, 247, 0.3);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.feature-icon {
-  width: 50px;
-  height: 50px;
+.sponsor-icon {
+  width: 60px;
+  height: 60px;
   margin-right: 15px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
 }
 
-.feature-icon img {
+.sponsor-icon img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: 8px;
 }
 
-.feature-content h3 {
-  font-size: 16px;
+.sponsor-content h3 {
+  font-size: 18px;
   margin: 0 0 10px 0;
+  color: #4dabf7;
 }
 
-.feature-content p {
+.sponsor-content p {
   font-size: 14px;
   color: #d0d7de;
   margin: 0;
@@ -509,12 +519,12 @@
       "profile"
       "events"
       "explore"
-      "features"
+      "sponsors"
       "tutorials";
   }
   
-  .feature-grid {
-    grid-template-columns: 1fr;
+  .sponsors-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .tutorials-grid {
@@ -523,11 +533,15 @@
 }
 
 @media (max-width: 768px) {
-  .feature-card {
+  .sponsors-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sponsor-card {
     flex-direction: column;
   }
   
-  .feature-icon {
+  .sponsor-icon {
     margin-bottom: 15px;
   }
 }

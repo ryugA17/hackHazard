@@ -197,47 +197,37 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Explore more section */}
-          <h2 className="explore-title">Explore more</h2>
+          {/* Sponsors section */}
+          <h2 className="sponsors-title">Our Technology Partners</h2>
           
-          <div className="feature-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src={userAvatar} alt="Challenge" />
+          <div className="sponsors-grid">
+            <div className="sponsor-card">
+              <div className="sponsor-icon">
+                <img src="https://placehold.co/60x60/4dabf7/ffffff?text=M" alt="Monad" />
               </div>
-              <div className="feature-content">
-                <h3>Challenge Packs</h3>
-                <p>Practice what you learned with bite-sized code challenges.</p>
-              </div>
-            </div>
-            
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src={rocketIcon} alt="Rocket" />
-              </div>
-              <div className="feature-content">
-                <h3>Project Tutorials</h3>
-                <p>Explore fun, step-by-step projects from beginner to advanced.</p>
+              <div className="sponsor-content">
+                <h3>Monad</h3>
+                <p>Powering our blockchain infrastructure with high-performance Layer-1 technology.</p>
               </div>
             </div>
             
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src={eggIcon} alt="Egg" />
+            <div className="sponsor-card">
+              <div className="sponsor-icon">
+                <img src="https://placehold.co/60x60/a05ebf/ffffff?text=G" alt="Groq" />
               </div>
-              <div className="feature-content">
-                <h3>#30NitesOfCode</h3>
-                <p>Commit to 30 days of learning and building—while raising a virtual pet!</p>
+              <div className="sponsor-content">
+                <h3>Groq</h3>
+                <p>Advanced AI processing with cutting-edge LPU technology for lightning-fast responses.</p>
               </div>
             </div>
             
-            <div className="feature-card">
-              <div className="feature-icon">
-                <img src={codeIcon} alt="Code" />
+            <div className="sponsor-card">
+              <div className="sponsor-icon">
+                <img src="https://placehold.co/60x60/ff6b6b/ffffff?text=T" alt="Terminator" />
               </div>
-              <div className="feature-content">
-                <h3>Builds</h3>
-                <p>Create and share code snippets and projects directly in the browser.</p>
+              <div className="sponsor-content">
+                <h3>Terminator</h3>
+                <p>Revolutionary screen reading technology for enhanced gaming accessibility.</p>
               </div>
             </div>
           </div>
