@@ -160,7 +160,7 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="profile-section">
+          <div className="profile-section treasure-vault">
             <div className="section-header">
               <h2>My Treasure Vault</h2>
               <Link to="/nfts" className="see-all-link">View all treasures</Link>
@@ -170,15 +170,16 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="projects-header">
-            <h2 className="projects-title">Epic Quests</h2>
-            <Link to="/projects" className="see-all-link">View all quests</Link>
-          </div>
-          
-          <div className="projects-grid">
-            <div className="empty-project">
-              <p>You haven't embarked on any quests yet.</p>
-              <button className="create-project-btn">Begin a New Quest</button>
+          <div className="profile-section epic-quests">
+            <div className="section-header">
+              <h2>Epic Quests</h2>
+              <Link to="/projects" className="see-all-link">View all quests</Link>
+            </div>
+            <div className="projects-grid">
+              <div className="empty-project">
+                <p>You haven't embarked on any quests yet.</p>
+                <button className="create-project-btn">Begin a New Quest</button>
+              </div>
             </div>
           </div>
         </div> 
