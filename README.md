@@ -89,8 +89,8 @@ Our key breakthrough was developing a hybrid approach that uses AI to enhance st
 
 ## 📽️ Demo & Deliverables
 
-- **Demo Video Link:** [https://youtu.be/demo-link] (https://youtu.be/TtTz3utN5RY)
-- **Pitch Deck Link:** [https://slides.com/hackhazards/questmint](https://slides.com/hackhazards/questmint](https://drive.google.com/file/d/1f8npBDThbVpwlJ_ZJfcidgCzEUFZMabs/view?usp=sharing)
+- **Demo Video Link:** [limk] (https://youtu.be/TtTz3utN5RY)
+- **Pitch Deck Link:** [limk] (https://slides.com/hackhazards/questmint](https://drive.google.com/file/d/1f8npBDThbVpwlJ_ZJfcidgCzEUFZMabs/view?usp=sharing)
 
 ---
 
