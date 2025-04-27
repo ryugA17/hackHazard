@@ -184,7 +184,6 @@
   grid-template-areas:
     "main stats"
     "main pet"
-    "skills skills"
     "skills-grid skills-grid"
     "projects projects"
     "projects-grid projects-grid";
@@ -354,7 +353,6 @@
 }
 
 /* Skills section */
-.skills-title,
 .projects-title {
   grid-area: skills;
   font-size: 24px;
@@ -806,7 +804,6 @@
     grid-template-areas:
       "main"
       "stats"
-      "skills"
       "skills-grid"
       "projects"
       "projects-grid";
