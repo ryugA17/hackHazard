@@ -17,6 +17,7 @@
     "main profile"
     "main events"
     "explore explore"
+    "subtitle subtitle"
     "sponsors sponsors"
     "tutorials tutorials";
   gap: 25px;
@@ -349,9 +350,39 @@
 /* Explore more section */
 .sponsors-title {
   grid-area: explore;
-  font-size: 24px;
-  margin: 40px 0 20px 0;
+  font-size: 26px;
+  margin: 40px auto 15px;
   font-family: 'Press Start 2P', monospace;
+  color: white;
+  text-align: center;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  position: relative;
+  padding-bottom: 16px;
+  display: block;
+  width: 100%;
+}
+
+.sponsors-title::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 120px;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(77, 171, 247, 0.2), rgba(77, 171, 247, 0.8), rgba(77, 171, 247, 0.2));
+  transform: translateX(-50%);
+  border-radius: 3px;
+}
+
+.sponsors-subtitle {
+  text-align: center;
+  color: #a0b0c0;
+  font-size: 18px;
+  margin: 0 auto 30px;
+  max-width: 700px;
+  font-family: system-ui, sans-serif;
+  font-weight: 300;
+  grid-area: subtitle;
 }
 
 /* Sponsors cards */
@@ -359,56 +390,145 @@
   grid-area: sponsors;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 24px;
   margin-bottom: 40px;
+  perspective: 1000px;
 }
 
 .sponsor-card {
-  background-color: rgba(25, 30, 45, 0.7);
-  border-radius: 8px;
-  padding: 20px;
+  background: linear-gradient(145deg, rgba(30, 40, 70, 0.8), rgba(20, 25, 45, 0.9));
+  border-radius: 16px;
+  padding: 28px;
   display: flex;
-  align-items: flex-start;
-  transition: transform 0.2s;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid rgba(77, 171, 247, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+.sponsor-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(77, 171, 247, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 0;
 }
 
 .sponsor-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(77, 171, 247, 0.3);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-8px) rotateX(5deg);
+  border-color: rgba(77, 171, 247, 0.5);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Slight delay for each card animation */
+.sponsors-grid .sponsor-card:nth-child(2) {
+  transition-delay: 0.05s;
+}
+
+.sponsors-grid .sponsor-card:nth-child(3) {
+  transition-delay: 0.1s;
 }
 
 .sponsor-icon {
-  width: 60px;
-  height: 60px;
-  margin-right: 15px;
-  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: 16px;
+  padding: 18px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.sponsor-card:hover .sponsor-icon {
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: scale(1.1) translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 .sponsor-icon img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 0;
+  transition: all 0.4s ease;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
+}
+
+.sponsor-card:hover .sponsor-icon img {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) brightness(1.1);
+}
+
+.sponsor-logo {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+.sponsor-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
 }
 
 .sponsor-content h3 {
-  font-size: 18px;
-  margin: 0 0 10px 0;
+  font-size: 22px;
+  margin: 0 0 16px 0;
   color: #4dabf7;
+  font-family: 'Press Start 2P', monospace;
+  letter-spacing: 0.5px;
+  transition: color 0.4s ease;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  display: inline-block;
+}
+
+.sponsor-content h3::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 0;
+  height: 2px;
+  background-color: #6ebcff;
+  transition: all 0.4s ease;
+  transform: translateX(-50%);
+}
+
+.sponsor-card:hover .sponsor-content h3 {
+  color: #6ebcff;
+}
+
+.sponsor-card:hover .sponsor-content h3::after {
+  width: 70%;
 }
 
 .sponsor-content p {
-  font-size: 14px;
+  font-size: 16px;
   color: #d0d7de;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+}
+
+.sponsor-card:hover .sponsor-content p {
+  color: #e0e7ef;
 }
 
 /* Tutorials section */
@@ -519,6 +639,7 @@
       "profile"
       "events"
       "explore"
+      "subtitle"
       "sponsors"
       "tutorials";
   }
@@ -538,11 +659,13 @@
   }
   
   .sponsor-card {
-    flex-direction: column;
+    padding: 24px;
   }
   
   .sponsor-icon {
-    margin-bottom: 15px;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
   }
 }
 
@@ -642,4 +765,20 @@
   font-size: 14px;
   color: #a0b0c0;
   font-family: system-ui, sans-serif;
+}
+
+.sponsor-card:hover::before {
+  opacity: 1;
+}
+
+/* Add a subtle pulsing animation to the logo on hover */
+@keyframes gentle-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.sponsor-card:hover .sponsor-icon img {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) brightness(1.1);
+  animation: gentle-pulse 2s infinite ease-in-out;
 }
