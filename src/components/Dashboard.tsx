@@ -236,59 +236,6 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-
-          {/* New tutorials section */}
-          <div className="tutorials-header">
-            <h2 className="tutorials-title"></h2>
-            <ScrollToTopLink to="/tutorials" className="see-all-link">See all</ScrollToTopLink>
-          </div>
-          
-          <div className="tutorials-grid">
-            <div className="tutorial-card">
-              <div className="tutorial-image">
-                {/* Placeholder for tutorial image */}
-                <div className="image-placeholder" style={{backgroundColor: "lightblue"}}></div>
-              </div>
-              <div className="tutorial-info">
-                <span className="tutorial-label">TUTORIAL</span>
-                <h3>Animate Images with CSS keyframes</h3>
-                <div className="tutorial-tags">
-                  <span className="tag level-tag">BEGINNER</span>
-                  <span className="tag language-tag">HTML</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="tutorial-card">
-              <div className="tutorial-image">
-                {/* Placeholder for tutorial image */}
-                <div className="image-placeholder" style={{backgroundColor: "lightgreen"}}></div>
-              </div>
-              <div className="tutorial-info">
-                <span className="tutorial-label">TUTORIAL</span>
-                <h3>Analyze U.S. Census Data with SciPy</h3>
-                <div className="tutorial-tags">
-                  <span className="tag level-tag">INTERMEDIATE</span>
-                  <span className="tag language-tag">PYTHON</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="tutorial-card">
-              <div className="tutorial-image">
-                {/* Placeholder for tutorial image */}
-                <div className="image-placeholder" style={{backgroundColor: "purple"}}></div>
-              </div>
-              <div className="tutorial-info">
-                <span className="tutorial-label">TUTORIAL</span>
-                <h3>Build a Chat Game with p5.js</h3>
-                <div className="tutorial-tags">
-                  <span className="tag level-tag">INTERMEDIATE</span>
-                  <span className="tag language-tag">JAVASCRIPT</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       <Footer />
