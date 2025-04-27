@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import Footer from './Footer';
 import { auth } from '../firebase';
@@ -11,6 +11,7 @@ import eggIcon from '../assets/egg-icon.png';
 import codeIcon from '../assets/code-icon.png';
 import loadingicon from '../assets/ass.gif';
 import { useProfile } from '../context/ProfileContext';
+import ScrollToTopLink from './ScrollToTopLink';
 
 const Dashboard = () => {
   const [user, setUser] = React.useState<any>(null);
@@ -180,10 +181,10 @@ const Dashboard = () => {
           <div className="nft-gallery-section">
             <div className="section-header">
               <h2 className="section-title">My NFT Collection</h2>
-              <Link to="/nfts" className="see-all-link">View All</Link>
+              <ScrollToTopLink to="/nfts" className="see-all-link">View All</ScrollToTopLink>
             </div>
             <div className="nft-preview-container">
-              <Link to="/nfts" className="nft-preview-card">
+              <ScrollToTopLink to="/nfts" className="nft-preview-card">
                 <div className="nft-preview-icon">
                   <img src="/assets/nft-icon.png" alt="NFT" onError={(e) => {
                     e.currentTarget.src = "https://placehold.co/40x40/4dabf7/ffffff?text=NFT";
@@ -193,7 +194,7 @@ const Dashboard = () => {
                   <h3>Your NFT Collection</h3>
                   <p>Check out your NFT collection and mint new ones!</p>
                 </div>
-              </Link>
+              </ScrollToTopLink>
             </div>
           </div>
 
@@ -235,7 +236,7 @@ const Dashboard = () => {
           {/* New tutorials section */}
           <div className="tutorials-header">
             <h2 className="tutorials-title"></h2>
-            <Link to="/tutorials" className="see-all-link">See all</Link>
+            <ScrollToTopLink to="/tutorials" className="see-all-link">See all</ScrollToTopLink>
           </div>
           
           <div className="tutorials-grid">

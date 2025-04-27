@@ -20,6 +20,8 @@ import { WalletConnect } from './components/WalletConnect';
 import { useAccount } from 'wagmi';
 import Onboarding from './components/Onboarding';
 import { DungeonMasterProvider } from './context/DungeonMasterContext';
+import ScrollToTop from './components/ScrollToTop';
+import ScrollTopButton from './components/ScrollTopButton';
 
 // Home page component
 const HomePage = ({ disableSignOut = false }) => {
@@ -68,6 +70,8 @@ const App = () => {
         <DungeonMasterProvider>
           <div className="app">
             <BrowserRouter>
+              <ScrollToTop />
+              <ScrollTopButton />
               <Routes>
                 <Route path="/" element={<HomePage disableSignOut={isSignedIn} />} />
                 <Route path="/signup" element={
