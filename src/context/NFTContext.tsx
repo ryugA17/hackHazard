@@ -5,9 +5,9 @@ import { useProfile } from './ProfileContext';
 import growlingDinosaur from '../assets/growling-dinosaur.gif';
 import minecraftSword from '../assets/minecraft-sword.gif';
 import witchWizard from '../assets/witch-wizard.gif';
-import dragonAmulet from '../assets/growling-dinosaur.gif';
-import ancientScroll from '../assets/growling-dinosaur.gif';
-import goldenPotion from '../assets/growling-dinosaur.gif';
+import dragonAmulet from '../assets/lockgrin-8bits.gif';
+import ancientScroll from '../assets/alcohol-poison.gif';
+import goldenPotion from '../assets/potion.gif';
 
 // Define NFT structure
 export interface NFTItem {

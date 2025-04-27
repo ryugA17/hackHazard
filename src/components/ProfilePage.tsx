@@ -12,9 +12,9 @@ import { NFTGallery } from './NFTGallery';
 import growlingDinosaur from '../assets/growling-dinosaur.gif';
 import minecraftSword from '../assets/minecraft-sword.gif';
 import witchWizard from '../assets/witch-wizard.gif';
-import dragonAmulet from '../assets/growling-dinosaur.gif';
-import ancientScroll from '../assets/growling-dinosaur.gif';
-import goldenPotion from '../assets/growling-dinosaur.gif';
+import dragonAmulet from '../assets/lockgrin-8bits.gif';
+import ancientScroll from '../assets/alcohol-poison.gif';
+import goldenPotion from '../assets/potion.gif';
 
 // Interface for EditProfilePage props
 interface EditProfilePageProps {
@@ -177,7 +177,7 @@ const ProfilePage = () => {
           <div className="profile-section treasure-vault">
             <div className="section-header">
               <h2>Treasure Vault</h2>
-              <Link to="/nft-marketplace" className="see-all-link">See All</Link>
+              <Link to="/nfts" className="see-all-link">See All</Link>
             </div>
             <div className="nft-preview">
               <NFTGallery isProfile={true} />
